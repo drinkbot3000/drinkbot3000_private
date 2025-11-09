@@ -2,6 +2,23 @@
   command = "npm run build"
   publish = "build"
 
+# Legal documents first (order matters!)
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms.html"
+  to = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from = "/refund.html"
+  to = "/refund.html"
+  status = 200
+
+# SPA catch-all - MUST be last
 [[redirects]]
   from = "/*"
   to = "/index.html"
