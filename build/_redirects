@@ -1,7 +1,0 @@
-# Redirects for single page application
-/*    /index.html   200
-
-# Legal documents are accessible directly
-/privacy.html   /privacy.html   200
-/terms.html     /terms.html     200
-/refund.html    /refund.html    200
