@@ -1,0 +1,11 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Legal documents
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /refund.html
+
+# Sitemap (add later if needed)
+# Sitemap: https://your-site.netlify.app/sitemap.xml
