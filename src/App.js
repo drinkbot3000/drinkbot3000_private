@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { AlertCircle, Beer, User, Weight, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package } from 'lucide-react';
+import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package } from 'lucide-react';
+import PWAInstallPrompt from './PWAInstallPrompt';
 
 // Constants
 const CONSTANTS = {
@@ -1025,7 +1026,7 @@ Questions? Contact: support@drinkbot3000.com
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Weight className="inline w-4 h-4 mr-1" />
+                  <Scale className="inline w-4 h-4 mr-1" />
                   Weight (lbs)
                 </label>
                 <input 
@@ -1115,16 +1116,19 @@ Questions? Contact: support@drinkbot3000.com
 
   // Rest of app (tracker, calculator, support pages) continues as before...
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <div className="text-center">
-          <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-6xl">ðŸ¤–</span>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+          <div className="text-center">
+            <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-6xl">ðŸ¤–</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
+            <p className="text-gray-600 mb-6">Your responsible drinking companion</p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
-          <p className="text-gray-600 mb-6">Your responsible drinking companion</p>
         </div>
       </div>
-    </div>
+      <PWAInstallPrompt />
+    </>
   );
 }
