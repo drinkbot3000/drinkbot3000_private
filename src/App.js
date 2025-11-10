@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useReducer } from 'react';
-import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package } from 'lucide-react';
+import React, { useEffect, useReducer } from 'react';
+import { AlertCircle, Beer, User, Scale, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
 // Constants
@@ -177,7 +177,7 @@ export default function BACTracker() {
         const receipts = JSON.parse(savedReceipts);
         dispatch({ type: 'SET_FIELD', field: 'receipts', value: receipts });
       } catch (e) {
-        console.error('Failed to load receipts:', e);
+        // Failed to load receipts - silently ignore
       }
     }
     
@@ -186,7 +186,7 @@ export default function BACTracker() {
         const data = JSON.parse(saved);
         dispatch({ type: 'SET_MULTIPLE', values: { ...data, showSplash: false } });
       } catch (e) {
-        console.error('Failed to load saved data:', e);
+        // Failed to load saved data - silently ignore
       }
     }
   }, []);

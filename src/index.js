@@ -16,7 +16,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/service-worker.js')
       .then((registration) => {
-        console.log('✅ Service Worker registered successfully:', registration.scope);
+        // Service Worker registered successfully
 
         // Check for updates periodically
         setInterval(() => {
@@ -38,13 +38,13 @@ if ('serviceWorker' in navigator) {
           });
         });
       })
-      .catch((error) => {
-        console.log('❌ Service Worker registration failed:', error);
+      .catch(() => {
+        // Service Worker registration failed
       });
 
     // Handle controller change
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('Service Worker controller changed');
+      // Service Worker controller changed
     });
   });
 }
@@ -60,20 +60,16 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
   // Dispatch custom event that can be caught in React components
   window.dispatchEvent(new CustomEvent('pwa-install-available', { detail: e }));
-
-  console.log('💾 PWA install prompt available');
 });
 
 // Track PWA installation
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA was installed successfully');
   deferredPrompt = null;
 });
 
 // Expose install function globally for components to use
 window.showInstallPrompt = async () => {
   if (!deferredPrompt) {
-    console.log('❌ Install prompt not available');
     return false;
   }
 
@@ -82,12 +78,6 @@ window.showInstallPrompt = async () => {
 
   // Wait for the user to respond to the prompt
   const { outcome } = await deferredPrompt.userChoice;
-
-  if (outcome === 'accepted') {
-    console.log('✅ User accepted the install prompt');
-  } else {
-    console.log('❌ User dismissed the install prompt');
-  }
 
   // Clear the deferred prompt
   deferredPrompt = null;
