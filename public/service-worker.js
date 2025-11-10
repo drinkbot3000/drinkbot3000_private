@@ -1,32 +1,59 @@
 // DrinkBot3000 Service Worker
-// Version 1.0.0
+// Version 1.0.1
 
 const CACHE_NAME = 'drinkbot3000-v1';
 const RUNTIME_CACHE = 'drinkbot3000-runtime-v1';
+
+// Flag to track if storage is available
+let storageAvailable = true;
 
 // Assets to cache on install
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.ico',
+  '/icon-192.png',
   '/privacy.html',
   '/terms.html',
   '/refund.html',
   '/offline.html'
 ];
 
+// Check if storage access is available
+async function checkStorageAccess() {
+  try {
+    await caches.keys();
+    return true;
+  } catch (error) {
+    console.log('[Service Worker] Storage access blocked:', error.message);
+    return false;
+  }
+}
+
 // Install event - precache essential resources
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing...');
 
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[Service Worker] Precaching app shell');
-        return cache.addAll(PRECACHE_URLS);
+    checkStorageAccess()
+      .then((available) => {
+        storageAvailable = available;
+        if (!storageAvailable) {
+          console.log('[Service Worker] Skipping cache due to storage restrictions');
+          return self.skipWaiting();
+        }
+        return caches.open(CACHE_NAME)
+          .then((cache) => {
+            console.log('[Service Worker] Precaching app shell');
+            return cache.addAll(PRECACHE_URLS);
+          })
+          .then(() => self.skipWaiting());
       })
-      .then(() => self.skipWaiting())
+      .catch((error) => {
+        console.log('[Service Worker] Install error (continuing anyway):', error);
+        storageAvailable = false;
+        return self.skipWaiting();
+      })
   );
 });
 
@@ -35,19 +62,31 @@ self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activating...');
 
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => {
-            // Delete old caches
-            return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
-          })
-          .map((cacheName) => {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          })
-      );
-    }).then(() => self.clients.claim())
+    checkStorageAccess()
+      .then((available) => {
+        storageAvailable = available;
+        if (!storageAvailable) {
+          console.log('[Service Worker] Storage unavailable, skipping cache cleanup');
+          return self.clients.claim();
+        }
+        return caches.keys().then((cacheNames) => {
+          return Promise.all(
+            cacheNames
+              .filter((cacheName) => {
+                // Delete old caches
+                return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
+              })
+              .map((cacheName) => {
+                console.log('[Service Worker] Deleting old cache:', cacheName);
+                return caches.delete(cacheName);
+              })
+          );
+        }).then(() => self.clients.claim());
+      })
+      .catch((error) => {
+        console.log('[Service Worker] Activate error (continuing anyway):', error);
+        return self.clients.claim();
+      })
   );
 });
 
@@ -81,27 +120,45 @@ self.addEventListener('fetch', (event) => {
 
 // Cache first strategy - good for static assets
 async function cacheFirst(request) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
+  // Skip caching if storage is unavailable
+  if (!storageAvailable) {
+    return fetch(request);
+  }
+
+  try {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+  } catch (error) {
+    console.log('[Service Worker] Cache read failed:', error.message);
   }
 
   try {
     const networkResponse = await fetch(request);
 
-    // Cache successful responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request, networkResponse.clone());
+    // Cache successful responses if storage is available
+    if (networkResponse.ok && storageAvailable) {
+      try {
+        const cache = await caches.open(RUNTIME_CACHE);
+        cache.put(request, networkResponse.clone());
+      } catch (error) {
+        console.log('[Service Worker] Cache write failed:', error.message);
+        storageAvailable = false;
+      }
     }
 
     return networkResponse;
   } catch (error) {
     console.log('[Service Worker] Fetch failed:', error);
 
-    // Return offline page for HTML requests
-    if (request.headers.get('accept').includes('text/html')) {
-      return caches.match('/offline.html');
+    // Try to return offline page for HTML requests
+    if (request.headers.get('accept')?.includes('text/html')) {
+      try {
+        return await caches.match('/offline.html') || fetch(request);
+      } catch {
+        throw error;
+      }
     }
 
     throw error;
@@ -113,19 +170,32 @@ async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
 
-    // Cache successful responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request, networkResponse.clone());
+    // Cache successful responses if storage is available
+    if (networkResponse.ok && storageAvailable) {
+      try {
+        const cache = await caches.open(RUNTIME_CACHE);
+        cache.put(request, networkResponse.clone());
+      } catch (error) {
+        console.log('[Service Worker] Cache write failed:', error.message);
+        storageAvailable = false;
+      }
     }
 
     return networkResponse;
   } catch (error) {
     console.log('[Service Worker] Network request failed, trying cache:', error);
-    const cachedResponse = await caches.match(request);
 
-    if (cachedResponse) {
-      return cachedResponse;
+    if (!storageAvailable) {
+      throw error;
+    }
+
+    try {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+    } catch (cacheError) {
+      console.log('[Service Worker] Cache read failed:', cacheError.message);
     }
 
     throw error;
@@ -148,8 +218,8 @@ async function syncData() {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New update available',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     tag: 'drinkbot-notification',
     requireInteraction: false

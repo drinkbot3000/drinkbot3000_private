@@ -4,21 +4,15 @@
   "description": "Track your blood alcohol content responsibly. Never drink and drive.",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon",
-      "purpose": "any"
-    },
-    {
-      "src": "favicon.ico",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/x-icon",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "favicon.ico",
+      "src": "icon-192.png",
       "sizes": "512x512",
-      "type": "image/x-icon",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -41,7 +35,7 @@
       "url": "/?tab=calculator",
       "icons": [
         {
-          "src": "favicon.ico",
+          "src": "icon-192.png",
           "sizes": "96x96"
         }
       ]
@@ -53,7 +47,7 @@
       "url": "/?action=add-drink",
       "icons": [
         {
-          "src": "favicon.ico",
+          "src": "icon-192.png",
           "sizes": "96x96"
         }
       ]
@@ -65,7 +59,7 @@
       "url": "/?tab=history",
       "icons": [
         {
-          "src": "favicon.ico",
+          "src": "icon-192.png",
           "sizes": "96x96"
         }
       ]
@@ -77,7 +71,7 @@
       "url": "/?tab=safety",
       "icons": [
         {
-          "src": "favicon.ico",
+          "src": "icon-192.png",
           "sizes": "96x96"
         }
       ]
