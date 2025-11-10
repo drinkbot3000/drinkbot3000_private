@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
+import UpdateNotification from './components/UpdateNotification';
 
 // Constants
 const CONSTANTS = {
@@ -1129,6 +1130,7 @@ Questions? Contact: support@drinkbot3000.com
         </div>
       </div>
       <PWAInstallPrompt />
+      <UpdateNotification />
     </>
   );
 }
