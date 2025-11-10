@@ -7,5 +7,5 @@ Allow: /privacy.html
 Allow: /terms.html
 Allow: /refund.html
 
-# Sitemap (add later if needed)
-# Sitemap: https://your-site.netlify.app/sitemap.xml
+# Sitemap
+Sitemap: https://drinkbot3000.netlify.app/sitemap.xml

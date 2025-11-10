@@ -1,0 +1,59 @@
+# Security Headers for all pages
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+
+# HTML files - no cache, always revalidate
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Service Worker - critical PWA file, short cache, must revalidate
+/service-worker.js
+  Cache-Control: public, max-age=0, must-revalidate
+  Service-Worker-Allowed: /
+  Content-Type: application/javascript; charset=utf-8
+
+# PWA Manifest - cache but revalidate
+/manifest.json
+  Cache-Control: public, max-age=3600, must-revalidate
+  Content-Type: application/manifest+json; charset=utf-8
+
+# Offline page - cache but allow updates
+/offline.html
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# Static assets - long-term cache with immutable
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# JavaScript files - moderate cache
+/*.js
+  Cache-Control: public, max-age=86400, must-revalidate
+  Content-Type: application/javascript; charset=utf-8
+
+# CSS files - moderate cache
+/*.css
+  Cache-Control: public, max-age=86400, must-revalidate
+  Content-Type: text/css; charset=utf-8
+
+# Images - long-term cache
+/*.ico
+  Cache-Control: public, max-age=2592000, immutable
+
+/*.png
+  Cache-Control: public, max-age=2592000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=2592000, immutable
+
+/*.jpeg
+  Cache-Control: public, max-age=2592000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=2592000, immutable
+
+/*.webp
+  Cache-Control: public, max-age=2592000, immutable

@@ -1166,20 +1166,8 @@ Questions? Contact: support@drinkbot3000.com
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
-            {/* App Icon Integration - Use your uploaded icon here */}
-            <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
-              {/* Replace this with your actual icon */}
-              <img 
-                src="/path/to/your/icon.png" 
-                alt="DrinkBot3000 Icon" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to emoji if image doesn't load
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
-                }}
-              />
-              <span className="text-6xl" style={{ display: 'none' }}>🤖</span>
+            <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-6xl">🤖</span>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
             <p className="text-gray-600">Track your blood alcohol content</p>
@@ -1316,20 +1304,604 @@ Questions? Contact: support@drinkbot3000.com
     );
   }
 
-  // Rest of app (tracker, calculator, support pages) continues as before...
+  // Main Tracker Interface
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-6xl">🤖</span>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-24">
+        {/* Header */}
+        <div className="bg-white shadow-sm">
+          <div className="max-w-md mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🤖</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-800">DrinkBot3000</h1>
+                <p className="text-xs text-gray-500">Responsible tracking</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
-            <p className="text-gray-600 mb-6">Your responsible drinking companion</p>
+            <button
+              onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true })}
+              className="p-2 hover:bg-gray-100 rounded-lg transition"
+            >
+              <Settings className="w-5 h-5 text-gray-600" />
+            </button>
           </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-md mx-auto px-6">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => dispatch({ type: 'SET_FIELD', field: 'activeTab', value: 'tracker' })}
+                className={`py-3 px-4 font-medium transition border-b-2 ${
+                  state.activeTab === 'tracker'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Activity className="w-4 h-4 inline mr-1" />
+                Tracker
+              </button>
+              <button
+                onClick={() => dispatch({ type: 'SET_FIELD', field: 'activeTab', value: 'calculator' })}
+                className={`py-3 px-4 font-medium transition border-b-2 ${
+                  state.activeTab === 'calculator'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Calculator className="w-4 h-4 inline mr-1" />
+                Calculator
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-md mx-auto px-6 py-6">
+          {state.activeTab === 'tracker' ? (
+            <>
+              {/* BAC Display */}
+              <div className={`rounded-2xl shadow-xl p-8 mb-6 ${status.bgColor}`}>
+                <div className="text-center">
+                  <div className="text-6xl font-bold text-white mb-2">
+                    {state.bac.toFixed(3)}%
+                  </div>
+                  <div className="text-xl text-white font-medium mb-4">{status.label}</div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                    <p className="text-white text-sm">{status.message}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Robot Message */}
+              {state.robotMessage && (
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border-2 border-purple-200 animate-pulse">
+                  <p className="text-purple-900 font-medium text-center">{state.robotMessage}</p>
+                </div>
+              )}
+
+              {/* Joke Display */}
+              {state.showJoke && state.currentJoke && (
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 mb-6 border-2 border-yellow-200">
+                  <div className="flex items-start">
+                    <Smile className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" />
+                    <p className="text-gray-800">{state.currentJoke}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Time Info */}
+              {state.drinks.length > 0 && (
+                <div className="bg-white rounded-lg p-4 mb-6 shadow">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <Clock className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                      <div className="text-2xl font-bold text-gray-800">{calculateElapsedTime()}</div>
+                      <div className="text-xs text-gray-500">Time Elapsed</div>
+                    </div>
+                    <div>
+                      <Coffee className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                      <div className="text-2xl font-bold text-gray-800">{calculateSoberTime()}</div>
+                      <div className="text-xs text-gray-500">Until Sober</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Add Drink Buttons */}
+              <div className="bg-white rounded-lg p-6 mb-6 shadow">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Drink</h3>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => addDrink('beer', 12, 5)}
+                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 p-4 rounded-lg font-medium transition"
+                  >
+                    🍺 Beer<br />
+                    <span className="text-xs">12 oz, 5% ABV</span>
+                  </button>
+                  <button
+                    onClick={() => addDrink('wine', 5, 12)}
+                    className="bg-purple-100 hover:bg-purple-200 text-purple-900 p-4 rounded-lg font-medium transition"
+                  >
+                    🍷 Wine<br />
+                    <span className="text-xs">5 oz, 12% ABV</span>
+                  </button>
+                  <button
+                    onClick={() => addDrink('shot', 1.5, 40)}
+                    className="bg-red-100 hover:bg-red-200 text-red-900 p-4 rounded-lg font-medium transition"
+                  >
+                    🥃 Shot<br />
+                    <span className="text-xs">1.5 oz, 40% ABV</span>
+                  </button>
+                  <button
+                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: true })}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 p-4 rounded-lg font-medium transition"
+                  >
+                    ➕ Custom<br />
+                    <span className="text-xs">Custom drink</span>
+                  </button>
+                </div>
+
+                {/* Custom Drink Input */}
+                {state.showCustomDrink && (
+                  <div className="border-t pt-4 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Volume (oz)</label>
+                      <input
+                        type="number"
+                        value={state.customDrinkOz}
+                        onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="e.g., 12"
+                        step="0.1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">ABV %</label>
+                      <input
+                        type="number"
+                        value={state.customDrinkABV}
+                        onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="e.g., 5"
+                        step="0.1"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (state.customDrinkOz && state.customDrinkABV) {
+                            addDrink('custom', parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
+                            dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
+                            dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
+                          }
+                        }}
+                        className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
+                        disabled={!state.customDrinkOz || !state.customDrinkABV}
+                      >
+                        Add Custom Drink
+                      </button>
+                      <button
+                        onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false })}
+                        className="px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Drink History */}
+              {state.drinks.length > 0 && (
+                <div className="bg-white rounded-lg p-6 mb-6 shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Drinks ({state.drinks.length})
+                    </h3>
+                    <button
+                      onClick={() => dispatch({ type: 'SET_FIELD', field: 'showDrinkHistory', value: !state.showDrinkHistory })}
+                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      {state.showDrinkHistory ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+
+                  {state.showDrinkHistory && (
+                    <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+                      {state.drinks.map((drink, index) => (
+                        <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-800">
+                              {drink.type === 'beer' && '🍺 Beer'}
+                              {drink.type === 'wine' && '🍷 Wine'}
+                              {drink.type === 'shot' && '🥃 Shot'}
+                              {drink.type === 'custom' && '🍹 Custom'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {drink.oz}oz, {drink.abv}% ABV • {new Date(drink.time).toLocaleTimeString()}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeDrink(drink.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={undoDrink}
+                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition"
+                      disabled={state.drinks.length === 0}
+                    >
+                      <RefreshCw className="w-4 h-4 inline mr-1" />
+                      Undo Last
+                    </button>
+                    <button
+                      onClick={clearDrinks}
+                      className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-medium hover:bg-red-200 transition"
+                    >
+                      <Trash2 className="w-4 h-4 inline mr-1" />
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Support Section */}
+              <div className="bg-white rounded-lg p-6 shadow">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Support DrinkBot3000</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Enjoying DrinkBot3000? Support development with a tip!
+                </p>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <button
+                    onClick={() => handleTip(3)}
+                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
+                  >
+                    $3
+                  </button>
+                  <button
+                    onClick={() => handleTip(5)}
+                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
+                  >
+                    $5
+                  </button>
+                  <button
+                    onClick={() => handleTip(10)}
+                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
+                  >
+                    $10
+                  </button>
+                </div>
+                <button
+                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomTip', value: !state.showCustomTip })}
+                  className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
+                >
+                  Custom Amount
+                </button>
+
+                {state.showCustomTip && (
+                  <div className="mt-3 space-y-2">
+                    <input
+                      type="number"
+                      value={state.customTipAmount}
+                      onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customTipAmount', value: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Enter custom amount"
+                      min={CONSTANTS.MIN_TIP_AMOUNT}
+                      step="1"
+                    />
+                    {state.tipError && (
+                      <p className="text-red-600 text-sm">{state.tipError}</p>
+                    )}
+                    <button
+                      onClick={() => {
+                        const amount = parseFloat(state.customTipAmount);
+                        if (amount >= CONSTANTS.MIN_TIP_AMOUNT) {
+                          handleTip(amount);
+                        }
+                      }}
+                      className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
+                      disabled={!state.customTipAmount || parseFloat(state.customTipAmount) < CONSTANTS.MIN_TIP_AMOUNT}
+                    >
+                      Send Tip
+                    </button>
+                  </div>
+                )}
+
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs text-blue-900">
+                    💡 Tips help keep DrinkBot3000 free and ad-free for everyone!
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            // Calculator Tab
+            <div className="bg-white rounded-lg p-6 shadow">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">BAC Calculator</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Estimate your BAC based on drinks consumed and time elapsed.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Standard Drinks
+                  </label>
+                  <input
+                    type="number"
+                    value={state.calcDrinks}
+                    onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'calcDrinks', value: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                    placeholder="e.g., 3"
+                    min="0"
+                    step="0.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hours Since First Drink
+                  </label>
+                  <input
+                    type="number"
+                    value={state.calcHours}
+                    onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'calcHours', value: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                    placeholder="e.g., 2"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+
+                <button
+                  onClick={calculateBAC}
+                  disabled={!state.calcDrinks || !state.calcHours}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-300"
+                >
+                  Calculate BAC
+                </button>
+
+                {state.calcBAC !== null && (
+                  <div className={`rounded-lg p-6 ${getBACStatus().bgColor}`}>
+                    <div className="text-center">
+                      <div className="text-5xl font-bold text-white mb-2">
+                        {state.calcBAC.toFixed(3)}%
+                      </div>
+                      <div className="text-xl text-white font-medium mb-3">
+                        {getBACStatus().label}
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
+                        <p className="text-white text-sm">
+                          {getBACStatus().message}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                  <p className="text-xs text-amber-800">
+                    <strong>Note:</strong> This calculator uses your saved profile ({state.gender}, {state.weight} lbs). Results are estimates only.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Settings Modal */}
+        {state.showSettings && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Settings</h2>
+                <button
+                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false })}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-800 mb-3">Your Profile</h3>
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : 'Female'}</p>
+                    <p><strong>Weight:</strong> {state.weight} lbs</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={handleReset}
+                    className="w-full bg-red-100 text-red-700 py-3 rounded-lg font-medium hover:bg-red-200 transition"
+                  >
+                    <RefreshCw className="w-4 h-4 inline mr-2" />
+                    Reset App
+                  </button>
+
+                  <a
+                    href="/privacy.html"
+                    target="_blank"
+                    className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
+                  >
+                    <FileText className="w-4 h-4 inline mr-2" />
+                    Privacy Policy
+                  </a>
+
+                  <a
+                    href="/terms.html"
+                    target="_blank"
+                    className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
+                  >
+                    <FileText className="w-4 h-4 inline mr-2" />
+                    Terms of Service
+                  </a>
+
+                  <button
+                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true })}
+                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                  >
+                    <DollarSign className="w-4 h-4 inline mr-2" />
+                    Refund Policy
+                  </button>
+                </div>
+
+                <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                  <p className="text-xs text-indigo-900">
+                    <strong>Version:</strong> 1.0.0<br />
+                    <strong>Made with:</strong> Responsibility & Care 🤖
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {state.showConfirmModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+              <div className="text-center mb-6">
+                <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Are you sure?</h3>
+                <p className="text-gray-600">{state.confirmModalMessage}</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (state.confirmModalAction) {
+                      state.confirmModalAction();
+                    }
+                    dispatch({ type: 'HIDE_CONFIRM' });
+                  }}
+                  className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition"
+                >
+                  Yes, Continue
+                </button>
+                <button
+                  onClick={() => dispatch({ type: 'HIDE_CONFIRM' })}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Receipt Modal */}
+        {state.showReceipt && state.currentReceipt && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+              <div className="text-center mb-6">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Payment Successful!</h3>
+                <p className="text-gray-600">Thank you for your support!</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <h4 className="font-semibold text-gray-800 mb-4 text-center">Receipt</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-semibold">${state.currentReceipt.amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date:</span>
+                    <span className="font-semibold">
+                      {new Date(state.currentReceipt.date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Receipt #:</span>
+                    <span className="font-mono text-xs">{state.currentReceipt.id.slice(0, 8)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                <p className="text-xs text-blue-900">
+                  <strong>Refund Policy:</strong> You can request a refund within {CONSTANTS.REFUND_WINDOW_DAYS} days. See Refund Policy for details.
+                </p>
+              </div>
+
+              <button
+                onClick={() => dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: false })}
+                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Refund Policy Modal */}
+        {state.showRefundPolicy && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full my-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Refund Policy</h2>
+                <button
+                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: false })}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="prose prose-sm max-w-none">
+                <p className="text-gray-600 mb-4">
+                  We want you to be completely satisfied with DrinkBot3000. If you're not happy with your tip/donation, we offer a simple refund process.
+                </p>
+
+                <h3 className="font-semibold text-gray-800 mt-4 mb-2">Refund Window</h3>
+                <p className="text-gray-600 mb-4">
+                  You can request a full refund within <strong>{CONSTANTS.REFUND_WINDOW_DAYS} days</strong> of your payment, no questions asked.
+                </p>
+
+                <h3 className="font-semibold text-gray-800 mt-4 mb-2">How to Request a Refund</h3>
+                <ol className="list-decimal list-inside text-gray-600 mb-4 space-y-2">
+                  <li>Email us at <strong>drinkbot3000@gmail.com</strong></li>
+                  <li>Include your receipt number or payment details</li>
+                  <li>We'll process your refund within 5-7 business days</li>
+                </ol>
+
+                <h3 className="font-semibold text-gray-800 mt-4 mb-2">Refund Method</h3>
+                <p className="text-gray-600 mb-4">
+                  Refunds will be issued to the original payment method used for the transaction.
+                </p>
+
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200 mt-6">
+                  <p className="text-sm text-green-900">
+                    ✓ Simple process • ✓ Full refunds • ✓ {CONSTANTS.REFUND_WINDOW_DAYS}-day window • ✓ No questions asked
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: false })}
+                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition mt-6"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
       <PWAInstallPrompt />
     </>
   );
