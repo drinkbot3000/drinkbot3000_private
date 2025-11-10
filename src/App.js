@@ -445,6 +445,17 @@ Questions? Contact: support@drinkbot3000.com
     }
   };
 
+  const handleSafetyScreenDecline = () => {
+    // User declined safety warnings - reset everything
+    localStorage.removeItem('ageVerified');
+    localStorage.removeItem('disclaimerAccepted');
+    localStorage.removeItem('safetyScreensComplete');
+    dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'currentSafetyScreen', value: 0 });
+  };
+
   const handleSetup = () => {
     const error = validateWeight(state.weight);
     if (error) {
@@ -852,12 +863,21 @@ Questions? Contact: support@drinkbot3000.com
               </div>
             </div>
 
-            <button
-              onClick={handleSafetyScreenNext}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
-            >
-              I Understand (1 of 4)
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand (1 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -911,12 +931,21 @@ Questions? Contact: support@drinkbot3000.com
               </div>
             </div>
 
-            <button
-              onClick={handleSafetyScreenNext}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
-            >
-              I Understand (2 of 4)
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand (2 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -979,12 +1008,21 @@ Questions? Contact: support@drinkbot3000.com
               </div>
             </div>
 
-            <button
-              onClick={handleSafetyScreenNext}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
-            >
-              I Understand (3 of 4)
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand (3 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -1058,12 +1096,21 @@ Questions? Contact: support@drinkbot3000.com
               </div>
             </div>
 
-            <button
-              onClick={handleSafetyScreenNext}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
-            >
-              I Understand - Continue to App (4 of 4)
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand - Continue to App (4 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
           </div>
         </div>
       );
