@@ -2,6 +2,7 @@
   "short_name": "DrinkBot3000",
   "name": "DrinkBot3000 - Responsible Drinking Companion",
   "description": "Track your blood alcohol content responsibly. Never drink and drive.",
+  "id": "/",
   "icons": [
     {
       "src": "favicon.ico",
