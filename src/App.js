@@ -159,11 +159,11 @@ export default function BACTracker() {
     const disclaimerCheck = localStorage.getItem('disclaimerAccepted');
     const safetyCheck = localStorage.getItem('safetyScreensComplete');
     const savedReceipts = localStorage.getItem('bacTrackerReceipts');
-    
+
     if (ageCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
     }
-    
+
     if (disclaimerCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     }
@@ -171,7 +171,7 @@ export default function BACTracker() {
     if (safetyCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-    
+
     if (savedReceipts) {
       try {
         const receipts = JSON.parse(savedReceipts);
@@ -180,11 +180,13 @@ export default function BACTracker() {
         console.error('Failed to load receipts:', e);
       }
     }
-    
+
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
-        dispatch({ type: 'SET_MULTIPLE', values: { ...data, showSplash: false } });
+        // Exclude agreement-related flags to prevent overwriting them
+        const { ageVerified, disclaimerAccepted, safetyScreensComplete, showDisclaimerModal, ...restData } = data;
+        dispatch({ type: 'SET_MULTIPLE', values: { ...restData, showSplash: false } });
       } catch (e) {
         console.error('Failed to load saved data:', e);
       }
