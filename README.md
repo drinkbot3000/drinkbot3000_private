@@ -283,6 +283,78 @@ netlify deploy --prod
 
 ---
 
+## 👨‍💻 Development Workflow
+
+### Code Quality Tools
+
+This project uses modern development tools to ensure code quality:
+
+- **ESLint** - Catches code quality issues and potential bugs
+- **Prettier** - Enforces consistent code formatting
+- **Husky** - Git hooks for pre-commit checks
+- **lint-staged** - Runs linting only on staged files (fast!)
+
+### Available Scripts
+
+```bash
+# Linting
+npm run lint              # Check for linting errors
+npm run lint:fix          # Auto-fix linting errors
+
+# Formatting
+npm run format            # Format all code files
+npm run format:check      # Check if files are formatted
+
+# Testing
+npm test                  # Run tests in watch mode
+npm test -- --coverage    # Run tests with coverage report
+
+# Build
+npm run build             # Production build
+```
+
+### Pre-commit Hooks
+
+Git hooks automatically run before each commit:
+- Lints and formats staged JavaScript/JSX files
+- Formats JSON, CSS, and Markdown files
+- Prevents commits with linting errors
+
+**No setup required!** Hooks are installed automatically when you run `npm install`.
+
+### Development Best Practices
+
+1. **Write descriptive commit messages:**
+   ```bash
+   # Good
+   git commit -m "feat(tracker): add drink deletion feature"
+   git commit -m "fix(calculator): correct BAC calculation edge case"
+
+   # Bad
+   git commit -m "fixed stuff"
+   git commit -m "updates"
+   ```
+
+2. **Test before committing:**
+   ```bash
+   npm test
+   npm run build
+   ```
+
+3. **Keep commits atomic** - One logical change per commit
+
+4. **See [CONTRIBUTING.md](CONTRIBUTING.md)** for full guidelines
+
+### CI/CD Pipeline
+
+GitHub Actions automatically runs on every PR:
+- ESLint checks
+- Prettier formatting checks
+- Test suite
+- Production build verification
+
+---
+
 ## 📄 License
 
 MIT License - See package.json
