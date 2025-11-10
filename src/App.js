@@ -580,6 +580,23 @@ Questions? Contact: support@drinkbot3000.com
     return soberTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
+  const calculateElapsedTime = () => {
+    if (state.drinks.length === 0) return '0m';
+    const firstDrinkTime = state.startTime || state.drinks[0].timestamp;
+    const elapsedMs = Date.now() - firstDrinkTime;
+    const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+    const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const calculateSoberTime = () => {
+    return getSoberTime(state.bac);
+  };
+
   const handleTip = (amount) => {
     if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
       dispatch({ 
