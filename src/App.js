@@ -657,9 +657,9 @@ Questions? Contact: support@drinkbot3000.com
             <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-blue-100 rounded-full">
               <Globe className="w-16 h-16 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">Geographic Verification</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">🇺🇸 USA Location Verification</h1>
             <p className="text-lg text-gray-700 mb-4">
-              For legal compliance, we need to verify your country location.
+              This is a USA-only service. We need to verify you're in the United States.
             </p>
           </div>
 
@@ -668,15 +668,15 @@ Questions? Contact: support@drinkbot3000.com
             <ul className="text-sm text-gray-700 space-y-2 text-left">
               <li>✓ Your country only (via IP address)</li>
               <li>✓ One-time verification only</li>
-              <li>✓ NOT your precise location (no GPS)</li>
+              <li>✓ NOT your precise location within USA (no GPS)</li>
               <li>✓ IP address is NOT stored</li>
             </ul>
           </div>
 
           <div className="bg-amber-50 rounded-lg p-4 mb-6 border border-amber-200">
-            <p className="text-amber-900 font-semibold mb-2">Why This Is Required:</p>
+            <p className="text-amber-900 font-semibold mb-2">🇺🇸 USA-Only Access:</p>
             <p className="text-sm text-amber-800">
-              This app cannot be used in countries where alcohol is prohibited by law. We must verify you are in an allowed country for legal compliance.
+              DrinkBot3000 is only available to users physically located in the United States. We must verify your location for legal compliance and service restrictions.
             </p>
           </div>
 
@@ -685,7 +685,7 @@ Questions? Contact: support@drinkbot3000.com
               onClick={handleGeoConsentAccept}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg"
             >
-              I Consent to Country Verification
+              I Consent to USA Location Verification
             </button>
 
             <button
@@ -715,9 +715,9 @@ Questions? Contact: support@drinkbot3000.com
             <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-red-100 rounded-full">
               <AlertTriangle className="w-16 h-16 text-red-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">Access Not Available</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">🇺🇸 USA-Only Service</h1>
             <p className="text-lg text-gray-700 mb-4">
-              This app is not available in your country.
+              This app is only available in the United States.
             </p>
           </div>
 
@@ -726,10 +726,10 @@ Questions? Contact: support@drinkbot3000.com
               Detected Location: {state.geoCountry}
             </p>
             <p className="text-gray-700 mb-4">
-              This application cannot be used in countries where alcohol consumption is prohibited by law.
+              DrinkBot3000 is a USA-only service. Access is restricted to users physically located within the United States.
             </p>
             <p className="text-sm text-red-800 font-semibold">
-              Using this app in a prohibited jurisdiction may result in legal consequences.
+              This restriction is in place for legal compliance and service availability reasons.
             </p>
           </div>
 
@@ -738,15 +738,16 @@ Questions? Contact: support@drinkbot3000.com
               If you believe this is an error:
             </p>
             <ul className="text-xs text-blue-800 space-y-1">
-              <li>• Check if you're using a VPN or proxy</li>
-              <li>• Disable VPN and reload the page</li>
+              <li>• Check if you're using a VPN or proxy routing through a non-US server</li>
+              <li>• Disable VPN/proxy and reload the page</li>
+              <li>• Ensure you're physically located in the United States</li>
               <li>• Contact support at drinkbot3000@gmail.com</li>
             </ul>
           </div>
 
           <div className="text-center">
             <p className="text-xs text-gray-600">
-              Geographic verification is required for legal compliance.
+              USA location verification is required for service access.
             </p>
           </div>
         </div>
