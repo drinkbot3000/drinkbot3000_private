@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Production
+build/
+dist/
+
+# Configuration
+*.config.js
+
+# Misc
+.netlify/
+coverage/
