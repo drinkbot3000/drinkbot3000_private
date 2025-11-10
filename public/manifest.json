@@ -22,8 +22,9 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?utm_source=pwa&utm_medium=app",
   "scope": "/",
+  "id": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "theme_color": "#4F46E5",
@@ -33,12 +34,18 @@
   "lang": "en-US",
   "dir": "ltr",
   "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
   "shortcuts": [
     {
       "name": "Quick BAC Check",
       "short_name": "BAC Check",
       "description": "Quickly check your current BAC estimate",
-      "url": "/?tab=calculator",
+      "url": "/?tab=calculator&utm_source=pwa_shortcut",
       "icons": [
         {
           "src": "favicon.ico",
@@ -50,7 +57,7 @@
       "name": "Add Drink",
       "short_name": "Add Drink",
       "description": "Log a new drink to your tracker",
-      "url": "/?action=add-drink",
+      "url": "/?action=add-drink&utm_source=pwa_shortcut",
       "icons": [
         {
           "src": "favicon.ico",
@@ -62,7 +69,7 @@
       "name": "View History",
       "short_name": "History",
       "description": "View your drink history",
-      "url": "/?tab=history",
+      "url": "/?tab=history&utm_source=pwa_shortcut",
       "icons": [
         {
           "src": "favicon.ico",
@@ -74,7 +81,7 @@
       "name": "Safety Info",
       "short_name": "Safety",
       "description": "View important safety information",
-      "url": "/?tab=safety",
+      "url": "/?tab=safety&utm_source=pwa_shortcut",
       "icons": [
         {
           "src": "favicon.ico",
@@ -94,5 +101,7 @@
       "text": "text",
       "url": "url"
     }
-  }
+  },
+  "protocol_handlers": [],
+  "file_handlers": []
 }
