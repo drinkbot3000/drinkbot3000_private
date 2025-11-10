@@ -10,6 +10,8 @@ const PRECACHE_URLS = [
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
   '/privacy.html',
   '/terms.html',
   '/refund.html',
@@ -148,8 +150,8 @@ async function syncData() {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New update available',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     tag: 'drinkbot-notification',
     requireInteraction: false
