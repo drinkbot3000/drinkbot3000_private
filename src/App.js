@@ -135,21 +135,21 @@ export default function BACTracker() {
   ];
 
   const robotGreetings = [
-    "Greetings! I am DrinkBot3000, your safety companion! ðŸ¤–",
-    "Beep boop! Ready to help you stay safe, dear friend! ðŸŽ©",
-    "*mechanical bow* Your safety assistant reporting for duty! ðŸ¤–",
-    "Salutations! Let us monitor responsibly together! ðŸ›¡ï¸",
-    "*whirrs politely* I shall help you stay safe this evening! ðŸŽ©",
+    "Greetings! I am DrinkBot3000, your safety companion! 🤖",
+    "Beep boop! Ready to help you stay safe, dear friend! 🎩",
+    "*mechanical bow* Your safety assistant reporting for duty! 🤖",
+    "Salutations! Let us monitor responsibly together! 🛡️",
+    "*whirrs politely* I shall help you stay safe this evening! 🎩",
   ];
 
   const robotComments = [
-    "*calculates thoughtfully* Remember to stay hydrated! ðŸ¤–",
-    "Beep boop! Please pace yourself, valued user! ðŸŽ©",
-    "*adjusts monocle* Safety first, always! ðŸ§",
-    "*whirrs concernedly* Time for water, perhaps? ðŸ’§",
-    "My sensors suggest taking it slow! ðŸ¤–",
-    "*beeps approvingly* Excellent responsibility detected! ðŸ’¦",
-    "*mechanical nod* You're making wise choices! ðŸŽ©",
+    "*calculates thoughtfully* Remember to stay hydrated! 🤖",
+    "Beep boop! Please pace yourself, valued user! 🎩",
+    "*adjusts monocle* Safety first, always! 🧙",
+    "*whirrs concernedly* Time for water, perhaps? 💧",
+    "My sensors suggest taking it slow! 🤖",
+    "*beeps approvingly* Excellent responsibility detected! 💦",
+    "*mechanical nod* You're making wise choices! 🎩",
   ];
 
   // Load saved data
@@ -318,16 +318,16 @@ export default function BACTracker() {
   // Download receipt
   const downloadReceipt = (receipt) => {
     const receiptText = `
-â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-â•‘              DRINKBOT3000 - PAYMENT RECEIPT               â•‘
-â•‘                   Developer Support                        â•‘
-â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+╔═══════════════════════════════════════════════════════════╗
+║              DRINKBOT3000 - PAYMENT RECEIPT               ║
+║                   Developer Support                        ║
+╚═══════════════════════════════════════════════════════════╝
 
 Receipt #: ${receipt.id}
 Date: ${new Date(receipt.date).toLocaleString()}
 Status: ${receipt.status}
 
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+─────────────────────────────────────────────────────────────
 
 Description: ${receipt.description}
 Support Amount: $${receipt.amount.toFixed(2)}
@@ -337,7 +337,7 @@ Net Amount: $${receipt.netAmount}
 Payment Method: ${receipt.paymentMethod}
 Payment Processor: Stripe, Inc.
 
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+─────────────────────────────────────────────────────────────
 
 REFUND POLICY:
 Eligible for refund until: ${new Date(receipt.refundableUntil).toLocaleDateString()}
@@ -348,7 +348,7 @@ To request a refund:
 2. Subject: "Refund Request - ${receipt.id}"
 3. Include this receipt number
 
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+─────────────────────────────────────────────────────────────
 
 THANK YOU FOR YOUR SUPPORT!
 
@@ -357,7 +357,7 @@ for everyone.
 
 Questions? Contact: support@drinkbot3000.com
 
-Â© ${new Date().getFullYear()} DrinkBot3000. All rights reserved.
+© ${new Date().getFullYear()} DrinkBot3000. All rights reserved.
 `;
 
     const blob = new Blob([receiptText], { type: 'text/plain' });
@@ -449,13 +449,13 @@ Questions? Contact: support@drinkbot3000.com
   const undoDrink = () => {
     if (state.drinks.length > 0) {
       dispatch({ type: 'UNDO_DRINK' });
-      showRobotMessage('*beep boop* Last drink removed from records! ðŸ¤–');
+      showRobotMessage('*beep boop* Last drink removed from records! 🤖');
     }
   };
 
   const deleteDrink = (id) => {
     dispatch({ type: 'REMOVE_DRINK', id });
-    showRobotMessage('*whirrs* Drink removed from records! ðŸ¤–');
+    showRobotMessage('*whirrs* Drink removed from records! 🤖');
   };
 
   const addCustomDrink = (oz, abv) => {
@@ -470,7 +470,7 @@ Questions? Contact: support@drinkbot3000.com
     };
     dispatch({ type: 'ADD_DRINK', drink: newDrink });
     
-    showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! ðŸ¤–`);
+    showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! 🤖`);
   };
 
   const tellJoke = () => {
@@ -534,12 +534,12 @@ Questions? Contact: support@drinkbot3000.com
       return;
     }
 
-    showRobotMessage(`*beep boop* Thank you for supporting development! Processing... ðŸ¤–`);
+    showRobotMessage(`*beep boop* Thank you for supporting development! Processing... 🤖`);
     
     setTimeout(() => {
       const receipt = generateReceipt(amount, 'Stripe');
       dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
-      showRobotMessage('*whirrs happily* Payment successful! Receipt generated! ðŸŽ‰');
+      showRobotMessage('*whirrs happily* Payment successful! Receipt generated! 🎉');
     }, 1500);
   };
 
@@ -604,7 +604,7 @@ Questions? Contact: support@drinkbot3000.com
 
           <div className="space-y-4 text-sm text-gray-700 mb-6 bg-gray-50 p-6 rounded-lg max-h-96 overflow-y-auto">
             <div className="font-bold text-red-700 text-lg mb-4">
-              âš ï¸ THIS APP IS FOR INFORMATIONAL PURPOSES ONLY
+              ⚠️ THIS APP IS FOR INFORMATIONAL PURPOSES ONLY
             </div>
 
             <div className="space-y-3">
@@ -721,19 +721,19 @@ Questions? Contact: support@drinkbot3000.com
               <h1 className="text-3xl font-bold text-gray-800 mb-4">Don't Go to Bed Drunk</h1>
               <div className="bg-purple-50 rounded-lg p-6 mb-6 border-2 border-purple-200">
                 <p className="text-gray-800 font-bold text-lg mb-4">
-                  âš ï¸ Sleep Can Be Dangerous When Intoxicated
+                  ⚠️ Sleep Can Be Dangerous When Intoxicated
                 </p>
                 <ul className="text-left text-gray-700 space-y-3">
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Risk of choking on vomit</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Alcohol poisoning symptoms worsen</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Dehydration and injuries from falls</span>
                   </li>
                 </ul>
@@ -742,11 +742,11 @@ Questions? Contact: support@drinkbot3000.com
               <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
                 <p className="font-semibold text-gray-800 mb-3">Plan Ahead:</p>
                 <ul className="text-left text-sm text-gray-700 space-y-2">
-                  <li>âœ“ Drink water throughout the evening</li>
-                  <li>âœ“ Eat food before drinking</li>
-                  <li>âœ“ Stay with friends who can monitor you</li>
-                  <li>âœ“ Sleep on your side, not back</li>
-                  <li>âœ“ Set multiple alarms</li>
+                  <li>─œ“ Drink water throughout the evening</li>
+                  <li>─œ“ Eat food before drinking</li>
+                  <li>─œ“ Stay with friends who can monitor you</li>
+                  <li>─œ“ Sleep on your side, not back</li>
+                  <li>─œ“ Set multiple alarms</li>
                 </ul>
               </div>
 
@@ -780,7 +780,7 @@ Questions? Contact: support@drinkbot3000.com
               <h1 className="text-3xl font-bold text-gray-800 mb-4">BENZODIAZEPINES WARNING</h1>
               <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-300">
                 <p className="text-red-900 font-bold text-xl mb-4">
-                  â˜ ï¸ DEADLY COMBINATION â˜ ï¸
+                  ─˜ ï¸ DEADLY COMBINATION ─˜ ï¸
                 </p>
                 <p className="text-gray-800 mb-4">
                   <strong>Never mix alcohol with benzodiazepines!</strong>
@@ -800,19 +800,19 @@ Questions? Contact: support@drinkbot3000.com
                 <p className="font-semibold text-gray-800 mb-3">Dangers:</p>
                 <ul className="text-left text-sm text-gray-700 space-y-2">
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Extreme sedation and respiratory depression</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Increased risk of overdose and death</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Severe impairment even at low doses</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span>Memory blackouts and dangerous behavior</span>
                   </li>
                 </ul>
@@ -848,7 +848,7 @@ Questions? Contact: support@drinkbot3000.com
               <h1 className="text-3xl font-bold text-gray-800 mb-4">OPIATES WARNING</h1>
               <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-300">
                 <p className="text-red-900 font-bold text-xl mb-4">
-                  â˜ ï¸ FATAL COMBINATION â˜ ï¸
+                  ─˜ ï¸ FATAL COMBINATION ─˜ ï¸
                 </p>
                 <p className="text-gray-800 font-bold mb-4">
                   Alcohol + Opiates = HIGH RISK OF DEATH
@@ -870,19 +870,19 @@ Questions? Contact: support@drinkbot3000.com
                 <p className="font-semibold text-gray-800 mb-3">Why It's Deadly:</p>
                 <ul className="text-left text-sm text-gray-700 space-y-2">
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span><strong>Respiratory Depression:</strong> Both slow breathing</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span><strong>You can stop breathing:</strong> Even in your sleep</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span><strong>Overdose risk:</strong> Dramatically increased</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-red-600 font-bold mr-2">â€¢</span>
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
                     <span><strong>Death can occur quickly:</strong> Minutes, not hours</span>
                   </li>
                 </ul>
@@ -890,7 +890,7 @@ Questions? Contact: support@drinkbot3000.com
 
               <div className="bg-red-100 rounded-lg p-4 border-2 border-red-300 mb-4">
                 <p className="text-red-900 font-bold text-sm mb-2">
-                  ðŸš¨ NEVER MIX ALCOHOL WITH OPIATES ðŸš¨
+                  🚨 NEVER MIX ALCOHOL WITH OPIATES 🚨
                 </p>
                 <p className="text-red-800 text-sm">
                   If you take prescription pain medication, DO NOT drink. If you've been drinking, DO NOT take opiates. This combination kills thousands every year.
@@ -934,7 +934,7 @@ Questions? Contact: support@drinkbot3000.com
                 DrinkBot3000 helps you track BAC estimates and make responsible decisions.
               </p>
               <p className="text-sm text-red-700 font-semibold">
-                âš ï¸ NEVER drive after drinking, even below the legal limit. Impairment begins at ANY BAC level.
+                ⚠️ NEVER drive after drinking, even below the legal limit. Impairment begins at ANY BAC level.
               </p>
             </div>
           </div>
@@ -948,7 +948,7 @@ Questions? Contact: support@drinkbot3000.com
 
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-600 italic">
-              Estimates only â€¢ Not medical advice â€¢ Drink responsibly â€¢ Never drink and drive
+              Estimates only ─¢ Not medical advice ─¢ Drink responsibly ─¢ Never drink and drive
             </p>
           </div>
         </div>
@@ -977,7 +977,7 @@ Questions? Contact: support@drinkbot3000.com
                   e.target.nextSibling.style.display = 'block';
                 }}
               />
-              <span className="text-6xl" style={{ display: 'none' }}>ðŸ¤–</span>
+              <span className="text-6xl" style={{ display: 'none' }}>🤖</span>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
             <p className="text-gray-600">Track your blood alcohol content</p>
@@ -1121,7 +1121,7 @@ Questions? Contact: support@drinkbot3000.com
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
           <div className="text-center">
             <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-6xl">ðŸ¤–</span>
+              <span className="text-6xl">🤖</span>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
             <p className="text-gray-600 mb-6">Your responsible drinking companion</p>
