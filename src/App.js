@@ -1416,21 +1416,21 @@ Questions? Contact: support@drinkbot3000.com
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Drink</h3>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <button
-                    onClick={() => addDrink('beer', 12, 5)}
+                    onClick={() => addCustomDrink(12, 5)}
                     className="bg-amber-100 hover:bg-amber-200 text-amber-900 p-4 rounded-lg font-medium transition"
                   >
                     🍺 Beer<br />
                     <span className="text-xs">12 oz, 5% ABV</span>
                   </button>
                   <button
-                    onClick={() => addDrink('wine', 5, 12)}
+                    onClick={() => addCustomDrink(5, 12)}
                     className="bg-purple-100 hover:bg-purple-200 text-purple-900 p-4 rounded-lg font-medium transition"
                   >
                     🍷 Wine<br />
                     <span className="text-xs">5 oz, 12% ABV</span>
                   </button>
                   <button
-                    onClick={() => addDrink('shot', 1.5, 40)}
+                    onClick={() => addCustomDrink(1.5, 40)}
                     className="bg-red-100 hover:bg-red-200 text-red-900 p-4 rounded-lg font-medium transition"
                   >
                     🥃 Shot<br />
@@ -1665,7 +1665,7 @@ Questions? Contact: support@drinkbot3000.com
                 </div>
 
                 <button
-                  onClick={calculateBAC}
+                  onClick={calculateQuickBAC}
                   disabled={!state.calcDrinks || !state.calcHours}
                   className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-300"
                 >
