@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 
+/**
+ * PWAInstallPrompt Component
+ * Displays a user-friendly prompt for installing the PWA
+ * Handles dismissal with a 7-day cooldown period
+ */
 const PWAInstallPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);

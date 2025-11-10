@@ -1,5 +1,31 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package } from 'lucide-react';
+import {
+  AlertCircle,
+  Beer,
+  User,
+  Scale,
+  Smile,
+  Calculator,
+  Activity,
+  Settings,
+  Trash2,
+  Clock,
+  X,
+  Heart,
+  Coffee,
+  DollarSign,
+  ShieldAlert,
+  Download,
+  AlertTriangle,
+  FileText,
+  RefreshCw,
+  CheckCircle,
+  Pill,
+  Bed,
+  Car,
+  Phone,
+  Package,
+} from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
 // Constants
@@ -70,13 +96,19 @@ function appReducer(state, action) {
     case 'ADD_DRINK':
       return { ...state, drinks: [...state.drinks, action.drink] };
     case 'REMOVE_DRINK':
-      return { ...state, drinks: state.drinks.filter(d => d.id !== action.id) };
+      return { ...state, drinks: state.drinks.filter((d) => d.id !== action.id) };
     case 'UNDO_DRINK':
       return { ...state, drinks: state.drinks.slice(0, -1) };
     case 'CLEAR_DRINKS':
       return { ...state, drinks: [], bac: 0, startTime: Date.now() };
     case 'RESET_APP':
-      return { ...initialState, showSplash: false, ageVerified: true, disclaimerAccepted: true, safetyScreensComplete: true };
+      return {
+        ...initialState,
+        showSplash: false,
+        ageVerified: true,
+        disclaimerAccepted: true,
+        safetyScreensComplete: true,
+      };
     case 'SHOW_CONFIRM':
       return {
         ...state,
@@ -113,42 +145,42 @@ export default function BACTracker() {
   // Jokes (family-friendly only)
   const jokes = [
     "Why don't scientists trust atoms? Because they make up everything!",
-    "What do you call a bear with no teeth? A gummy bear!",
-    "Why did the scarecrow win an award? He was outstanding in his field!",
-    "What do you call a fake noodle? An impasta!",
+    'What do you call a bear with no teeth? A gummy bear!',
+    'Why did the scarecrow win an award? He was outstanding in his field!',
+    'What do you call a fake noodle? An impasta!',
     "What's orange and sounds like a parrot? A carrot!",
-    "Why did the math book look so sad? Because it had too many problems!",
+    'Why did the math book look so sad? Because it had too many problems!',
     "Why don't skeletons fight each other? They don't have the guts!",
-    "What do you call a fish wearing a bowtie? Sofishticated!",
-    "Why did the bicycle fall over? Because it was two-tired!",
-    "What do you call a sleeping bull? A bulldozer!",
+    'What do you call a fish wearing a bowtie? Sofishticated!',
+    'Why did the bicycle fall over? Because it was two-tired!',
+    'What do you call a sleeping bull? A bulldozer!',
     "Why can't your nose be 12 inches long? Because then it would be a foot!",
     "What do you call cheese that isn't yours? Nacho cheese!",
     "Why don't programmers like nature? It has too many bugs!",
-    "What do you call a snowman with a six-pack? An abdominal snowman!",
-    "What do you call a lazy kangaroo? A pouch potato!",
+    'What do you call a snowman with a six-pack? An abdominal snowman!',
+    'What do you call a lazy kangaroo? A pouch potato!',
     "Why don't mountains get cold? They wear snow caps!",
-    "What do you call a magic dog? A labracadabrador!",
-    "Why did the picture go to jail? It was framed!",
+    'What do you call a magic dog? A labracadabrador!',
+    'Why did the picture go to jail? It was framed!',
     "What do you call a boomerang that won't come back? A stick!",
-    "What do you call a cow during an earthquake? A milkshake!",
+    'What do you call a cow during an earthquake? A milkshake!',
   ];
 
   const robotGreetings = [
-    "Greetings! I am DrinkBot3000, your safety companion! ðŸ¤–",
-    "Beep boop! Ready to help you stay safe, dear friend! ðŸŽ©",
-    "*mechanical bow* Your safety assistant reporting for duty! ðŸ¤–",
-    "Salutations! Let us monitor responsibly together! ðŸ›¡ï¸",
-    "*whirrs politely* I shall help you stay safe this evening! ðŸŽ©",
+    'Greetings! I am DrinkBot3000, your safety companion! ðŸ¤–',
+    'Beep boop! Ready to help you stay safe, dear friend! ðŸŽ©',
+    '*mechanical bow* Your safety assistant reporting for duty! ðŸ¤–',
+    'Salutations! Let us monitor responsibly together! ðŸ›¡ï¸',
+    '*whirrs politely* I shall help you stay safe this evening! ðŸŽ©',
   ];
 
   const robotComments = [
-    "*calculates thoughtfully* Remember to stay hydrated! ðŸ¤–",
-    "Beep boop! Please pace yourself, valued user! ðŸŽ©",
-    "*adjusts monocle* Safety first, always! ðŸ§",
-    "*whirrs concernedly* Time for water, perhaps? ðŸ’§",
-    "My sensors suggest taking it slow! ðŸ¤–",
-    "*beeps approvingly* Excellent responsibility detected! ðŸ’¦",
+    '*calculates thoughtfully* Remember to stay hydrated! ðŸ¤–',
+    'Beep boop! Please pace yourself, valued user! ðŸŽ©',
+    '*adjusts monocle* Safety first, always! ðŸ§',
+    '*whirrs concernedly* Time for water, perhaps? ðŸ’§',
+    'My sensors suggest taking it slow! ðŸ¤–',
+    '*beeps approvingly* Excellent responsibility detected! ðŸ’¦',
     "*mechanical nod* You're making wise choices! ðŸŽ©",
   ];
 
@@ -159,11 +191,11 @@ export default function BACTracker() {
     const disclaimerCheck = localStorage.getItem('disclaimerAccepted');
     const safetyCheck = localStorage.getItem('safetyScreensComplete');
     const savedReceipts = localStorage.getItem('bacTrackerReceipts');
-    
+
     if (ageCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
     }
-    
+
     if (disclaimerCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     }
@@ -171,7 +203,7 @@ export default function BACTracker() {
     if (safetyCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-    
+
     if (savedReceipts) {
       try {
         const receipts = JSON.parse(savedReceipts);
@@ -180,7 +212,7 @@ export default function BACTracker() {
         console.error('Failed to load receipts:', e);
       }
     }
-    
+
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
@@ -225,7 +257,7 @@ export default function BACTracker() {
   ]);
 
   // Helper functions
-  const getBodyWaterConstant = (g) => 
+  const getBodyWaterConstant = (g) =>
     g === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
 
   const validateWeight = (weight) => {
@@ -239,43 +271,43 @@ export default function BACTracker() {
   const calculateBAC = () => {
     if (state.mode === 'estimate') {
       if (!state.estimateDrinks || !state.estimateHours) return 0;
-      
+
       const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
       const bodyWater = getBodyWaterConstant(state.gender);
       const numDrinks = parseFloat(state.estimateDrinks);
       const hours = parseFloat(state.estimateHours);
-      
+
       const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
       const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
       const metabolized = CONSTANTS.METABOLISM_RATE * hours;
-      
+
       return Math.max(0, initialBAC - metabolized);
     }
-    
+
     if (state.mode === 'live') {
       if (!state.startTime || state.drinks.length === 0) return 0;
 
       const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
       const bodyWater = getBodyWaterConstant(state.gender);
       const currentTime = Date.now();
-      
+
       let adjustedBAC = 0;
 
-      state.drinks.forEach(drink => {
+      state.drinks.forEach((drink) => {
         const standardDrinks = drink.standardDrinks || 1;
         const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
         const hoursElapsed = (currentTime - drink.timestamp) / (1000 * 60 * 60);
-        
+
         const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
         const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
         const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
-        
+
         adjustedBAC += currentDrinkBAC;
       });
 
       return Math.max(0, adjustedBAC);
     }
-    
+
     return 0;
   };
 
@@ -288,7 +320,16 @@ export default function BACTracker() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours]);
+  }, [
+    state.drinks,
+    state.setupComplete,
+    state.gender,
+    state.weight,
+    state.startTime,
+    state.mode,
+    state.estimateDrinks,
+    state.estimateHours,
+  ]);
 
   const showRobotMessage = (message) => {
     dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: message });
@@ -303,14 +344,16 @@ export default function BACTracker() {
       id: `DBT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       date: new Date().toISOString(),
       amount: amount,
-      stripeFee: (amount * 0.029 + 0.30).toFixed(2),
-      netAmount: (amount - (amount * 0.029 + 0.30)).toFixed(2),
+      stripeFee: (amount * 0.029 + 0.3).toFixed(2),
+      netAmount: (amount - (amount * 0.029 + 0.3)).toFixed(2),
       paymentMethod: paymentMethod,
       description: 'Developer Support - DrinkBot3000',
       status: 'Completed',
-      refundableUntil: new Date(Date.now() + (CONSTANTS.REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000)).toISOString(),
+      refundableUntil: new Date(
+        Date.now() + CONSTANTS.REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000
+      ).toISOString(),
     };
-    
+
     dispatch({ type: 'ADD_RECEIPT', receipt });
     return receipt;
   };
@@ -407,11 +450,11 @@ Questions? Contact: support@drinkbot3000.com
     if (state.gender && state.weight && parseFloat(state.weight) > 0) {
       dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
       dispatch({ type: 'SET_FIELD', field: 'setupComplete', value: true });
-      
+
       if (state.mode === 'live') {
         dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
       }
-      
+
       const greeting = robotGreetings[Math.floor(Math.random() * robotGreetings.length)];
       showRobotMessage(greeting);
     }
@@ -441,7 +484,7 @@ Questions? Contact: support@drinkbot3000.com
       type: 'Standard Drink',
     };
     dispatch({ type: 'ADD_DRINK', drink: newDrink });
-    
+
     const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
     showRobotMessage(comment);
   };
@@ -461,7 +504,7 @@ Questions? Contact: support@drinkbot3000.com
   const addCustomDrink = (oz, abv) => {
     const pureAlcoholOz = parseFloat(oz) * (parseFloat(abv) / 100);
     const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
-    
+
     const newDrink = {
       id: Date.now(),
       timestamp: Date.now(),
@@ -469,8 +512,10 @@ Questions? Contact: support@drinkbot3000.com
       type: `${oz}oz @ ${abv}%`,
     };
     dispatch({ type: 'ADD_DRINK', drink: newDrink });
-    
-    showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! ðŸ¤–`);
+
+    showRobotMessage(
+      `*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! ðŸ¤–`
+    );
   };
 
   const tellJoke = () => {
@@ -484,25 +529,27 @@ Questions? Contact: support@drinkbot3000.com
 
   const calculateQuickBAC = () => {
     if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) return;
-    
+
     const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
     const bodyWater = getBodyWaterConstant(state.gender);
     const numDrinks = parseFloat(state.calcDrinks);
     const hours = parseFloat(state.calcHours);
-    
+
     const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
     const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
     const metabolized = CONSTANTS.METABOLISM_RATE * hours;
-    
+
     const result = Math.max(0, initialBAC - metabolized);
     dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
   };
 
   const getBACStatus = () => {
-    const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
+    const currentBAC =
+      state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
     if (currentBAC === 0) return { text: 'Sober', color: 'text-green-600', bg: 'bg-green-50' };
     if (currentBAC < 0.03) return { text: 'Mild', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return { text: 'Impaired', color: 'text-orange-600', bg: 'bg-orange-50' };
+    if (currentBAC < CONSTANTS.LEGAL_LIMIT)
+      return { text: 'Impaired', color: 'text-orange-600', bg: 'bg-orange-50' };
     return { text: 'Intoxicated', color: 'text-red-600', bg: 'bg-red-50' };
   };
 
@@ -518,15 +565,19 @@ Questions? Contact: support@drinkbot3000.com
     if (bac === 0) return '--:--';
     const minutesToSober = Math.ceil((bac / CONSTANTS.METABOLISM_RATE) * 60);
     const soberTime = new Date(Date.now() + minutesToSober * 60000);
-    return soberTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return soberTime.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
   const handleTip = (amount) => {
     if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
-      dispatch({ 
-        type: 'SET_FIELD', 
-        field: 'tipError', 
-        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.` 
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'tipError',
+        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.`,
       });
       setTimeout(() => {
         dispatch({ type: 'SET_FIELD', field: 'tipError', value: '' });
@@ -535,7 +586,7 @@ Questions? Contact: support@drinkbot3000.com
     }
 
     showRobotMessage(`*beep boop* Thank you for supporting development! Processing... ðŸ¤–`);
-    
+
     setTimeout(() => {
       const receipt = generateReceipt(amount, 'Stripe');
       dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
@@ -581,7 +632,8 @@ Questions? Contact: support@drinkbot3000.com
 
           <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
             <p className="text-xs text-amber-800 text-center">
-              By clicking "I am {CONSTANTS.LEGAL_DRINKING_AGE} or Older", you confirm that you are of legal drinking age in your jurisdiction.
+              By clicking "I am {CONSTANTS.LEGAL_DRINKING_AGE} or Older", you confirm that you are
+              of legal drinking age in your jurisdiction.
             </p>
           </div>
         </div>
@@ -609,22 +661,49 @@ Questions? Contact: support@drinkbot3000.com
 
             <div className="space-y-3">
               <p className="font-semibold">NOT A MEDICAL DEVICE:</p>
-              <p>This application is NOT a medical device and should NOT be used to determine fitness to drive, operate machinery, or make any safety-critical decisions. Blood Alcohol Content (BAC) calculations are ESTIMATES ONLY and may not accurately reflect your actual BAC.</p>
+              <p>
+                This application is NOT a medical device and should NOT be used to determine fitness
+                to drive, operate machinery, or make any safety-critical decisions. Blood Alcohol
+                Content (BAC) calculations are ESTIMATES ONLY and may not accurately reflect your
+                actual BAC.
+              </p>
 
               <p className="font-semibold mt-4">NO MEDICAL ADVICE:</p>
-              <p>This app does not provide medical advice, diagnosis, or treatment. Consult a qualified healthcare professional for medical concerns. The developer is not liable for any health consequences resulting from app use.</p>
+              <p>
+                This app does not provide medical advice, diagnosis, or treatment. Consult a
+                qualified healthcare professional for medical concerns. The developer is not liable
+                for any health consequences resulting from app use.
+              </p>
 
               <p className="font-semibold mt-4">ACCURACY DISCLAIMER:</p>
-              <p>BAC calculations are based on general population averages. Individual metabolism varies significantly due to genetics, health conditions, medications, food consumption, hydration, and other factors. Actual BAC may be higher or lower than estimated.</p>
+              <p>
+                BAC calculations are based on general population averages. Individual metabolism
+                varies significantly due to genetics, health conditions, medications, food
+                consumption, hydration, and other factors. Actual BAC may be higher or lower than
+                estimated.
+              </p>
 
               <p className="font-semibold mt-4">LEGAL CONSEQUENCES:</p>
-              <p>Using this app does NOT protect you from DUI/DWI charges or other legal consequences. Law enforcement uses certified breathalyzer devices. You may be impaired even if this app shows a low BAC.</p>
+              <p>
+                Using this app does NOT protect you from DUI/DWI charges or other legal
+                consequences. Law enforcement uses certified breathalyzer devices. You may be
+                impaired even if this app shows a low BAC.
+              </p>
 
               <p className="font-semibold mt-4">NEVER DRINK AND DRIVE:</p>
-              <p>Impairment begins at ANY BAC level. Even small amounts of alcohol impair judgment, reaction time, and coordination. Never drive, operate machinery, or engage in dangerous activities after consuming ANY amount of alcohol.</p>
+              <p>
+                Impairment begins at ANY BAC level. Even small amounts of alcohol impair judgment,
+                reaction time, and coordination. Never drive, operate machinery, or engage in
+                dangerous activities after consuming ANY amount of alcohol.
+              </p>
 
               <p className="font-semibold mt-4">ASSUMPTION OF RISK:</p>
-              <p>By using this app, you assume all risks and agree that the developer, its affiliates, and contributors are NOT liable for any damages, injuries, accidents, legal issues, or other consequences arising from your use of this application or decisions based on its output.</p>
+              <p>
+                By using this app, you assume all risks and agree that the developer, its
+                affiliates, and contributors are NOT liable for any damages, injuries, accidents,
+                legal issues, or other consequences arising from your use of this application or
+                decisions based on its output.
+              </p>
 
               <p className="font-bold text-red-700 mt-6 text-base">
                 IF YOU DO NOT AGREE TO THESE TERMS, DO NOT USE THIS APP.
@@ -639,7 +718,7 @@ Questions? Contact: support@drinkbot3000.com
             >
               I Understand and Accept
             </button>
-            
+
             <button
               onClick={() => {
                 dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
@@ -672,28 +751,37 @@ Questions? Contact: support@drinkbot3000.com
                   "Impairment to the Slightest Degree"
                 </p>
                 <p className="text-gray-700 mb-4">
-                  You can be charged with DUI even BELOW the 0.08% legal limit if you show ANY signs of impairment.
+                  You can be charged with DUI even BELOW the 0.08% legal limit if you show ANY signs
+                  of impairment.
                 </p>
-                <p className="text-red-700 font-semibold">
-                  ANY alcohol consumption = impairment
-                </p>
+                <p className="text-red-700 font-semibold">ANY alcohol consumption = impairment</p>
               </div>
 
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4 border border-blue-200">
                 <p className="font-semibold text-gray-800 mb-3">Use Rideshare Instead:</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <span className="px-3 py-1 bg-black text-white rounded-full text-sm">Uber</span>
-                  <span className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm">Lyft</span>
-                  <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm">Taxi</span>
+                  <span className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm">
+                    Lyft
+                  </span>
+                  <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm">
+                    Taxi
+                  </span>
                 </div>
               </div>
 
               <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
                 <p className="font-semibold text-gray-800 mb-3">Or Order Delivery:</p>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  <span className="px-3 py-1 bg-red-600 text-white rounded-full text-sm">DoorDash</span>
-                  <span className="px-3 py-1 bg-green-600 text-white rounded-full text-sm">Instacart</span>
-                  <span className="px-3 py-1 bg-orange-600 text-white rounded-full text-sm">Postmates</span>
+                  <span className="px-3 py-1 bg-red-600 text-white rounded-full text-sm">
+                    DoorDash
+                  </span>
+                  <span className="px-3 py-1 bg-green-600 text-white rounded-full text-sm">
+                    Instacart
+                  </span>
+                  <span className="px-3 py-1 bg-orange-600 text-white rounded-full text-sm">
+                    Postmates
+                  </span>
                 </div>
               </div>
             </div>
@@ -752,7 +840,8 @@ Questions? Contact: support@drinkbot3000.com
 
               <div className="bg-red-50 rounded-lg p-3 border border-red-200">
                 <p className="text-sm text-red-800 font-semibold">
-                  If someone is passed out drunk, place them in the recovery position and seek medical help if needed.
+                  If someone is passed out drunk, place them in the recovery position and seek
+                  medical help if needed.
                 </p>
               </div>
             </div>
@@ -785,9 +874,7 @@ Questions? Contact: support@drinkbot3000.com
                 <p className="text-gray-800 mb-4">
                   <strong>Never mix alcohol with benzodiazepines!</strong>
                 </p>
-                <p className="text-gray-700 mb-4">
-                  Common benzos include:
-                </p>
+                <p className="text-gray-700 mb-4">Common benzos include:</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-white p-2 rounded border border-red-200">Xanax</div>
                   <div className="bg-white p-2 rounded border border-red-200">Valium</div>
@@ -820,7 +907,8 @@ Questions? Contact: support@drinkbot3000.com
 
               <div className="bg-red-100 rounded-lg p-4 border-2 border-red-300">
                 <p className="text-red-900 font-bold text-sm">
-                  If you take benzodiazepines, DO NOT drink alcohol. If you've been drinking, DO NOT take benzos. This combination can be fatal.
+                  If you take benzodiazepines, DO NOT drink alcohol. If you've been drinking, DO NOT
+                  take benzos. This combination can be fatal.
                 </p>
               </div>
             </div>
@@ -847,15 +935,11 @@ Questions? Contact: support@drinkbot3000.com
               </div>
               <h1 className="text-3xl font-bold text-gray-800 mb-4">OPIATES WARNING</h1>
               <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-300">
-                <p className="text-red-900 font-bold text-xl mb-4">
-                  â˜ ï¸ FATAL COMBINATION â˜ ï¸
-                </p>
+                <p className="text-red-900 font-bold text-xl mb-4">â˜ ï¸ FATAL COMBINATION â˜ ï¸</p>
                 <p className="text-gray-800 font-bold mb-4">
                   Alcohol + Opiates = HIGH RISK OF DEATH
                 </p>
-                <p className="text-gray-700 mb-4">
-                  Common opiates/opioids:
-                </p>
+                <p className="text-gray-700 mb-4">Common opiates/opioids:</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-white p-2 rounded border border-red-200">Oxycodone</div>
                   <div className="bg-white p-2 rounded border border-red-200">Hydrocodone</div>
@@ -871,19 +955,27 @@ Questions? Contact: support@drinkbot3000.com
                 <ul className="text-left text-sm text-gray-700 space-y-2">
                   <li className="flex items-start">
                     <span className="text-red-600 font-bold mr-2">â€¢</span>
-                    <span><strong>Respiratory Depression:</strong> Both slow breathing</span>
+                    <span>
+                      <strong>Respiratory Depression:</strong> Both slow breathing
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-600 font-bold mr-2">â€¢</span>
-                    <span><strong>You can stop breathing:</strong> Even in your sleep</span>
+                    <span>
+                      <strong>You can stop breathing:</strong> Even in your sleep
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-600 font-bold mr-2">â€¢</span>
-                    <span><strong>Overdose risk:</strong> Dramatically increased</span>
+                    <span>
+                      <strong>Overdose risk:</strong> Dramatically increased
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-600 font-bold mr-2">â€¢</span>
-                    <span><strong>Death can occur quickly:</strong> Minutes, not hours</span>
+                    <span>
+                      <strong>Death can occur quickly:</strong> Minutes, not hours
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -893,13 +985,15 @@ Questions? Contact: support@drinkbot3000.com
                   ðŸš¨ NEVER MIX ALCOHOL WITH OPIATES ðŸš¨
                 </p>
                 <p className="text-red-800 text-sm">
-                  If you take prescription pain medication, DO NOT drink. If you've been drinking, DO NOT take opiates. This combination kills thousands every year.
+                  If you take prescription pain medication, DO NOT drink. If you've been drinking,
+                  DO NOT take opiates. This combination kills thousands every year.
                 </p>
               </div>
 
               <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                 <p className="text-sm text-blue-900">
-                  <strong>Emergency:</strong> If someone is unresponsive after mixing alcohol and opiates, call 911 immediately. Mention both substances.
+                  <strong>Emergency:</strong> If someone is unresponsive after mixing alcohol and
+                  opiates, call 911 immediately. Mention both substances.
                 </p>
               </div>
             </div>
@@ -926,15 +1020,14 @@ Questions? Contact: support@drinkbot3000.com
               <AlertCircle className="w-16 h-16 text-red-600" />
             </div>
             <h1 className="text-4xl font-bold text-gray-800 mb-4">Every 42 Minutes</h1>
-            <p className="text-xl text-gray-700 mb-6">
-              Someone dies from drunk driving in the USA
-            </p>
+            <p className="text-xl text-gray-700 mb-6">Someone dies from drunk driving in the USA</p>
             <div className="bg-red-50 rounded-lg p-4 mb-6 border-2 border-red-200">
               <p className="text-gray-700 font-medium mb-3">
                 DrinkBot3000 helps you track BAC estimates and make responsible decisions.
               </p>
               <p className="text-sm text-red-700 font-semibold">
-                âš ï¸ NEVER drive after drinking, even below the legal limit. Impairment begins at ANY BAC level.
+                âš ï¸ NEVER drive after drinking, even below the legal limit. Impairment begins at
+                ANY BAC level.
               </p>
             </div>
           </div>
@@ -958,7 +1051,7 @@ Questions? Contact: support@drinkbot3000.com
 
   // Setup screen and rest of the app continues...
   // (For brevity, keeping the rest of the app the same as before)
-  
+
   if (!state.setupComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
@@ -967,9 +1060,9 @@ Questions? Contact: support@drinkbot3000.com
             {/* App Icon Integration - Use your uploaded icon here */}
             <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
               {/* Replace this with your actual icon */}
-              <img 
-                src="/path/to/your/icon.png" 
-                alt="DrinkBot3000 Icon" 
+              <img
+                src="/path/to/your/icon.png"
+                alt="DrinkBot3000 Icon"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to emoji if image doesn't load
@@ -977,7 +1070,9 @@ Questions? Contact: support@drinkbot3000.com
                   e.target.nextSibling.style.display = 'block';
                 }}
               />
-              <span className="text-6xl" style={{ display: 'none' }}>ðŸ¤–</span>
+              <span className="text-6xl" style={{ display: 'none' }}>
+                ðŸ¤–
+              </span>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">DrinkBot3000</h1>
             <p className="text-gray-600">Track your blood alcohol content</p>
@@ -986,15 +1081,15 @@ Questions? Contact: support@drinkbot3000.com
           {!state.mode ? (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-800 text-center mb-4">Choose Mode</h2>
-              <button 
-                onClick={() => handleModeSelect('live')} 
+              <button
+                onClick={() => handleModeSelect('live')}
                 className="w-full bg-indigo-600 text-white py-4 rounded-lg font-semibold hover:bg-indigo-700 transition"
               >
                 Live Tracking
                 <p className="text-sm font-normal mt-1">Track drinks in real-time</p>
               </button>
-              <button 
-                onClick={() => handleModeSelect('estimate')} 
+              <button
+                onClick={() => handleModeSelect('estimate')}
                 className="w-full bg-purple-600 text-white py-4 rounded-lg font-semibold hover:bg-purple-700 transition"
               >
                 Quick Estimate
@@ -1009,14 +1104,16 @@ Questions? Contact: support@drinkbot3000.com
                   Gender
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button 
+                  <button
                     onClick={() => dispatch({ type: 'SET_FIELD', field: 'gender', value: 'male' })}
                     className={`py-3 px-4 rounded-lg font-medium transition ${state.gender === 'male' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
                   >
                     Male
                   </button>
-                  <button 
-                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'gender', value: 'female' })}
+                  <button
+                    onClick={() =>
+                      dispatch({ type: 'SET_FIELD', field: 'gender', value: 'female' })
+                    }
                     className={`py-3 px-4 rounded-lg font-medium transition ${state.gender === 'female' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
                   >
                     Female
@@ -1029,15 +1126,15 @@ Questions? Contact: support@drinkbot3000.com
                   <Scale className="inline w-4 h-4 mr-1" />
                   Weight (lbs)
                 </label>
-                <input 
-                  type="number" 
-                  value={state.weight} 
+                <input
+                  type="number"
+                  value={state.weight}
                   onChange={(e) => {
                     dispatch({ type: 'SET_FIELD', field: 'weight', value: e.target.value });
                     const error = validateWeight(e.target.value);
                     dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
                   }}
-                  placeholder="Enter your weight" 
+                  placeholder="Enter your weight"
                   className={`w-full px-4 py-3 border rounded-lg ${state.weightError ? 'border-red-500' : 'border-gray-300'}`}
                   min={CONSTANTS.MIN_WEIGHT}
                   max={CONSTANTS.MAX_WEIGHT}
@@ -1054,40 +1151,59 @@ Questions? Contact: support@drinkbot3000.com
                       <Beer className="inline w-4 h-4 mr-1" />
                       Number of Drinks
                     </label>
-                    <input 
-                      type="number" 
-                      value={state.estimateDrinks} 
-                      onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value: e.target.value })}
-                      placeholder="How many drinks?" 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg" 
-                      min="0" 
+                    <input
+                      type="number"
+                      value={state.estimateDrinks}
+                      onChange={(e) =>
+                        dispatch({
+                          type: 'SET_FIELD',
+                          field: 'estimateDrinks',
+                          value: e.target.value,
+                        })
+                      }
+                      placeholder="How many drinks?"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                      min="0"
                       step="0.5"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hours Since First Drink</label>
-                    <input 
-                      type="number" 
-                      value={state.estimateHours} 
-                      onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'estimateHours', value: e.target.value })}
-                      placeholder="How many hours ago?" 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg" 
-                      min="0" 
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hours Since First Drink
+                    </label>
+                    <input
+                      type="number"
+                      value={state.estimateHours}
+                      onChange={(e) =>
+                        dispatch({
+                          type: 'SET_FIELD',
+                          field: 'estimateHours',
+                          value: e.target.value,
+                        })
+                      }
+                      placeholder="How many hours ago?"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                      min="0"
                       step="0.5"
                     />
                   </div>
                 </>
               )}
 
-              <button 
-                onClick={handleSetup} 
-                disabled={!state.gender || !state.weight || state.weightError || (state.mode === 'estimate' && (!state.estimateDrinks || !state.estimateHours))} 
+              <button
+                onClick={handleSetup}
+                disabled={
+                  !state.gender ||
+                  !state.weight ||
+                  state.weightError ||
+                  (state.mode === 'estimate' && (!state.estimateDrinks || !state.estimateHours))
+                }
                 className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-300"
               >
                 {state.mode === 'estimate' ? 'Calculate BAC' : 'Start Tracking'}
               </button>
 
-              <button 
+              <button
                 onClick={() => {
                   dispatch({ type: 'SET_FIELD', field: 'mode', value: '' });
                   dispatch({ type: 'SET_FIELD', field: 'gender', value: '' });
@@ -1095,7 +1211,7 @@ Questions? Contact: support@drinkbot3000.com
                   dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value: '' });
                   dispatch({ type: 'SET_FIELD', field: 'estimateHours', value: '' });
                   dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
-                }} 
+                }}
                 className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
               >
                 Back
@@ -1106,7 +1222,9 @@ Questions? Contact: support@drinkbot3000.com
           <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
             <div className="flex items-start">
               <AlertCircle className="w-5 h-5 text-amber-600 mr-2 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">This app provides estimates only. Never drink and drive.</p>
+              <p className="text-sm text-amber-800">
+                This app provides estimates only. Never drink and drive.
+              </p>
             </div>
           </div>
         </div>

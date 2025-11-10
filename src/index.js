@@ -2,15 +2,21 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
-// Service Worker Registration for PWA
+/**
+ * Service Worker Registration for PWA
+ * Registers the service worker and handles updates
+ */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -49,7 +55,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// PWA Install Prompt Handler
+/**
+ * PWA Install Prompt Handler
+ * Captures the beforeinstallprompt event and makes it available to the app
+ */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   // Prevent the mini-infobar from appearing on mobile
@@ -70,7 +79,10 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
 });
 
-// Expose install function globally for components to use
+/**
+ * Expose install function globally for components to use
+ * @returns {Promise<boolean>} True if user accepted installation, false otherwise
+ */
 window.showInstallPrompt = async () => {
   if (!deferredPrompt) {
     console.log('❌ Install prompt not available');
