@@ -967,9 +967,9 @@ Questions? Contact: support@drinkbot3000.com
             {/* App Icon Integration - Use your uploaded icon here */}
             <div className="w-24 h-24 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
               {/* Replace this with your actual icon */}
-              <img 
-                src="/path/to/your/icon.png" 
-                alt="DrinkBot3000 Icon" 
+              <img
+                src="/icon-192.png"
+                alt="DrinkBot3000 Icon"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to emoji if image doesn't load
