@@ -599,10 +599,10 @@ Questions? Contact: support@drinkbot3000.com
 
   const handleTip = (amount) => {
     if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
-      dispatch({ 
-        type: 'SET_FIELD', 
-        field: 'tipError', 
-        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.` 
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'tipError',
+        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.`
       });
       setTimeout(() => {
         dispatch({ type: 'SET_FIELD', field: 'tipError', value: '' });
@@ -610,13 +610,17 @@ Questions? Contact: support@drinkbot3000.com
       return;
     }
 
-    showRobotMessage(`*beep boop* Thank you for supporting development! Processing... 🤖`);
-    
+    // Redirect to Stripe Payment Link
+    showRobotMessage(`*beep boop* Redirecting to secure Stripe checkout... 🤖`);
+
+    // Open Stripe checkout in new window
+    const stripePaymentLink = 'https://buy.stripe.com/6oU14m8oI9Yj2EX8wM5sA00';
+    window.open(stripePaymentLink, '_blank', 'noopener,noreferrer');
+
+    // Show confirmation message
     setTimeout(() => {
-      const receipt = generateReceipt(amount, 'Stripe');
-      dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
-      showRobotMessage('*whirrs happily* Payment successful! Receipt generated! 🎉');
-    }, 1500);
+      showRobotMessage('*whirrs happily* Thank you for your support! 🎉');
+    }, 1000);
   };
 
   const status = getBACStatus();
@@ -1577,7 +1581,7 @@ Questions? Contact: support@drinkbot3000.com
               <div className="bg-white rounded-lg p-6 shadow">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Support DrinkBot3000</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Enjoying DrinkBot3000? Support development with a tip!
+                  Enjoying DrinkBot3000? Support development with a tip! Secure checkout via Stripe.
                 </p>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <button
@@ -1637,7 +1641,7 @@ Questions? Contact: support@drinkbot3000.com
 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-900">
-                    💡 Tips help keep DrinkBot3000 free and ad-free for everyone!
+                    💡 Tips help keep DrinkBot3000 free and ad-free for everyone! Payments are securely processed by Stripe.
                   </p>
                 </div>
               </div>
