@@ -483,18 +483,6 @@ Questions? Contact: support@drinkbot3000.com
     dispatch({ type: 'SET_FIELD', field: 'mode', value: selectedMode });
   };
 
-  const resetApp = () => {
-    dispatch({
-      type: 'SHOW_CONFIRM',
-      message: 'Are you sure you want to reset the app? All data will be permanently deleted.',
-      action: () => {
-        localStorage.removeItem('bacTrackerData');
-        dispatch({ type: 'RESET_APP' });
-        dispatch({ type: 'HIDE_CONFIRM' });
-      },
-    });
-  };
-
   const addDrink = () => {
     const newDrink = {
       id: Date.now(),
@@ -1861,18 +1849,13 @@ Questions? Contact: support@drinkbot3000.com
                   <div className="space-y-2 text-sm">
                     <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : 'Female'}</p>
                     <p><strong>Weight:</strong> {state.weight} lbs</p>
+                    <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200">
+                      <strong>Note:</strong> Your weight is locked and cannot be changed once set. To reset, you must clear your browser data or reinstall the app.
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <button
-                    onClick={handleReset}
-                    className="w-full bg-red-100 text-red-700 py-3 rounded-lg font-medium hover:bg-red-200 transition"
-                  >
-                    <RefreshCw className="w-4 h-4 inline mr-2" />
-                    Reset App
-                  </button>
-
                   <a
                     href="/privacy.html"
                     target="_blank"
