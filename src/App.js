@@ -1745,32 +1745,20 @@ Questions? Contact: support@drinkbot3000.com
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Drink</h3>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <button
-                    onClick={() => addDrink('beer', 12, 5)}
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 p-4 rounded-lg font-medium transition"
+                    onClick={() => addDrink()}
+                    className="bg-gradient-to-br from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-blue-900 p-4 rounded-lg font-medium transition shadow-sm"
                   >
-                    🍺 Beer<br />
-                    <span className="text-xs">12 oz, 5% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => addDrink('wine', 5, 12)}
-                    className="bg-purple-100 hover:bg-purple-200 text-purple-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🍷 Wine<br />
-                    <span className="text-xs">5 oz, 12% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => addDrink('shot', 1.5, 40)}
-                    className="bg-red-100 hover:bg-red-200 text-red-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🥃 Shot<br />
-                    <span className="text-xs">1.5 oz, 40% ABV</span>
+                    <div className="text-2xl mb-1">🍺🍷🥃</div>
+                    <div className="font-bold">Standard Drink</div>
+                    <span className="text-xs block mt-1">1 beer / 1 glass wine / 1 shot</span>
                   </button>
                   <button
                     onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: true })}
                     className="bg-gray-100 hover:bg-gray-200 text-gray-900 p-4 rounded-lg font-medium transition"
                   >
-                    ➕ Custom<br />
-                    <span className="text-xs">Custom drink</span>
+                    <div className="text-2xl mb-1">➕</div>
+                    <div className="font-bold">Custom</div>
+                    <span className="text-xs block mt-1">Different size/strength</span>
                   </button>
                 </div>
 
