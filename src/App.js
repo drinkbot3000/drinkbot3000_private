@@ -245,7 +245,8 @@ export default function BACTracker() {
   ]);
 
   // Helper functions
-  const getBodyWaterConstant = (g) => 
+  // Default to female body water constant (more conservative - higher BAC estimate)
+  const getBodyWaterConstant = (g) =>
     g === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
 
   const validateWeight = (weight) => {
@@ -662,7 +663,8 @@ Questions? Contact: support@drinkbot3000.com
 
   const handleOpenSettings = () => {
     // Initialize edit fields with current values (with fallbacks)
-    dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: state.gender || 'male' });
+    // Default to 'female' as it's more conservative (lower body water = higher BAC estimate)
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: state.gender || 'female' });
     dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: state.weight || '' });
     dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
     dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true });
