@@ -77,6 +77,8 @@ const initialState = {
   settingsEditGender: '',
   settingsEditWeight: '',
   settingsEditMode: false,
+  // Impairment tracking
+  hasBeenImpaired: false,
 };
 
 // Reducer
@@ -230,6 +232,7 @@ export default function BACTracker() {
         estimateDrinks: state.estimateDrinks,
         estimateHours: state.estimateHours,
         savedCustomDrinks: state.savedCustomDrinks,
+        hasBeenImpaired: state.hasBeenImpaired,
       };
       localStorage.setItem('bacTrackerData', JSON.stringify(dataToSave));
     }
@@ -243,6 +246,7 @@ export default function BACTracker() {
     state.estimateDrinks,
     state.estimateHours,
     state.savedCustomDrinks,
+    state.hasBeenImpaired,
   ]);
 
   // Helper functions
@@ -306,11 +310,22 @@ export default function BACTracker() {
     if (!state.setupComplete) return;
 
     const interval = setInterval(() => {
-      dispatch({ type: 'SET_FIELD', field: 'bac', value: calculateBAC() });
+      const currentBAC = calculateBAC();
+      dispatch({ type: 'SET_FIELD', field: 'bac', value: currentBAC });
+
+      // Track if user has been impaired (at or above legal limit)
+      if (currentBAC >= CONSTANTS.LEGAL_LIMIT && !state.hasBeenImpaired) {
+        dispatch({ type: 'SET_FIELD', field: 'hasBeenImpaired', value: true });
+      }
+
+      // Reset impairment flag only when completely sober
+      if (currentBAC === 0 && state.hasBeenImpaired) {
+        dispatch({ type: 'SET_FIELD', field: 'hasBeenImpaired', value: false });
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours]);
+  }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours, state.hasBeenImpaired]);
 
   // URL Query Parameter Parsing
   useEffect(() => {
@@ -633,29 +648,42 @@ Questions? Contact: support@drinkbot3000.com
 
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
+
+    // Special handling for users who have been impaired but are now sober
+    if (currentBAC === 0 && state.hasBeenImpaired) return {
+      label: 'Recently Impaired',
+      color: 'text-orange-600',
+      bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
+      message: '⚠️ WARNING: You recently exceeded the legal limit. Wait until fully recovered before driving. Impairment effects may persist even at 0.00% BAC.'
+    };
+
     if (currentBAC === 0) return {
       label: 'Sober',
       color: 'text-green-600',
       bgColor: 'bg-gradient-to-br from-green-400 to-green-600',
       message: 'You are completely sober. Safe to drive and operate machinery.'
     };
+
+    // Add impairment warning to all non-zero BAC levels if they've been impaired
+    const impairmentWarning = state.hasBeenImpaired ? ' ⚠️ YOU HAVE BEEN OVER THE LEGAL LIMIT - DO NOT DRIVE.' : '';
+
     if (currentBAC < 0.03) return {
       label: 'Mild Effect',
       color: 'text-yellow-600',
       bgColor: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
-      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory.'
+      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory.' + impairmentWarning
     };
     if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
       label: 'Impaired',
       color: 'text-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
-      message: 'Reduced coordination and judgment. Do not drive or operate machinery.'
+      message: 'Reduced coordination and judgment. Do not drive or operate machinery.' + impairmentWarning
     };
     return {
       label: 'Intoxicated',
       color: 'text-red-600',
       bgColor: 'bg-gradient-to-br from-red-400 to-red-600',
-      message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.'
+      message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.' + impairmentWarning
     };
   };
 
@@ -1705,6 +1733,19 @@ Questions? Contact: support@drinkbot3000.com
                 </div>
               </div>
 
+              {/* Impairment History Warning */}
+              {state.hasBeenImpaired && state.bac > 0 && (
+                <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4 mb-6 animate-pulse">
+                  <div className="flex items-start">
+                    <AlertTriangle className="w-6 h-6 text-red-600 mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-900 font-bold mb-1">⚠️ IMPAIRMENT WARNING</p>
+                      <p className="text-red-800 text-sm">You have exceeded the legal limit during this session. DO NOT DRIVE until your BAC reaches 0.00% and you feel fully recovered.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Robot Message */}
               {state.robotMessage && (
                 <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border-2 border-purple-200 animate-pulse">
@@ -2041,7 +2082,7 @@ Questions? Contact: support@drinkbot3000.com
 
                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
                   <p className="text-xs text-amber-800">
-                    <strong>Note:</strong> This calculator uses your saved profile ({state.gender}, {state.weight} lbs). Results are estimates only.
+                    <strong>Note:</strong> This calculator uses your saved profile ({state.gender}, weight configured). Results are estimates only.
                   </p>
                 </div>
               </div>
