@@ -45,6 +45,8 @@ const initialState = {
   showHelp: false,
   customDrinkOz: '',
   customDrinkABV: '5',
+  customDrinkName: '',
+  savedCustomDrinks: [],
   robotMessage: '',
   showSplash: true,
   showConfirmModal: false,
@@ -69,6 +71,11 @@ const initialState = {
   geoBlocked: false,
   geoCountry: '',
   geoError: null,
+  geoVerifying: false,
+  // Settings edit state
+  settingsEditGender: '',
+  settingsEditWeight: '',
+  settingsEditMode: false,
 };
 
 // Reducer
@@ -221,6 +228,7 @@ export default function BACTracker() {
         mode: state.mode,
         estimateDrinks: state.estimateDrinks,
         estimateHours: state.estimateHours,
+        savedCustomDrinks: state.savedCustomDrinks,
       };
       localStorage.setItem('bacTrackerData', JSON.stringify(dataToSave));
     }
@@ -233,6 +241,7 @@ export default function BACTracker() {
     state.mode,
     state.estimateDrinks,
     state.estimateHours,
+    state.savedCustomDrinks,
   ]);
 
   // Helper functions
@@ -300,6 +309,38 @@ export default function BACTracker() {
 
     return () => clearInterval(interval);
   }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours]);
+
+  // URL Query Parameter Parsing
+  useEffect(() => {
+    const parseUrlParameters = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // Calculator mode parameters
+      const drinks = urlParams.get('drinks');
+      const hours = urlParams.get('hours');
+      const tab = urlParams.get('tab');
+
+      // If drinks and hours are provided, switch to calculator tab and pre-fill
+      if (drinks !== null && hours !== null) {
+        const drinksNum = parseFloat(drinks);
+        const hoursNum = parseFloat(hours);
+
+        if (!isNaN(drinksNum) && !isNaN(hoursNum) && drinksNum > 0 && hoursNum > 0) {
+          dispatch({ type: 'SET_FIELD', field: 'calcDrinks', value: drinks });
+          dispatch({ type: 'SET_FIELD', field: 'calcHours', value: hours });
+          dispatch({ type: 'SET_FIELD', field: 'activeTab', value: 'calculator' });
+        }
+      }
+
+      // Tab switching parameter
+      if (tab === 'calculator' || tab === 'tracker') {
+        dispatch({ type: 'SET_FIELD', field: 'activeTab', value: tab });
+      }
+    };
+
+    // Only parse URL parameters once when component mounts
+    parseUrlParameters();
+  }, []); // Empty dependency array - run once on mount
 
   const showRobotMessage = (message) => {
     dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: message });
@@ -394,10 +435,13 @@ Questions? Contact: support@drinkbot3000.com
   const handleGeoConsentAccept = async () => {
     dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: true });
 
     // Perform geographic verification
     try {
       const result = await checkGeographicRestriction();
+
+      dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: false });
 
       if (result.allowed) {
         // User is in an allowed country
@@ -417,6 +461,7 @@ Questions? Contact: support@drinkbot3000.com
       }
     } catch (error) {
       console.error('Geographic verification failed:', error);
+      dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: false });
       dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
       // On error, block access for USA-only service (fail-closed)
       dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
@@ -557,10 +602,30 @@ Questions? Contact: support@drinkbot3000.com
 
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
-    if (currentBAC === 0) return { text: 'Sober', color: 'text-green-600', bg: 'bg-green-50' };
-    if (currentBAC < 0.03) return { text: 'Mild', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return { text: 'Impaired', color: 'text-orange-600', bg: 'bg-orange-50' };
-    return { text: 'Intoxicated', color: 'text-red-600', bg: 'bg-red-50' };
+    if (currentBAC === 0) return {
+      label: 'Sober',
+      color: 'text-green-600',
+      bgColor: 'bg-gradient-to-br from-green-400 to-green-600',
+      message: 'You are completely sober. Safe to drive and operate machinery.'
+    };
+    if (currentBAC < 0.03) return {
+      label: 'Mild Effect',
+      color: 'text-yellow-600',
+      bgColor: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
+      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory.'
+    };
+    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
+      label: 'Impaired',
+      color: 'text-orange-600',
+      bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
+      message: 'Reduced coordination and judgment. Do not drive or operate machinery.'
+    };
+    return {
+      label: 'Intoxicated',
+      color: 'text-red-600',
+      bgColor: 'bg-gradient-to-br from-red-400 to-red-600',
+      message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.'
+    };
   };
 
   const formatTime = (timestamp) => {
@@ -593,6 +658,120 @@ Questions? Contact: support@drinkbot3000.com
 
   const calculateSoberTime = () => {
     return getSoberTime(state.bac);
+  };
+
+  const handleOpenSettings = () => {
+    // Initialize edit fields with current values
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: state.gender });
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: state.weight });
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true });
+  };
+
+  const handleSaveSettings = () => {
+    // Validate inputs
+    const weight = parseFloat(state.settingsEditWeight);
+    if (isNaN(weight) || weight < 50 || weight > 500) {
+      dispatch({ type: 'SET_FIELD', field: 'weightError', value: 'Please enter a valid weight between 50-500 lbs' });
+      return;
+    }
+
+    // Check if values actually changed
+    if (state.settingsEditGender === state.gender && weight === parseFloat(state.weight)) {
+      dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false });
+      return;
+    }
+
+    // Warn user that changing profile will reset tracking
+    if (state.drinks.length > 0 || state.bac > 0) {
+      dispatch({
+        type: 'SHOW_CONFIRM',
+        message: 'Changing your profile will reset your current BAC tracking and drink history. Continue?',
+        action: () => {
+          updateProfile();
+        }
+      });
+    } else {
+      updateProfile();
+    }
+  };
+
+  const updateProfile = () => {
+    // Update profile
+    dispatch({ type: 'SET_FIELD', field: 'gender', value: state.settingsEditGender });
+    dispatch({ type: 'SET_FIELD', field: 'weight', value: state.settingsEditWeight });
+
+    // Reset BAC tracking
+    dispatch({ type: 'SET_FIELD', field: 'drinks', value: [] });
+    dispatch({ type: 'SET_FIELD', field: 'bac', value: 0 });
+    dispatch({ type: 'SET_FIELD', field: 'startTime', value: null });
+
+    // Clear weight error and close settings
+    dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
+    dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
+
+    showRobotMessage('Profile updated successfully! BAC tracking has been reset.');
+  };
+
+  const handleSaveCustomDrink = () => {
+    const oz = parseFloat(state.customDrinkOz);
+    const abv = parseFloat(state.customDrinkABV);
+    const name = state.customDrinkName.trim();
+
+    // Validate inputs
+    if (!name) {
+      showRobotMessage('Please enter a name for your custom drink.');
+      return;
+    }
+    if (isNaN(oz) || oz <= 0 || oz > 64) {
+      showRobotMessage('Please enter a valid drink size (0-64 oz).');
+      return;
+    }
+    if (isNaN(abv) || abv <= 0 || abv > 100) {
+      showRobotMessage('Please enter a valid ABV% (0-100%).');
+      return;
+    }
+
+    // Check if name already exists
+    if (state.savedCustomDrinks.some(drink => drink.name.toLowerCase() === name.toLowerCase())) {
+      showRobotMessage('A custom drink with this name already exists.');
+      return;
+    }
+
+    // Add to saved custom drinks
+    const newDrink = {
+      id: Date.now(),
+      name,
+      oz,
+      abv
+    };
+    dispatch({
+      type: 'SET_FIELD',
+      field: 'savedCustomDrinks',
+      value: [...state.savedCustomDrinks, newDrink]
+    });
+
+    // Clear form
+    dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
+    dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
+    dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
+
+    showRobotMessage(`Custom drink "${name}" saved!`);
+  };
+
+  const handleDeleteCustomDrink = (drinkId) => {
+    dispatch({
+      type: 'SET_FIELD',
+      field: 'savedCustomDrinks',
+      value: state.savedCustomDrinks.filter(drink => drink.id !== drinkId)
+    });
+    showRobotMessage('Custom drink deleted.');
+  };
+
+  const handleAddSavedCustomDrink = (drink) => {
+    addDrink(drink.name, drink.oz, drink.abv);
+    showRobotMessage(`Added ${drink.name} to your log!`);
   };
 
   const handleTip = (amount) => {
@@ -734,6 +913,31 @@ Questions? Contact: support@drinkbot3000.com
             <a href="/privacy.html" target="_blank" className="text-xs text-blue-600 hover:underline">
               Read our Privacy Policy
             </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Geographic Verification Loading Screen
+  if (state.geoVerifying) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-blue-100 rounded-full">
+              <Globe className="w-16 h-16 text-blue-600 animate-pulse" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Verifying Location...</h1>
+            <p className="text-lg text-gray-700 mb-6">
+              Please wait while we verify your location.
+            </p>
+            <div className="flex justify-center mb-6">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+            <p className="text-sm text-gray-600">
+              This usually takes just a few seconds.
+            </p>
           </div>
         </div>
       </div>
@@ -1390,7 +1594,7 @@ Questions? Contact: support@drinkbot3000.com
                 <HelpCircle className="w-5 h-5 text-gray-600" />
               </button>
               <button
-                onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true })}
+                onClick={handleOpenSettings}
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
                 title="Settings"
               >
@@ -1516,9 +1720,46 @@ Questions? Contact: support@drinkbot3000.com
                   </button>
                 </div>
 
+                {/* Saved Custom Drinks */}
+                {state.savedCustomDrinks.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Custom Drinks</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {state.savedCustomDrinks.map((drink) => (
+                        <div key={drink.id} className="relative">
+                          <button
+                            onClick={() => handleAddSavedCustomDrink(drink)}
+                            className="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-900 p-3 rounded-lg font-medium transition text-left"
+                          >
+                            {drink.name}<br />
+                            <span className="text-xs">{drink.oz} oz, {drink.abv}% ABV</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCustomDrink(drink.id)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition text-xs"
+                            title="Delete"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Custom Drink Input */}
                 {state.showCustomDrink && (
                   <div className="border-t pt-4 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Drink Name</label>
+                      <input
+                        type="text"
+                        value={state.customDrinkName}
+                        onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="e.g., My IPA, Margarita"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Volume (oz)</label>
                       <input
@@ -1545,7 +1786,8 @@ Questions? Contact: support@drinkbot3000.com
                       <button
                         onClick={() => {
                           if (state.customDrinkOz && state.customDrinkABV) {
-                            addDrink('custom', parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
+                            addDrink(state.customDrinkName || 'custom', parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
+                            dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
                             dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
                             dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
                           }
@@ -1553,15 +1795,28 @@ Questions? Contact: support@drinkbot3000.com
                         className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
                         disabled={!state.customDrinkOz || !state.customDrinkABV}
                       >
-                        Add Custom Drink
+                        Add Once
                       </button>
                       <button
-                        onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false })}
-                        className="px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                        onClick={handleSaveCustomDrink}
+                        className="flex-1 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition"
+                        disabled={!state.customDrinkName || !state.customDrinkOz || !state.customDrinkABV}
+                        title="Save as reusable preset"
                       >
-                        Cancel
+                        Save Preset
                       </button>
                     </div>
+                    <button
+                      onClick={() => {
+                        dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
+                        dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
+                        dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
+                        dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
+                      }}
+                      className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 )}
               </div>
@@ -1845,14 +2100,96 @@ Questions? Contact: support@drinkbot3000.com
 
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3">Your Profile</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : 'Female'}</p>
-                    <p><strong>Weight:</strong> {state.weight} lbs</p>
-                    <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200">
-                      <strong>Note:</strong> Your weight is locked and cannot be changed once set. To reset, you must clear your browser data or reinstall the app.
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-800">Your Profile</h3>
+                    {!state.settingsEditMode && (
+                      <button
+                        onClick={() => dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: true })}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Edit
+                      </button>
+                    )}
                   </div>
+
+                  {!state.settingsEditMode ? (
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : 'Female'}</p>
+                      <p><strong>Weight:</strong> {state.weight} lbs</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Gender
+                        </label>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: 'male' })}
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+                              state.settingsEditGender === 'male'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            Male
+                          </button>
+                          <button
+                            onClick={() => dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: 'female' })}
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+                              state.settingsEditGender === 'female'
+                                ? 'bg-pink-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            Female
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Weight (lbs)
+                        </label>
+                        <input
+                          type="number"
+                          value={state.settingsEditWeight}
+                          onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter weight (50-500)"
+                          min="50"
+                          max="500"
+                        />
+                        {state.weightError && (
+                          <p className="text-sm text-red-600 mt-1">{state.weightError}</p>
+                        )}
+                      </div>
+
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <p className="text-xs text-amber-900">
+                          <strong>Warning:</strong> Changing your profile will reset your current BAC tracking and drink history.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
+                            dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
+                          }}
+                          className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveSettings}
+                          className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
