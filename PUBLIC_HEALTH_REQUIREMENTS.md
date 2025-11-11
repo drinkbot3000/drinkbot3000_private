@@ -379,18 +379,11 @@ Building a public health research platform would require:
 
 #### Economic Costs of Alcohol-Related Harms (USA, 2025 data)
 
-**1. DUI Arrest - $10,000 to $25,000 per person**
-- Legal fees: $5,000-$10,000
-- Fines and court costs: $2,000-$5,000
-- Increased insurance premiums: $3,000-$10,000/year for 3-5 years
-- Lost wages (jail time, court appearances): $1,000-$3,000
-- Ignition interlock device: $1,200-$2,500
-- DUI education programs: $500-$1,000
-- License reinstatement fees: $200-$500
+**Focus: Life-Saving Impact, Not Legal Consequences**
 
-**Total economic impact per DUI:** **$10,000-$25,000+**
+DrinkBot3000's value isn't in helping people avoid arrest - it's in **preventing actual harm: injuries, deaths, and dangerous drug interactions.**
 
-**2. Alcohol-Related Car Crash (No Fatality) - $50,000 to $500,000**
+**1. Alcohol-Related Car Crash (No Fatality) - $50,000 to $500,000**
 - Emergency medical care: $10,000-$50,000
 - Hospital stay (if serious injury): $20,000-$200,000
 - Rehabilitation/physical therapy: $5,000-$50,000
@@ -400,7 +393,7 @@ Building a public health research platform would require:
 
 **Total economic impact per injury crash:** **$50,000-$500,000**
 
-**3. Alcohol-Related Death - $1.4 Million to $10 Million per life**
+**2. Alcohol-Related Death - $1.4 Million to $10 Million per life**
 - **Economic value of statistical life (VSL):** $10 million (EPA/DOT standard)
 - **Economic costs alone (CDC estimate):** $1.4 million average
   - Medical costs: $10,000-$100,000
@@ -412,7 +405,7 @@ Building a public health research platform would require:
 
 **Total impact per death:** **$1.4M-$10M (economic only, ignoring immeasurable human suffering)**
 
-**4. Alcohol Poisoning (Emergency Room) - $1,000 to $10,000**
+**3. Alcohol Poisoning (Emergency Room) - $1,000 to $10,000**
 - Emergency room visit: $500-$3,000
 - Ambulance transport: $500-$2,000
 - Observation/treatment: $1,000-$5,000
@@ -420,14 +413,14 @@ Building a public health research platform would require:
 
 **Total economic impact:** **$1,000-$10,000**
 
-**5. Benzodiazepine + Alcohol Overdose (Prevented) - $5,000 to $1.4M**
+**4. Benzodiazepine + Alcohol Overdose (Prevented) - $5,000 to $1.4M**
 - If caught early (ER visit): $5,000-$20,000
 - If fatal: $1.4M-$10M (same as alcohol-related death)
 - DrinkBot has explicit warnings about benzos (Xanax, Valium, Ativan, etc.)
 
 **Total economic impact:** **$5,000-$1.4M depending on severity**
 
-**6. Opioid + Alcohol Overdose (Prevented) - $10,000 to $1.4M**
+**5. Opioid + Alcohol Overdose (Prevented) - $10,000 to $1.4M**
 - If reversed with Narcan: $1,000-$5,000
 - If ER/ICU admission: $10,000-$100,000
 - If fatal: $1.4M-$10M
@@ -451,17 +444,17 @@ Building a public health research platform would require:
 
 #### The Math: Break-Even Analysis
 
-**If DrinkBot3000 prevents just ONE incident per year:**
+**If DrinkBot3000 prevents just ONE serious incident per year:**
 
 | Incident Type | Cost Prevented | DrinkBot Operating Cost | Net Public Health Value |
 |---------------|----------------|-------------------------|------------------------|
-| **1 DUI arrest** | $10,000-$25,000 | ~$0 | **+$10,000 to +$25,000** |
 | **1 injury crash** | $50,000-$500,000 | ~$0 | **+$50,000 to +$500,000** |
 | **1 death prevented** | $1.4M-$10M | ~$0 | **+$1.4M to +$10M** |
 | **1 drug overdose** | $5,000-$1.4M | ~$0 | **+$5,000 to +$1.4M** |
+| **1 alcohol poisoning** | $1,000-$10,000 | ~$0 | **+$1,000 to +$10,000** |
 
-**If DrinkBot prevents 100 DUIs per year:** $1M-$2.5M in value created
-**If DrinkBot prevents 10 serious injuries:** $500K-$5M in value created
+**If DrinkBot prevents 10 serious injuries per year:** $500K-$5M in value created
+**If DrinkBot prevents 5 drug overdoses per year:** $25K-$7M in value created
 **If DrinkBot prevents 1 death:** $1.4M-$10M in value created
 
 **Compare to building a research platform:**
@@ -485,8 +478,8 @@ Building a public health research platform would require:
 - Checks DrinkBot: BAC 0.09%
 - Sees warning: "Impairment at any level - take rideshare"
 - Takes Uber instead of driving ($30)
-- **Prevented:** Potential DUI arrest ($15,000) or worse
-- **Net value created:** $14,970 (or millions if crash prevented)
+- **Prevented:** Potential crash causing injury or death
+- **Net value created:** $50K-$10M (if crash with injury/death prevented)
 
 **Scenario 2: The Anxiety Medication User**
 - User takes Xanax prescription regularly
@@ -522,17 +515,17 @@ Building a public health research platform would require:
 
 **Public Health Research Team Annual Cost:** $750K-$1.35M/year
 
-**If that team prevents 100 DUIs/year:**
-- Value created: $1M-$2.5M
+**If that team prevents 10 serious injuries/year:**
+- Value created: $500K-$5M
 - Cost: $750K-$1.35M
-- **Net benefit:** $0-$1.75M (barely break-even or modest positive)
-- **Cost per prevention:** $7,500-$13,500 per DUI prevented
+- **Net benefit:** -$250K to +$4.25M (potentially negative to modest positive)
+- **Cost per prevention:** $75K-$135K per injury prevented
 
-**If DrinkBot3000 prevents 100 DUIs/year:**
-- Value created: $1M-$2.5M
+**If DrinkBot3000 prevents 10 serious injuries/year:**
+- Value created: $500K-$5M
 - Cost: ~$0
-- **Net benefit:** $1M-$2.5M (pure value)
-- **Cost per prevention:** ~$0 per DUI prevented
+- **Net benefit:** $500K-$5M (pure value)
+- **Cost per prevention:** ~$0 per injury prevented
 
 **But here's the critical difference:**
 
@@ -596,8 +589,8 @@ Building a public health research platform would require:
 **If you're trying to PREVENT HARM:**
 - DrinkBot creates immediate value
 - Costs ~$0
-- Every prevented DUI/injury/death is pure public health gain
-- **And people can use that saved money to support OTHER parts of the economy** (not paying lawyers, hospitals, insurance companies for preventable incidents)
+- Every prevented injury/death/overdose is pure public health gain
+- **And people can use that saved money to support OTHER parts of the economy** (not paying hospitals, rehab centers, funeral homes for preventable tragedies)
 
 ---
 
@@ -1317,7 +1310,7 @@ Let's say you're a developer or hire one freelancer:
 
 **Total realistic cost: $7,500-$12,500 + $124 stores = $7,624-$12,624**
 
-**ROI:** If prevents just 1 DUI ($10K-$25K value), you've broken even. Everything beyond that is pure public health impact at minimal ongoing cost.
+**ROI:** If prevents just 1 serious injury ($50K-$500K value) or saves 1 life ($1.4M-$10M), you've created massive public health impact at minimal cost.
 
 ---
 
@@ -1341,7 +1334,7 @@ Let's say you're a developer or hire one freelancer:
 
 **The choice is obvious: Build the app. Help people now. Preserve privacy. Save money.**
 
-**And if even ONE person uses the app to avoid a DUI or drug interaction, you've created $10K-$10M in public health value while spending only $624-$200K.**
+**And if even ONE person uses the app to avoid a crash, overdose, or death, you've created $50K-$10M in public health value while spending only $624-$200K.**
 
 **Return on investment: 50x to 50,000x** (vs. research platform's negative ROI)
 
