@@ -1880,34 +1880,54 @@ Questions? Contact: support@drinkbot3000.com
 
                   {state.showDrinkHistory && (
                     <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
-                      {state.drinks.map((drink, index) => (
-                        <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-800">
-                              {drink.type === 'beer' && '🍺 Beer'}
-                              {drink.type === 'wine' && '🍷 Wine'}
-                              {drink.type === 'shot' && '🥃 Shot'}
-                              {drink.type === 'custom' && '🍹 Custom'}
+                      {[...state.drinks].reverse().map((drink) => {
+                        // Format the timestamp
+                        const timeStr = new Date(drink.timestamp).toLocaleTimeString([], {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        });
+
+                        // Determine emoji based on drink type
+                        let emoji = '🍹';
+                        if (drink.type === 'Standard Drink') {
+                          emoji = '🍺';
+                        } else if (drink.type.toLowerCase().includes('beer')) {
+                          emoji = '🍺';
+                        } else if (drink.type.toLowerCase().includes('wine')) {
+                          emoji = '🍷';
+                        } else if (drink.type.toLowerCase().includes('shot')) {
+                          emoji = '🥃';
+                        }
+
+                        return (
+                          <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-800">
+                                {emoji} {drink.type}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {drink.standardDrinks.toFixed(2)} std drinks • {timeStr}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {drink.oz}oz, {drink.abv}% ABV • {new Date(drink.time).toLocaleTimeString()}
-                            </div>
+                            <button
+                              onClick={() => deleteDrink(drink.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                              title="Remove this drink"
+                              aria-label="Remove drink"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => removeDrink(drink.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
                   <div className="flex gap-2">
                     <button
                       onClick={undoDrink}
-                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition"
+                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={state.drinks.length === 0}
                     >
                       <RefreshCw className="w-4 h-4 inline mr-1" />
