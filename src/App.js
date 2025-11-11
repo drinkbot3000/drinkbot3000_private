@@ -168,11 +168,16 @@ export default function BACTracker() {
     const disclaimerCheck = localStorage.getItem('disclaimerAccepted');
     const safetyCheck = localStorage.getItem('safetyScreensComplete');
     const savedReceipts = localStorage.getItem('bacTrackerReceipts');
-    
+
+    // Load geographic verification state (CRITICAL for security)
+    const geoVerifiedCheck = localStorage.getItem('geoVerified');
+    const geoConsentCheck = localStorage.getItem('geoConsentGiven');
+    const userCountryCheck = localStorage.getItem('userCountry');
+
     if (ageCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
     }
-    
+
     if (disclaimerCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     }
@@ -180,7 +185,23 @@ export default function BACTracker() {
     if (safetyCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-    
+
+    // Enforce geographic restriction on load
+    if (geoVerifiedCheck !== null) {
+      const isGeoVerified = geoVerifiedCheck === 'true';
+      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: isGeoVerified });
+
+      // If verification failed (not in USA), set blocked state
+      if (!isGeoVerified) {
+        dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: userCountryCheck || 'Unknown' });
+      }
+    }
+
+    if (geoConsentCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
+    }
+
     if (savedReceipts) {
       try {
         const receipts = JSON.parse(savedReceipts);
@@ -189,7 +210,7 @@ export default function BACTracker() {
         console.error('Failed to load receipts:', e);
       }
     }
-    
+
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
@@ -391,6 +412,7 @@ Questions? Contact: support@drinkbot3000.com
 
   const handleGeoConsentAccept = async () => {
     dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
+    localStorage.setItem('geoConsentGiven', 'true');
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
 
     // Perform geographic verification
@@ -416,9 +438,9 @@ Questions? Contact: support@drinkbot3000.com
     } catch (error) {
       console.error('Geographic verification failed:', error);
       dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
-      // On error, allow access and show disclaimer
-      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
-      dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
+      // SECURITY: Fail-closed - block access on error (never allow on error)
+      dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'Unknown (Error)' });
     }
   };
 
