@@ -71,6 +71,7 @@ const initialState = {
   currentSafetyScreen: 0, // For multi-screen safety warnings
   safetyScreensComplete: false,
   // Geographic verification state
+  showUSADeclaration: false,
   showGeoConsent: false,
   geoConsentGiven: false,
   geoVerified: false,
@@ -447,11 +448,24 @@ Questions? Contact: support@drinkbot3000.com
     if (isOfAge) {
       localStorage.setItem('ageVerified', 'true');
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
-      // Show geographic consent dialog first
-      dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: true });
+      // Show USA declaration screen first
+      dispatch({ type: 'SET_FIELD', field: 'showUSADeclaration', value: true });
     } else {
       alert('You must be of legal drinking age to use this app.');
     }
+  };
+
+  const handleUSADeclarationYes = () => {
+    dispatch({ type: 'SET_FIELD', field: 'showUSADeclaration', value: false });
+    // Continue to geographic consent dialog
+    dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: true });
+  };
+
+  const handleUSADeclarationNo = () => {
+    // User declared they are NOT in USA - block immediately
+    dispatch({ type: 'SET_FIELD', field: 'showUSADeclaration', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+    dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'Outside USA (self-declared)' });
   };
 
   const handleGeoConsentAccept = async () => {
@@ -948,16 +962,74 @@ Questions? Contact: support@drinkbot3000.com
     );
   }
 
+  // USA Declaration Screen - Patriotic self-declaration
+  if (state.showUSADeclaration && state.ageVerified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-700 via-white to-blue-700 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-blue-600">
+          <div className="text-center mb-6">
+            <div className="text-8xl mb-6 animate-pulse">
+              🇺🇸
+            </div>
+            <div className="text-6xl mb-4">
+              🦅
+            </div>
+            <h1 className="text-4xl font-bold text-blue-900 mb-4">
+              ARE YOU IN THE USA?
+            </h1>
+            <p className="text-xl text-gray-700 mb-4 font-semibold">
+              This service is ONLY available to users physically located in the United States of America
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-r from-red-50 via-white to-blue-50 rounded-lg p-6 mb-6 border-2 border-blue-300">
+            <p className="text-center text-lg text-gray-800 font-bold mb-3">
+              🇺🇸 USA RESIDENTS ONLY 🇺🇸
+            </p>
+            <p className="text-sm text-gray-700 text-center">
+              DrinkBot3000 is exclusively for users in the United States. We will verify your location.
+            </p>
+          </div>
+
+          <div className="space-y-4 mb-4">
+            <button
+              onClick={handleUSADeclarationYes}
+              className="w-full bg-gradient-to-r from-blue-600 via-white to-red-600 text-blue-900 py-5 rounded-xl font-bold text-2xl border-4 border-blue-700 hover:shadow-2xl transition transform hover:scale-105"
+            >
+              🇺🇸 YES - I AM IN THE USA 🦅
+            </button>
+
+            <button
+              onClick={handleUSADeclarationNo}
+              className="w-full bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold text-lg hover:bg-gray-400 transition"
+            >
+              No - I am not in the USA
+            </button>
+          </div>
+
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-300">
+            <p className="text-xs text-amber-900 text-center">
+              ⚠️ If you select "YES", we will verify your location using your IP address. False declarations may result in access denial.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Geographic Consent Dialog
   if (state.showGeoConsent && state.ageVerified && !state.geoConsentGiven) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-red-600">
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-blue-100 rounded-full">
+            <div className="text-6xl mb-4">
+              🦅
+            </div>
+            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-gradient-to-br from-red-100 via-white to-blue-100 rounded-full border-4 border-blue-600">
               <Globe className="w-16 h-16 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">🇺🇸 USA Location Verification</h1>
+            <h1 className="text-3xl font-bold text-blue-900 mb-4">🇺🇸 USA LOCATION VERIFICATION 🇺🇸</h1>
             <p className="text-lg text-gray-700 mb-4">
               This is a USA-only service. We need to verify you're in the United States.
             </p>
@@ -983,9 +1055,9 @@ Questions? Contact: support@drinkbot3000.com
           <div className="space-y-3">
             <button
               onClick={handleGeoConsentAccept}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg"
+              className="w-full bg-gradient-to-r from-blue-700 via-red-600 to-blue-700 text-white py-5 rounded-xl font-bold text-xl hover:shadow-2xl transition transform hover:scale-105 border-2 border-white"
             >
-              I Consent to USA Location Verification
+              🇺🇸 I CONSENT TO USA LOCATION VERIFICATION 🦅
             </button>
 
             <button
