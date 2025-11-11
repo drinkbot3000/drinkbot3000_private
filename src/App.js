@@ -49,10 +49,8 @@ const initialState = {
   confirmModalAction: null,
   showDrinkHistory: false,
   weightError: '',
-  customTipAmount: '',
   showDisclaimerModal: false,
   disclaimerAccepted: false,
-  tipError: '',
   showRefundPolicy: false,
   showReceipt: false,
   currentReceipt: null,
@@ -601,18 +599,6 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const handleTip = (amount) => {
-    if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
-      dispatch({
-        type: 'SET_FIELD',
-        field: 'tipError',
-        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.`
-      });
-      setTimeout(() => {
-        dispatch({ type: 'SET_FIELD', field: 'tipError', value: '' });
-      }, 5000);
-      return;
-    }
-
     // Show payment consent modal before redirecting
     dispatch({
       type: 'SET_MULTIPLE',
@@ -1606,63 +1592,16 @@ Questions? Contact: support@drinkbot3000.com
               <div className="bg-white rounded-lg p-6 shadow">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Support DrinkBot3000</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Enjoying DrinkBot3000? Support development with a tip! Secure checkout via Stripe.
+                  Enjoying DrinkBot3000? Support development with a $5 tip! Secure checkout via Stripe.
                 </p>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <button
-                    onClick={() => handleTip(3)}
-                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
-                  >
-                    $3
-                  </button>
-                  <button
-                    onClick={() => handleTip(5)}
-                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
-                  >
-                    $5
-                  </button>
-                  <button
-                    onClick={() => handleTip(10)}
-                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
-                  >
-                    $10
-                  </button>
-                </div>
-                <button
-                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomTip', value: !state.showCustomTip })}
-                  className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
-                >
-                  Custom Amount
-                </button>
 
-                {state.showCustomTip && (
-                  <div className="mt-3 space-y-2">
-                    <input
-                      type="number"
-                      value={state.customTipAmount}
-                      onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customTipAmount', value: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Enter custom amount"
-                      min={CONSTANTS.MIN_TIP_AMOUNT}
-                      step="1"
-                    />
-                    {state.tipError && (
-                      <p className="text-red-600 text-sm">{state.tipError}</p>
-                    )}
-                    <button
-                      onClick={() => {
-                        const amount = parseFloat(state.customTipAmount);
-                        if (amount >= CONSTANTS.MIN_TIP_AMOUNT) {
-                          handleTip(amount);
-                        }
-                      }}
-                      className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
-                      disabled={!state.customTipAmount || parseFloat(state.customTipAmount) < CONSTANTS.MIN_TIP_AMOUNT}
-                    >
-                      Send Tip
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={() => handleTip(5)}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 rounded-lg font-semibold text-lg transition shadow-lg flex items-center justify-center gap-2"
+                >
+                  <DollarSign className="w-5 h-5" />
+                  Support with $5
+                </button>
 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-900">
