@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import CONSTANTS from '../constants/appConstants';
 
-export default function AgeVerification({ onVerify }) {
+const AgeVerification = memo(function AgeVerification({ onVerify }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -43,4 +43,6 @@ export default function AgeVerification({ onVerify }) {
       </div>
     </div>
   );
-}
+});
+
+export default AgeVerification;

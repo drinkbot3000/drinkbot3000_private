@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Globe } from 'lucide-react';
 
-export default function GeoConsent({ onAccept, onDecline }) {
+const GeoConsent = memo(function GeoConsent({ onAccept, onDecline }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -56,4 +56,6 @@ export default function GeoConsent({ onAccept, onDecline }) {
       </div>
     </div>
   );
-}
+});
+
+export default GeoConsent;

@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Coffee, DollarSign, AlertTriangle, FileText, RefreshCw, CheckCircle } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
@@ -120,14 +120,14 @@ export default function BACTracker() {
     return () => clearInterval(interval);
   }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours]);
 
-  const showRobotMessage = (message) => {
+  const showRobotMessage = useCallback((message) => {
     dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: message });
     setTimeout(() => {
       dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: '' });
     }, CONSTANTS.ROBOT_MESSAGE_DURATION);
-  };
+  }, []);
 
-  const handleAgeVerification = (isOfAge) => {
+  const handleAgeVerification = useCallback((isOfAge) => {
     if (isOfAge) {
       localStorage.setItem('ageVerified', 'true');
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
@@ -135,9 +135,9 @@ export default function BACTracker() {
     } else {
       alert('You must be of legal drinking age to use this app.');
     }
-  };
+  }, []);
 
-  const handleGeoConsentAccept = async () => {
+  const handleGeoConsentAccept = useCallback(async () => {
     dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
 
@@ -163,31 +163,31 @@ export default function BACTracker() {
       dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
       dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
     }
-  };
+  }, []);
 
-  const handleGeoConsentDecline = () => {
+  const handleGeoConsentDecline = useCallback(() => {
     dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
     localStorage.removeItem('ageVerified');
-  };
+  }, []);
 
-  const handleDisclaimerAccept = () => {
+  const handleDisclaimerAccept = useCallback(() => {
     localStorage.setItem('disclaimerAccepted', 'true');
     dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: false });
     dispatch({ type: 'SET_FIELD', field: 'currentSafetyScreen', value: 0 });
-  };
+  }, []);
 
-  const handleSafetyScreenNext = () => {
+  const handleSafetyScreenNext = useCallback(() => {
     if (state.currentSafetyScreen < 3) {
       dispatch({ type: 'NEXT_SAFETY_SCREEN' });
     } else {
       localStorage.setItem('safetyScreensComplete', 'true');
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-  };
+  }, [state.currentSafetyScreen]);
 
-  const handleSafetyScreenDecline = () => {
+  const handleSafetyScreenDecline = useCallback(() => {
     localStorage.removeItem('ageVerified');
     localStorage.removeItem('disclaimerAccepted');
     localStorage.removeItem('safetyScreensComplete');
@@ -195,9 +195,9 @@ export default function BACTracker() {
     dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: false });
     dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: false });
     dispatch({ type: 'SET_FIELD', field: 'currentSafetyScreen', value: 0 });
-  };
+  }, []);
 
-  const handleSetup = () => {
+  const handleSetup = useCallback(() => {
     const error = validateWeight(state.weight);
     if (error) {
       dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
@@ -215,13 +215,13 @@ export default function BACTracker() {
       const greeting = robotGreetings[Math.floor(Math.random() * robotGreetings.length)];
       showRobotMessage(greeting);
     }
-  };
+  }, [state.weight, state.gender, state.mode, showRobotMessage]);
 
-  const handleModeSelect = (selectedMode) => {
+  const handleModeSelect = useCallback((selectedMode) => {
     dispatch({ type: 'SET_FIELD', field: 'mode', value: selectedMode });
-  };
+  }, []);
 
-  const resetApp = () => {
+  const resetApp = useCallback(() => {
     dispatch({
       type: 'SHOW_CONFIRM',
       message: 'Are you sure you want to reset the app? All data will be permanently deleted.',
@@ -231,9 +231,9 @@ export default function BACTracker() {
         dispatch({ type: 'HIDE_CONFIRM' });
       },
     });
-  };
+  }, []);
 
-  const addDrink = (type, oz, abv) => {
+  const addDrink = useCallback((type, oz, abv) => {
     const pureAlcoholOz = parseFloat(oz) * (parseFloat(abv) / 100);
     const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
 
@@ -250,21 +250,21 @@ export default function BACTracker() {
 
     const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
     showRobotMessage(comment);
-  };
+  }, [showRobotMessage]);
 
-  const undoDrink = () => {
+  const undoDrink = useCallback(() => {
     if (state.drinks.length > 0) {
       dispatch({ type: 'UNDO_DRINK' });
       showRobotMessage('*beep boop* Last drink removed from records! 🤖');
     }
-  };
+  }, [state.drinks.length, showRobotMessage]);
 
-  const removeDrink = (id) => {
+  const removeDrink = useCallback((id) => {
     dispatch({ type: 'REMOVE_DRINK', id });
     showRobotMessage('*whirrs* Drink removed from records! 🤖');
-  };
+  }, [showRobotMessage]);
 
-  const clearDrinks = () => {
+  const clearDrinks = useCallback(() => {
     dispatch({
       type: 'SHOW_CONFIRM',
       message: 'Clear all drinks and reset tracker?',
@@ -274,18 +274,18 @@ export default function BACTracker() {
         showRobotMessage('*beep boop* All drinks cleared! Starting fresh! 🤖');
       },
     });
-  };
+  }, [showRobotMessage]);
 
-  const tellJoke = () => {
+  const tellJoke = useCallback(() => {
     const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
     dispatch({ type: 'SET_FIELD', field: 'currentJoke', value: randomJoke });
     dispatch({ type: 'SET_FIELD', field: 'showJoke', value: true });
     setTimeout(() => {
       dispatch({ type: 'SET_FIELD', field: 'showJoke', value: false });
     }, CONSTANTS.JOKE_DURATION);
-  };
+  }, []);
 
-  const calculateQuickBAC = () => {
+  const calculateQuickBAC = useCallback(() => {
     if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) return;
 
     const bac = calcBAC({
@@ -299,9 +299,9 @@ export default function BACTracker() {
     });
 
     dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: bac });
-  };
+  }, [state.gender, state.weight, state.calcDrinks, state.calcHours]);
 
-  const handleTip = (amount) => {
+  const handleTip = useCallback((amount) => {
     if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
       dispatch({
         type: 'SET_FIELD',
@@ -322,16 +322,19 @@ export default function BACTracker() {
       dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
       showRobotMessage('*whirrs happily* Payment successful! Receipt generated! 🎉');
     }, 1500);
-  };
+  }, [showRobotMessage]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     resetApp();
-  };
+  }, [resetApp]);
 
-  const status = getBACStatus(state.bac);
-  const currentStatus = state.calcBAC !== null && state.activeTab === 'calculator'
-    ? getBACStatus(state.calcBAC)
-    : status;
+  const status = useMemo(() => getBACStatus(state.bac), [state.bac]);
+  const currentStatus = useMemo(() =>
+    state.calcBAC !== null && state.activeTab === 'calculator'
+      ? getBACStatus(state.calcBAC)
+      : status,
+    [state.calcBAC, state.activeTab, status]
+  );
 
   // Age Verification Screen
   if (!state.ageVerified) {
