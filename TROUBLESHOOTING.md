@@ -73,7 +73,7 @@ Then reload the page.
 
 ### "Loading chunk failed"
 
-**Cause:** Code splitting issue or service worker interference
+**Cause:** Service worker cache interference or network issue
 
 **Fix:**
 1. Clear service worker cache (see above)

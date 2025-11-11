@@ -324,7 +324,6 @@ If something breaks:
 
 ### Future Enhancements
 - Image optimization (use WebP format)
-- Code splitting (React.lazy())
 - Bundle analysis (webpack-bundle-analyzer)
 - Preload critical assets
 - Service worker caching strategies
