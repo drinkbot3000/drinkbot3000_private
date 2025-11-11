@@ -46,6 +46,7 @@ const initialState = {
   customDrinkOz: '',
   customDrinkABV: '5',
   customDrinkName: '',
+  showCustomDrink: false,
   savedCustomDrinks: [],
   robotMessage: '',
   showSplash: true,
@@ -529,17 +530,46 @@ Questions? Contact: support@drinkbot3000.com
     dispatch({ type: 'SET_FIELD', field: 'mode', value: selectedMode });
   };
 
-  const addDrink = () => {
-    const newDrink = {
-      id: Date.now(),
-      timestamp: Date.now(),
-      standardDrinks: 1,
-      type: 'Standard Drink',
-    };
-    dispatch({ type: 'ADD_DRINK', drink: newDrink });
-    
-    const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
-    showRobotMessage(comment);
+  const addDrink = (name = 'Standard Drink', oz = null, abv = null) => {
+    try {
+      let standardDrinks = 1;
+      let drinkType = name;
+
+      // If oz and abv are provided, calculate standard drinks
+      if (oz !== null && abv !== null) {
+        const ozValue = parseFloat(oz);
+        const abvValue = parseFloat(abv);
+
+        // Validate inputs
+        if (isNaN(ozValue) || ozValue <= 0 || ozValue > 64) {
+          showRobotMessage('Invalid drink size. Please use a value between 0 and 64 oz.');
+          return;
+        }
+        if (isNaN(abvValue) || abvValue <= 0 || abvValue > 100) {
+          showRobotMessage('Invalid ABV%. Please use a value between 0 and 100%.');
+          return;
+        }
+
+        const pureAlcoholOz = ozValue * (abvValue / 100);
+        standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
+        drinkType = `${name} (${ozValue}oz @ ${abvValue}%)`;
+      }
+
+      const newDrink = {
+        id: Date.now(),
+        timestamp: Date.now(),
+        standardDrinks: standardDrinks,
+        type: drinkType,
+      };
+
+      dispatch({ type: 'ADD_DRINK', drink: newDrink });
+
+      const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
+      showRobotMessage(comment);
+    } catch (error) {
+      console.error('Error adding drink:', error);
+      showRobotMessage('Error adding drink. Please check your inputs and try again.');
+    }
   };
 
   const undoDrink = () => {
@@ -717,49 +747,62 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const handleSaveCustomDrink = () => {
-    const oz = parseFloat(state.customDrinkOz);
-    const abv = parseFloat(state.customDrinkABV);
-    const name = state.customDrinkName.trim();
+    try {
+      const oz = parseFloat(state.customDrinkOz);
+      const abv = parseFloat(state.customDrinkABV);
+      const name = state.customDrinkName.trim();
 
-    // Validate inputs
-    if (!name) {
-      showRobotMessage('Please enter a name for your custom drink.');
-      return;
+      // Validate inputs
+      if (!name) {
+        showRobotMessage('Please enter a name for your custom drink.');
+        return;
+      }
+
+      // Validate name length and characters
+      if (name.length > 50) {
+        showRobotMessage('Drink name is too long. Please use 50 characters or less.');
+        return;
+      }
+
+      if (isNaN(oz) || oz <= 0 || oz > 64) {
+        showRobotMessage('Please enter a valid drink size (0-64 oz).');
+        return;
+      }
+      if (isNaN(abv) || abv <= 0 || abv > 100) {
+        showRobotMessage('Please enter a valid ABV% (0-100%).');
+        return;
+      }
+
+      // Check if name already exists
+      if (state.savedCustomDrinks.some(drink => drink.name.toLowerCase() === name.toLowerCase())) {
+        showRobotMessage('A custom drink with this name already exists. Please choose a different name.');
+        return;
+      }
+
+      // Add to saved custom drinks
+      const newDrink = {
+        id: Date.now(),
+        name,
+        oz,
+        abv
+      };
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'savedCustomDrinks',
+        value: [...state.savedCustomDrinks, newDrink]
+      });
+
+      // Clear form and hide custom drink input
+      dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
+      dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
+      dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
+      dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
+
+      showRobotMessage(`Custom drink "${name}" saved!`);
+    } catch (error) {
+      console.error('Error saving custom drink:', error);
+      showRobotMessage('Error saving custom drink. Please try again.');
     }
-    if (isNaN(oz) || oz <= 0 || oz > 64) {
-      showRobotMessage('Please enter a valid drink size (0-64 oz).');
-      return;
-    }
-    if (isNaN(abv) || abv <= 0 || abv > 100) {
-      showRobotMessage('Please enter a valid ABV% (0-100%).');
-      return;
-    }
-
-    // Check if name already exists
-    if (state.savedCustomDrinks.some(drink => drink.name.toLowerCase() === name.toLowerCase())) {
-      showRobotMessage('A custom drink with this name already exists.');
-      return;
-    }
-
-    // Add to saved custom drinks
-    const newDrink = {
-      id: Date.now(),
-      name,
-      oz,
-      abv
-    };
-    dispatch({
-      type: 'SET_FIELD',
-      field: 'savedCustomDrinks',
-      value: [...state.savedCustomDrinks, newDrink]
-    });
-
-    // Clear form
-    dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
-    dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
-    dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
-
-    showRobotMessage(`Custom drink "${name}" saved!`);
   };
 
   const handleDeleteCustomDrink = (drinkId) => {
@@ -772,8 +815,17 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const handleAddSavedCustomDrink = (drink) => {
-    addDrink(drink.name, drink.oz, drink.abv);
-    showRobotMessage(`Added ${drink.name} to your log!`);
+    try {
+      if (!drink || !drink.name || drink.oz == null || drink.abv == null) {
+        showRobotMessage('Error: Invalid drink data. Please try again.');
+        return;
+      }
+      addDrink(drink.name, drink.oz, drink.abv);
+      showRobotMessage(`Added ${drink.name} to your log!`);
+    } catch (error) {
+      console.error('Error adding saved custom drink:', error);
+      showRobotMessage('Error adding drink. Please try again.');
+    }
   };
 
   const handleTip = (amount) => {
