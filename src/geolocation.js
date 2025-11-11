@@ -15,6 +15,7 @@ const GEO_API_CONFIG = {
   endpoint: 'https://ip-api.com/json/',
   fields: 'status,country,countryCode',
   timeout: 10000, // 10 second timeout
+  rateLimitCacheDuration: 300000, // 5 minutes - cache rate limit errors
 };
 
 /**
@@ -30,6 +31,12 @@ export async function checkGeographicRestriction() {
     const cachedResult = getCachedVerification();
     if (cachedResult) {
       return cachedResult;
+    }
+
+    // Check if we're currently rate limited
+    const rateLimitError = checkRateLimit();
+    if (rateLimitError) {
+      return rateLimitError;
     }
 
     // Fetch user's country from IP geolocation service
@@ -54,7 +61,11 @@ export async function checkGeographicRestriction() {
     };
 
   } catch (error) {
-    console.error('Geographic verification error:', error);
+    // Only log to console once, not repeatedly
+    if (!sessionStorage.getItem('geoErrorLogged')) {
+      console.error('Geographic verification error:', error);
+      sessionStorage.setItem('geoErrorLogged', 'true');
+    }
 
     // Fail closed: deny access on error for USA-only service
     // This prevents unauthorized access if verification fails
@@ -88,8 +99,24 @@ async function fetchGeolocation() {
     });
 
     if (!response.ok) {
-      throw new Error(`Geolocation service error: ${response.status}`);
+      // Handle specific error codes
+      if (response.status === 403) {
+        // Rate limit or access restriction - cache this error
+        cacheRateLimit();
+        throw new Error('Geolocation service temporarily unavailable (rate limit). Please try again in a few minutes.');
+      } else if (response.status === 429) {
+        // Explicit rate limit
+        cacheRateLimit();
+        throw new Error('Too many requests. Please try again in a few minutes.');
+      } else if (response.status >= 500) {
+        throw new Error('Geolocation service is currently down. Please try again later.');
+      } else {
+        throw new Error(`Geolocation service error: ${response.status}`);
+      }
     }
+
+    // Clear any cached rate limit on success
+    clearRateLimit();
 
     return await response.json();
   } finally {
@@ -123,11 +150,56 @@ function cacheVerification(allowed, country) {
 }
 
 /**
+ * Check if we're currently rate limited
+ * @private
+ */
+function checkRateLimit() {
+  const rateLimitUntil = sessionStorage.getItem('geoRateLimitUntil');
+  if (!rateLimitUntil) return null;
+
+  const now = Date.now();
+  const limitTime = parseInt(rateLimitUntil, 10);
+
+  if (now < limitTime) {
+    const minutesLeft = Math.ceil((limitTime - now) / 60000);
+    return {
+      allowed: false,
+      country: 'Unknown',
+      error: `Service temporarily unavailable. Please try again in ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`,
+      rateLimited: true
+    };
+  }
+
+  // Rate limit expired, clear it
+  clearRateLimit();
+  return null;
+}
+
+/**
+ * Cache rate limit error
+ * @private
+ */
+function cacheRateLimit() {
+  const rateLimitUntil = Date.now() + GEO_API_CONFIG.rateLimitCacheDuration;
+  sessionStorage.setItem('geoRateLimitUntil', rateLimitUntil.toString());
+}
+
+/**
+ * Clear rate limit cache
+ * @private
+ */
+function clearRateLimit() {
+  sessionStorage.removeItem('geoRateLimitUntil');
+}
+
+/**
  * Reset geographic verification (for testing/debugging only)
  */
 export function resetGeographicVerification() {
   localStorage.removeItem('geoVerified');
   localStorage.removeItem('userCountry');
+  clearRateLimit();
+  sessionStorage.removeItem('geoErrorLogged');
 }
 
 /**
