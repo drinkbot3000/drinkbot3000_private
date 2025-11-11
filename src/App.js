@@ -19,13 +19,8 @@ const CONSTANTS = {
   MIN_TIP_AMOUNT: 3,
   LEGAL_DRINKING_AGE: 21,
   REFUND_WINDOW_DAYS: 30,
-  // Stripe Payment Links - Replace these with your actual Stripe Payment Links
-  STRIPE_PAYMENT_LINKS: {
-    3: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_3_DOLLAR_LINK',
-    5: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_5_DOLLAR_LINK',
-    10: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_10_DOLLAR_LINK',
-    custom: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_CUSTOM_LINK'
-  }
+  // Stripe Payment Link - $5 payment to support DrinkBot3000 and spread safety messages!
+  STRIPE_PAYMENT_LINK: 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01'
 };
 
 // Initial state
@@ -618,10 +613,9 @@ Questions? Contact: support@drinkbot3000.com
       return;
     }
 
-    // Open Stripe Payment Link in new tab
-    const paymentLink = CONSTANTS.STRIPE_PAYMENT_LINKS[amount] || CONSTANTS.STRIPE_PAYMENT_LINKS.custom;
-    window.open(paymentLink, '_blank', 'noopener,noreferrer');
-    showRobotMessage(`*beep boop* Opening payment page... Thank you for your support! 🤖`);
+    // Open Stripe Payment Link in new tab ($5 donation)
+    window.open(CONSTANTS.STRIPE_PAYMENT_LINK, '_blank', 'noopener,noreferrer');
+    showRobotMessage(`*beep boop* Opening $5 payment page... Thank you for your support! Share to spread safety! 🤖`);
   };
 
   const handleShare = async () => {
@@ -1642,74 +1636,36 @@ Questions? Contact: support@drinkbot3000.com
               <div className="bg-white rounded-lg p-6 shadow">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Support DrinkBot3000</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Enjoying DrinkBot3000? Support development with a secure payment via Stripe!
+                  Help us spread life-saving safety messages! Support development with $5 and share with friends.
                 </p>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <button
-                    onClick={() => handleTip(3)}
-                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
-                    title="Opens Stripe payment page"
-                  >
-                    $3
-                  </button>
-                  <button
-                    onClick={() => handleTip(5)}
-                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
-                    title="Opens Stripe payment page"
-                  >
-                    $5
-                  </button>
-                  <button
-                    onClick={() => handleTip(10)}
-                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
-                    title="Opens Stripe payment page"
-                  >
-                    $10
-                  </button>
-                </div>
+
                 <button
-                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomTip', value: !state.showCustomTip })}
-                  className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition text-sm"
+                  onClick={() => handleTip(5)}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-4 rounded-xl font-bold text-xl transition shadow-lg flex items-center justify-center space-x-2"
+                  title="Opens Stripe payment page"
                 >
-                  Custom Amount
+                  <DollarSign className="w-6 h-6" />
+                  <span>Support with $5</span>
                 </button>
 
-                {state.showCustomTip && (
-                  <div className="mt-3 space-y-2">
-                    <input
-                      type="number"
-                      value={state.customTipAmount}
-                      onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customTipAmount', value: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Enter custom amount"
-                      min={CONSTANTS.MIN_TIP_AMOUNT}
-                      step="1"
-                    />
-                    {state.tipError && (
-                      <p className="text-red-600 text-sm">{state.tipError}</p>
-                    )}
-                    <button
-                      onClick={() => {
-                        const amount = parseFloat(state.customTipAmount);
-                        if (amount >= CONSTANTS.MIN_TIP_AMOUNT) {
-                          handleTip(amount);
-                        }
-                      }}
-                      className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
-                      disabled={!state.customTipAmount || parseFloat(state.customTipAmount) < CONSTANTS.MIN_TIP_AMOUNT}
-                      title="Opens Stripe payment page"
-                    >
-                      Pay with Stripe
-                    </button>
-                  </div>
-                )}
-
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-900 mb-2">
-                    💡 Tips help keep DrinkBot3000 free and ad-free for everyone!
+                <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+                  <p className="text-sm text-blue-900 font-semibold mb-2">
+                    💡 Help us save lives!
                   </p>
-                  <p className="text-xs text-blue-800">
+                  <p className="text-xs text-blue-800 mb-2">
+                    Your $5 keeps DrinkBot3000 free and spreads critical safety messages to more people.
+                  </p>
+                  <p className="text-xs text-indigo-800 font-medium">
                     Secure payments via Stripe with automatic tax collection
+                  </p>
+                </div>
+
+                <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                  <p className="text-xs text-purple-900 font-semibold mb-1">
+                    🚀 Spread the word!
+                  </p>
+                  <p className="text-xs text-purple-800">
+                    Share DrinkBot3000 with friends to help grow our community and spread safety awareness!
                   </p>
                 </div>
               </div>
