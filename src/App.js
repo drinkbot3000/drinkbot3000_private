@@ -3,22 +3,52 @@ import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, 
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
 
-// Constants
+// Constants - Scientifically validated values for BAC calculations
+// These values are based on the Widmark formula, the gold standard for BAC estimation
+// used by law enforcement and medical professionals worldwide.
 const CONSTANTS = {
+  // Average alcohol elimination rate: 0.015% BAC per hour
+  // Medical range: 0.012-0.018% per hour depending on individual factors
+  // (liver health, genetics, medication, food intake)
+  // Source: National Institute on Alcohol Abuse and Alcoholism (NIAAA)
   METABOLISM_RATE: 0.015,
+
+  // US Standard Drink definition: 14 grams (0.6 fl oz) of pure ethanol
+  // Equivalent to: 12oz beer (5% ABV), 5oz wine (12% ABV), 1.5oz spirits (40% ABV)
+  // Source: NIAAA, CDC, SAMHSA
   GRAMS_PER_STANDARD_DRINK: 14,
+
+  // Precise conversion factor: pounds to kilograms
   LBS_TO_KG: 0.453592,
+
+  // Widmark r-values: body water distribution ratio
+  // Male: 0.68 (68% body weight is water for average male)
+  // Female: 0.55 (55% body weight is water for average female)
+  // These are population averages; individual variation exists
+  // Source: Widmark, E.M.P. (1932), Watson et al. (1980)
   MALE_BODY_WATER: 0.68,
   FEMALE_BODY_WATER: 0.55,
+
+  // Standard drink in fluid ounces of pure alcohol
+  // 0.6 fl oz = 14 grams = 17.7 mL of pure ethanol
   STANDARD_DRINK_OZ: 0.6,
+
+  // US legal limit for driving: 0.08% BAC (0.08 g/dL)
+  // Note: Impairment begins at much lower levels (0.02-0.03%)
+  // Many countries use 0.05% or lower
   LEGAL_LIMIT: 0.08,
+
+  // Safety limits for weight input (in pounds)
   MIN_WEIGHT: 50,
   MAX_WEIGHT: 500,
+
+  // UI timing constants
   ROBOT_MESSAGE_DURATION: 5000,
   JOKE_DURATION: 7000,
   MIN_TIP_AMOUNT: 3,
   LEGAL_DRINKING_AGE: 21,
   REFUND_WINDOW_DAYS: 30,
+
   // Stripe Payment Link - $5 payment to support DrinkBot3000 and spread safety messages!
   STRIPE_PAYMENT_LINK: 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01'
 };
@@ -247,6 +277,8 @@ export default function BACTracker() {
 
   // Helper functions
   // Default to female body water constant (more conservative - higher BAC estimate)
+  // Returns Widmark r-value (body water distribution ratio) based on gender
+  // Defaults to female (more conservative estimate) if gender not specified
   const getBodyWaterConstant = (g) =>
     g === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
 
@@ -258,46 +290,99 @@ export default function BACTracker() {
     return '';
   };
 
+  /**
+   * Calculates Blood Alcohol Concentration (BAC) using the Widmark formula
+   *
+   * WIDMARK FORMULA:
+   * BAC = (A / (W × r)) - (β × t)
+   *
+   * Where:
+   * A = Alcohol consumed in grams
+   * W = Body weight in grams
+   * r = Body water distribution ratio (0.68 male, 0.55 female)
+   * β = Elimination rate (0.015% per hour average)
+   * t = Time elapsed in hours
+   *
+   * IMPORTANT LIMITATIONS:
+   * 1. Assumes instant absorption (actual: 30-90 minutes to peak)
+   * 2. Doesn't account for food (can reduce peak BAC by 25-45%)
+   * 3. Uses average metabolism rate (actual range: 0.012-0.018%/hr)
+   * 4. Individual factors not modeled: liver health, medications, age, genetics
+   * 5. Accuracy: ±0.02% BAC in controlled studies
+   *
+   * ALWAYS err on the side of caution - when in doubt, don't drive.
+   *
+   * Sources:
+   * - Widmark, E.M.P. (1932) "Die theoretischen Grundlagen..."
+   * - Watson, P.E. et al. (1980) J Clinical Pharmacology
+   * - NIAAA Technical Report (2007)
+   */
   const calculateBAC = () => {
     if (state.mode === 'estimate') {
       if (!state.estimateDrinks || !state.estimateHours) return 0;
-      
+
+      // Convert weight to kilograms
       const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
       const bodyWater = getBodyWaterConstant(state.gender);
       const numDrinks = parseFloat(state.estimateDrinks);
       const hours = parseFloat(state.estimateHours);
-      
+
+      // Validate realistic input ranges
+      if (numDrinks > 50) {
+        // Extremely dangerous levels - over 50 drinks would be potentially fatal
+        console.warn('Unrealistic drink count detected');
+      }
+
+      // Calculate total alcohol in grams
       const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+
+      // Apply Widmark formula: BAC = (grams / (weight_kg × r × 1000)) × 100
+      // Multiply by 100 to get percentage, divide by 1000 to convert kg to grams
       const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+
+      // Subtract metabolized alcohol: β × t
       const metabolized = CONSTANTS.METABOLISM_RATE * hours;
-      
+
+      // BAC cannot be negative
       return Math.max(0, initialBAC - metabolized);
     }
-    
+
     if (state.mode === 'live') {
       if (!state.startTime || state.drinks.length === 0) return 0;
 
       const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
       const bodyWater = getBodyWaterConstant(state.gender);
       const currentTime = Date.now();
-      
+
       let adjustedBAC = 0;
 
+      // Calculate BAC contribution from each drink individually
+      // This is more accurate than treating all drinks as consumed at once
+      // because it accounts for metabolism starting from when each drink was consumed
       state.drinks.forEach(drink => {
         const standardDrinks = drink.standardDrinks || 1;
         const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+
+        // Calculate hours elapsed since THIS drink was consumed
         const hoursElapsed = (currentTime - drink.timestamp) / (1000 * 60 * 60);
-        
+
+        // Calculate initial BAC contribution from this drink
         const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+
+        // Subtract metabolized amount since this drink was consumed
         const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
+
+        // Add remaining BAC from this drink (cannot be negative)
         const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
-        
+
         adjustedBAC += currentDrinkBAC;
       });
 
-      return Math.max(0, adjustedBAC);
+      // Round to prevent floating-point precision errors
+      // Store full precision but prevent accumulation of tiny errors
+      return Math.max(0, Math.round(adjustedBAC * 100000) / 100000);
     }
-    
+
     return 0;
   };
 
@@ -530,17 +615,35 @@ Questions? Contact: support@drinkbot3000.com
     dispatch({ type: 'SET_FIELD', field: 'mode', value: selectedMode });
   };
 
+  /**
+   * Adds a drink to the tracker with precise standard drink calculation
+   *
+   * STANDARD DRINK CALCULATION:
+   * Standard Drinks = (Volume in oz × ABV%) / 0.6 oz
+   *
+   * Where 0.6 fl oz = 14 grams of pure ethanol (US standard drink definition)
+   *
+   * Examples:
+   * - 12 oz beer (5% ABV) = (12 × 0.05) / 0.6 = 1.0 standard drinks
+   * - 5 oz wine (12% ABV) = (5 × 0.12) / 0.6 = 1.0 standard drinks
+   * - 1.5 oz shot (40% ABV) = (1.5 × 0.40) / 0.6 = 1.0 standard drinks
+   * - 16 oz IPA (7% ABV) = (16 × 0.07) / 0.6 = 1.87 standard drinks
+   *
+   * @param {string} name - Display name for the drink
+   * @param {number|null} oz - Volume in fluid ounces (null for standard 1.0 drink)
+   * @param {number|null} abv - Alcohol by volume percentage (null for standard 1.0 drink)
+   */
   const addDrink = (name = 'Standard Drink', oz = null, abv = null) => {
     try {
       let standardDrinks = 1;
       let drinkType = name;
 
-      // If oz and abv are provided, calculate standard drinks
+      // If oz and abv are provided, calculate standard drinks precisely
       if (oz !== null && abv !== null) {
         const ozValue = parseFloat(oz);
         const abvValue = parseFloat(abv);
 
-        // Validate inputs
+        // Validate inputs for safety and realism
         if (isNaN(ozValue) || ozValue <= 0 || ozValue > 64) {
           showRobotMessage('Invalid drink size. Please use a value between 0 and 64 oz.');
           return;
@@ -550,8 +653,20 @@ Questions? Contact: support@drinkbot3000.com
           return;
         }
 
+        // Warn about extremely strong drinks (e.g., Everclear, moonshine)
+        if (abvValue > 80) {
+          console.warn('Very high ABV detected:', abvValue);
+        }
+
+        // Calculate pure alcohol content in fluid ounces
         const pureAlcoholOz = ozValue * (abvValue / 100);
+
+        // Convert to standard drinks (14g each = 0.6 fl oz pure alcohol)
         standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
+
+        // Round to reasonable precision (5 decimal places prevents floating-point errors)
+        standardDrinks = Math.round(standardDrinks * 100000) / 100000;
+
         drinkType = `${name} (${ozValue}oz @ ${abvValue}%)`;
       }
 
@@ -615,47 +730,91 @@ Questions? Contact: support@drinkbot3000.com
     }, CONSTANTS.JOKE_DURATION);
   };
 
+  /**
+   * Calculator mode: Estimates BAC from hypothetical drink count and time
+   * Uses the same Widmark formula as live tracking for consistency
+   *
+   * This is useful for planning: "If I have 3 drinks over 4 hours, what will my BAC be?"
+   * Or retrospective analysis: "I had 5 drinks last night over 6 hours, what was my peak BAC?"
+   */
   const calculateQuickBAC = () => {
     if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) return;
-    
+
     const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
     const bodyWater = getBodyWaterConstant(state.gender);
     const numDrinks = parseFloat(state.calcDrinks);
     const hours = parseFloat(state.calcHours);
-    
+
+    // Validate realistic ranges for user safety
+    if (numDrinks > 50) {
+      console.warn('Extremely high drink count detected:', numDrinks);
+    }
+    if (hours > 48) {
+      console.warn('Very long time period detected:', hours);
+    }
+
+    // Calculate total alcohol consumed in grams
     const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+
+    // Apply Widmark formula
     const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+
+    // Subtract metabolized alcohol
     const metabolized = CONSTANTS.METABOLISM_RATE * hours;
-    
-    const result = Math.max(0, initialBAC - metabolized);
+
+    // Round to prevent floating-point precision errors
+    const result = Math.max(0, Math.round((initialBAC - metabolized) * 100000) / 100000);
+
     dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
   };
 
+  /**
+   * Returns BAC status with medically accurate impairment descriptions
+   * Based on NIAAA guidelines and traffic safety research
+   *
+   * Note: These are ESTIMATES. Actual impairment varies by individual.
+   * Some people show significant impairment at BACs below 0.08%.
+   */
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
+
     if (currentBAC === 0) return {
       label: 'Sober',
       color: 'text-green-600',
       bgColor: 'bg-gradient-to-br from-green-400 to-green-600',
       message: 'You are completely sober. Safe to drive and operate machinery.'
     };
+
+    // 0.01-0.029%: Subtle effects begin
     if (currentBAC < 0.03) return {
       label: 'Mild Effect',
       color: 'text-yellow-600',
       bgColor: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
-      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory.'
+      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory. May not feel impaired but judgment is affected.'
     };
-    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
+
+    // 0.03-0.059%: Noticeable impairment
+    if (currentBAC < 0.06) return {
       label: 'Impaired',
       color: 'text-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
-      message: 'Reduced coordination and judgment. Do not drive or operate machinery.'
+      message: 'Reduced coordination, slower reaction time, impaired judgment. DO NOT drive. Risk of accidents increases significantly.'
     };
+
+    // 0.06-0.079%: Significant impairment, approaching legal limit
+    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
+      label: 'Significantly Impaired',
+      color: 'text-red-600',
+      bgColor: 'bg-gradient-to-br from-orange-500 to-red-600',
+      message: 'Serious impairment of balance, vision, and reaction time. DO NOT drive. Your actual BAC may be higher due to calculation limitations.'
+    };
+
+    // 0.08%+: Legally intoxicated (in most US states)
     return {
       label: 'Intoxicated',
       color: 'text-red-600',
-      bgColor: 'bg-gradient-to-br from-red-400 to-red-600',
-      message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.'
+      bgColor: 'bg-gradient-to-br from-red-500 to-red-700',
+      message: 'LEGALLY INTOXICATED. Severe impairment of motor control, judgment, and reasoning. DO NOT drive under any circumstances. Seek safe transportation.'
     };
   };
 
@@ -1093,7 +1252,15 @@ Questions? Contact: support@drinkbot3000.com
               <p>This app does not provide medical advice, diagnosis, or treatment. Consult a qualified healthcare professional for medical concerns. The developer is not liable for any health consequences resulting from app use.</p>
 
               <p className="font-semibold mt-4">ACCURACY DISCLAIMER:</p>
-              <p>BAC calculations are based on general population averages. Individual metabolism varies significantly due to genetics, health conditions, medications, food consumption, hydration, and other factors. Actual BAC may be higher or lower than estimated.</p>
+              <p>BAC calculations use the scientifically-validated Widmark formula but have inherent limitations:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Assumes instant absorption (actual: 30-90 minutes to peak BAC)</li>
+                <li>Does not account for food (can reduce peak BAC by 25-45%)</li>
+                <li>Uses average metabolism rate (0.015%/hr); actual range: 0.012-0.018%/hr</li>
+                <li>Individual factors not modeled: liver health, medications, age, body composition, genetics</li>
+                <li>Typical accuracy: ±0.02% BAC even in controlled studies</li>
+              </ul>
+              <p className="mt-2 font-medium">Your actual BAC may be significantly higher or lower than estimated. ALWAYS err on the side of caution.</p>
 
               <p className="font-semibold mt-4">LEGAL CONSEQUENCES:</p>
               <p>Using this app does NOT protect you from DUI/DWI charges or other legal consequences. Law enforcement uses certified breathalyzer devices. You may be impaired even if this app shows a low BAC.</p>
