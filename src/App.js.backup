@@ -1,28 +1,164 @@
-import React, { useReducer, useEffect } from 'react';
-import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Coffee, DollarSign, AlertTriangle, FileText, RefreshCw, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useReducer } from 'react';
+import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package, Globe } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
 
-// Import constants
-import CONSTANTS from './constants/appConstants';
-import { jokes, robotGreetings, robotComments } from './constants/jokes';
+// Constants
+const CONSTANTS = {
+  METABOLISM_RATE: 0.015,
+  GRAMS_PER_STANDARD_DRINK: 14,
+  LBS_TO_KG: 0.453592,
+  MALE_BODY_WATER: 0.68,
+  FEMALE_BODY_WATER: 0.55,
+  STANDARD_DRINK_OZ: 0.6,
+  LEGAL_LIMIT: 0.08,
+  MIN_WEIGHT: 50,
+  MAX_WEIGHT: 500,
+  ROBOT_MESSAGE_DURATION: 5000,
+  JOKE_DURATION: 7000,
+  MIN_TIP_AMOUNT: 3,
+  LEGAL_DRINKING_AGE: 21,
+  REFUND_WINDOW_DAYS: 30,
+};
 
-// Import utilities
-import { validateWeight } from './utils/validations';
-import { calculateBAC as calcBAC, getBACStatus } from './utils/bacCalculations';
-import { formatTime, getSoberTime, calculateElapsedTime } from './utils/timeUtils';
-import { generateReceipt, downloadReceipt } from './utils/receiptUtils';
+// Initial state
+const initialState = {
+  ageVerified: false,
+  setupComplete: false,
+  gender: '',
+  weight: '',
+  bac: 0,
+  drinks: [],
+  startTime: null,
+  currentJoke: '',
+  showJoke: false,
+  mode: '',
+  estimateDrinks: '',
+  estimateHours: '',
+  activeTab: 'tracker',
+  calcDrinks: '',
+  calcHours: '',
+  calcBAC: null,
+  showSettings: false,
+  customDrinkOz: '',
+  customDrinkABV: '5',
+  robotMessage: '',
+  showSplash: true,
+  showConfirmModal: false,
+  confirmModalMessage: '',
+  confirmModalAction: null,
+  showDrinkHistory: false,
+  weightError: '',
+  customTipAmount: '',
+  showDisclaimerModal: false,
+  disclaimerAccepted: false,
+  tipError: '',
+  showRefundPolicy: false,
+  showReceipt: false,
+  currentReceipt: null,
+  receipts: [],
+  currentSafetyScreen: 0, // For multi-screen safety warnings
+  safetyScreensComplete: false,
+  // Geographic verification state
+  showGeoConsent: false,
+  geoConsentGiven: false,
+  geoVerified: false,
+  geoBlocked: false,
+  geoCountry: '',
+  geoError: null,
+};
 
-// Import reducer and state
-import { initialState, appReducer } from './hooks/appReducer';
-
-// Import components
-import AgeVerification from './components/AgeVerification';
-import GeoConsent from './components/GeoConsent';
-import { SafetyScreen1, SafetyScreen2, SafetyScreen3, SafetyScreen4 } from './components/SafetyScreens';
+// Reducer
+function appReducer(state, action) {
+  switch (action.type) {
+    case 'SET_FIELD':
+      return { ...state, [action.field]: action.value };
+    case 'SET_MULTIPLE':
+      return { ...state, ...action.values };
+    case 'ADD_DRINK':
+      return { ...state, drinks: [...state.drinks, action.drink] };
+    case 'REMOVE_DRINK':
+      return { ...state, drinks: state.drinks.filter(d => d.id !== action.id) };
+    case 'UNDO_DRINK':
+      return { ...state, drinks: state.drinks.slice(0, -1) };
+    case 'CLEAR_DRINKS':
+      return { ...state, drinks: [], bac: 0, startTime: Date.now() };
+    case 'RESET_APP':
+      return { ...initialState, showSplash: false, ageVerified: true, disclaimerAccepted: true, safetyScreensComplete: true };
+    case 'SHOW_CONFIRM':
+      return {
+        ...state,
+        showConfirmModal: true,
+        confirmModalMessage: action.message,
+        confirmModalAction: action.action,
+      };
+    case 'HIDE_CONFIRM':
+      return {
+        ...state,
+        showConfirmModal: false,
+        confirmModalMessage: '',
+        confirmModalAction: null,
+      };
+    case 'ADD_RECEIPT':
+      return {
+        ...state,
+        receipts: [...state.receipts, action.receipt],
+        currentReceipt: action.receipt,
+      };
+    case 'NEXT_SAFETY_SCREEN':
+      return {
+        ...state,
+        currentSafetyScreen: state.currentSafetyScreen + 1,
+      };
+    default:
+      return state;
+  }
+}
 
 export default function BACTracker() {
   const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // Jokes (family-friendly only)
+  const jokes = [
+    "Why don't scientists trust atoms? Because they make up everything!",
+    "What do you call a bear with no teeth? A gummy bear!",
+    "Why did the scarecrow win an award? He was outstanding in his field!",
+    "What do you call a fake noodle? An impasta!",
+    "What's orange and sounds like a parrot? A carrot!",
+    "Why did the math book look so sad? Because it had too many problems!",
+    "Why don't skeletons fight each other? They don't have the guts!",
+    "What do you call a fish wearing a bowtie? Sofishticated!",
+    "Why did the bicycle fall over? Because it was two-tired!",
+    "What do you call a sleeping bull? A bulldozer!",
+    "Why can't your nose be 12 inches long? Because then it would be a foot!",
+    "What do you call cheese that isn't yours? Nacho cheese!",
+    "Why don't programmers like nature? It has too many bugs!",
+    "What do you call a snowman with a six-pack? An abdominal snowman!",
+    "What do you call a lazy kangaroo? A pouch potato!",
+    "Why don't mountains get cold? They wear snow caps!",
+    "What do you call a magic dog? A labracadabrador!",
+    "Why did the picture go to jail? It was framed!",
+    "What do you call a boomerang that won't come back? A stick!",
+    "What do you call a cow during an earthquake? A milkshake!",
+  ];
+
+  const robotGreetings = [
+    "Greetings! I am DrinkBot3000, your safety companion! 🤖",
+    "Beep boop! Ready to help you stay safe, dear friend! 🎩",
+    "*mechanical bow* Your safety assistant reporting for duty! 🤖",
+    "Salutations! Let us monitor responsibly together! 🛡️",
+    "*whirrs politely* I shall help you stay safe this evening! 🎩",
+  ];
+
+  const robotComments = [
+    "*calculates thoughtfully* Remember to stay hydrated! 🤖",
+    "Beep boop! Please pace yourself, valued user! 🎩",
+    "*adjusts monocle* Safety first, always! 🧙",
+    "*whirrs concernedly* Time for water, perhaps? 💧",
+    "My sensors suggest taking it slow! 🤖",
+    "*beeps approvingly* Excellent responsibility detected! 💦",
+    "*mechanical nod* You're making wise choices! 🎩",
+  ];
 
   // Load saved data
   useEffect(() => {
@@ -31,11 +167,11 @@ export default function BACTracker() {
     const disclaimerCheck = localStorage.getItem('disclaimerAccepted');
     const safetyCheck = localStorage.getItem('safetyScreensComplete');
     const savedReceipts = localStorage.getItem('bacTrackerReceipts');
-
+    
     if (ageCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
     }
-
+    
     if (disclaimerCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     }
@@ -43,7 +179,7 @@ export default function BACTracker() {
     if (safetyCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-
+    
     if (savedReceipts) {
       try {
         const receipts = JSON.parse(savedReceipts);
@@ -52,7 +188,7 @@ export default function BACTracker() {
         console.error('Failed to load receipts:', e);
       }
     }
-
+    
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
@@ -96,17 +232,59 @@ export default function BACTracker() {
     state.estimateHours,
   ]);
 
-  // Calculate BAC
-  const calculateBACValue = () => {
-    return calcBAC({
-      mode: state.mode,
-      gender: state.gender,
-      weight: state.weight,
-      drinks: state.drinks,
-      startTime: state.startTime,
-      estimateDrinks: state.estimateDrinks,
-      estimateHours: state.estimateHours,
-    });
+  // Helper functions
+  const getBodyWaterConstant = (g) => 
+    g === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
+
+  const validateWeight = (weight) => {
+    const w = parseFloat(weight);
+    if (isNaN(w)) return 'Please enter a valid number';
+    if (w < CONSTANTS.MIN_WEIGHT) return `Weight must be at least ${CONSTANTS.MIN_WEIGHT} lbs`;
+    if (w > CONSTANTS.MAX_WEIGHT) return `Weight must be less than ${CONSTANTS.MAX_WEIGHT} lbs`;
+    return '';
+  };
+
+  const calculateBAC = () => {
+    if (state.mode === 'estimate') {
+      if (!state.estimateDrinks || !state.estimateHours) return 0;
+      
+      const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
+      const bodyWater = getBodyWaterConstant(state.gender);
+      const numDrinks = parseFloat(state.estimateDrinks);
+      const hours = parseFloat(state.estimateHours);
+      
+      const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+      const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+      const metabolized = CONSTANTS.METABOLISM_RATE * hours;
+      
+      return Math.max(0, initialBAC - metabolized);
+    }
+    
+    if (state.mode === 'live') {
+      if (!state.startTime || state.drinks.length === 0) return 0;
+
+      const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
+      const bodyWater = getBodyWaterConstant(state.gender);
+      const currentTime = Date.now();
+      
+      let adjustedBAC = 0;
+
+      state.drinks.forEach(drink => {
+        const standardDrinks = drink.standardDrinks || 1;
+        const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+        const hoursElapsed = (currentTime - drink.timestamp) / (1000 * 60 * 60);
+        
+        const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+        const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
+        const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
+        
+        adjustedBAC += currentDrinkBAC;
+      });
+
+      return Math.max(0, adjustedBAC);
+    }
+    
+    return 0;
   };
 
   // Update BAC every second
@@ -114,7 +292,7 @@ export default function BACTracker() {
     if (!state.setupComplete) return;
 
     const interval = setInterval(() => {
-      dispatch({ type: 'SET_FIELD', field: 'bac', value: calculateBACValue() });
+      dispatch({ type: 'SET_FIELD', field: 'bac', value: calculateBAC() });
     }, 1000);
 
     return () => clearInterval(interval);
@@ -127,10 +305,83 @@ export default function BACTracker() {
     }, CONSTANTS.ROBOT_MESSAGE_DURATION);
   };
 
+  // Generate receipt
+  const generateReceipt = (amount, paymentMethod = 'Stripe') => {
+    const receipt = {
+      id: `DBT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      date: new Date().toISOString(),
+      amount: amount,
+      stripeFee: (amount * 0.029 + 0.30).toFixed(2),
+      netAmount: (amount - (amount * 0.029 + 0.30)).toFixed(2),
+      paymentMethod: paymentMethod,
+      description: 'Developer Support - DrinkBot3000',
+      status: 'Completed',
+      refundableUntil: new Date(Date.now() + (CONSTANTS.REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000)).toISOString(),
+    };
+    
+    dispatch({ type: 'ADD_RECEIPT', receipt });
+    return receipt;
+  };
+
+  // Download receipt
+  const downloadReceipt = (receipt) => {
+    const receiptText = `
+╔═══════════════════════════════════════════════════════════╗
+║              DRINKBOT3000 - PAYMENT RECEIPT               ║
+║                   Developer Support                        ║
+╚═══════════════════════════════════════════════════════════╝
+
+Receipt #: ${receipt.id}
+Date: ${new Date(receipt.date).toLocaleString()}
+Status: ${receipt.status}
+
+─────────────────────────────────────────────────────────────
+
+Description: ${receipt.description}
+Support Amount: $${receipt.amount.toFixed(2)}
+Processing Fee: -$${receipt.stripeFee}
+Net Amount: $${receipt.netAmount}
+
+Payment Method: ${receipt.paymentMethod}
+Payment Processor: Stripe, Inc.
+
+─────────────────────────────────────────────────────────────
+
+REFUND POLICY:
+Eligible for refund until: ${new Date(receipt.refundableUntil).toLocaleDateString()}
+Refund window: ${CONSTANTS.REFUND_WINDOW_DAYS} days from purchase date
+
+To request a refund:
+1. Email: support@drinkbot3000.com
+2. Subject: "Refund Request - ${receipt.id}"
+3. Include this receipt number
+
+─────────────────────────────────────────────────────────────
+
+THANK YOU FOR YOUR SUPPORT!
+
+Your contribution helps keep DrinkBot3000 free and ad-free
+for everyone.
+
+Questions? Contact: support@drinkbot3000.com
+
+© ${new Date().getFullYear()} DrinkBot3000. All rights reserved.
+`;
+
+    const blob = new Blob([receiptText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `DrinkBot3000-Receipt-${receipt.id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleAgeVerification = (isOfAge) => {
     if (isOfAge) {
       localStorage.setItem('ageVerified', 'true');
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
+      // Show geographic consent dialog first
       dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: true });
     } else {
       alert('You must be of legal drinking age to use this app.');
@@ -141,15 +392,19 @@ export default function BACTracker() {
     dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
 
+    // Perform geographic verification
     try {
       const result = await checkGeographicRestriction();
 
       if (result.allowed) {
+        // User is in an allowed country
         dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+        // Continue to disclaimer
         dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
       } else {
+        // User is in a prohibited country
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
       }
@@ -160,6 +415,7 @@ export default function BACTracker() {
     } catch (error) {
       console.error('Geographic verification failed:', error);
       dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
+      // On error, allow access and show disclaimer
       dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
       dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
     }
@@ -175,6 +431,7 @@ export default function BACTracker() {
     localStorage.setItem('disclaimerAccepted', 'true');
     dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: false });
+    // Start safety screens sequence
     dispatch({ type: 'SET_FIELD', field: 'currentSafetyScreen', value: 0 });
   };
 
@@ -182,12 +439,14 @@ export default function BACTracker() {
     if (state.currentSafetyScreen < 3) {
       dispatch({ type: 'NEXT_SAFETY_SCREEN' });
     } else {
+      // All safety screens complete
       localStorage.setItem('safetyScreensComplete', 'true');
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
   };
 
   const handleSafetyScreenDecline = () => {
+    // User declined safety warnings - reset everything
     localStorage.removeItem('ageVerified');
     localStorage.removeItem('disclaimerAccepted');
     localStorage.removeItem('safetyScreensComplete');
@@ -207,11 +466,11 @@ export default function BACTracker() {
     if (state.gender && state.weight && parseFloat(state.weight) > 0) {
       dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
       dispatch({ type: 'SET_FIELD', field: 'setupComplete', value: true });
-
+      
       if (state.mode === 'live') {
         dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
       }
-
+      
       const greeting = robotGreetings[Math.floor(Math.random() * robotGreetings.length)];
       showRobotMessage(greeting);
     }
@@ -233,21 +492,15 @@ export default function BACTracker() {
     });
   };
 
-  const addDrink = (type, oz, abv) => {
-    const pureAlcoholOz = parseFloat(oz) * (parseFloat(abv) / 100);
-    const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
-
+  const addDrink = () => {
     const newDrink = {
       id: Date.now(),
       timestamp: Date.now(),
-      standardDrinks: standardDrinks,
-      type: type,
-      oz: oz,
-      abv: abv,
-      time: Date.now(),
+      standardDrinks: 1,
+      type: 'Standard Drink',
     };
     dispatch({ type: 'ADD_DRINK', drink: newDrink });
-
+    
     const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
     showRobotMessage(comment);
   };
@@ -259,21 +512,24 @@ export default function BACTracker() {
     }
   };
 
-  const removeDrink = (id) => {
+  const deleteDrink = (id) => {
     dispatch({ type: 'REMOVE_DRINK', id });
     showRobotMessage('*whirrs* Drink removed from records! 🤖');
   };
 
-  const clearDrinks = () => {
-    dispatch({
-      type: 'SHOW_CONFIRM',
-      message: 'Clear all drinks and reset tracker?',
-      action: () => {
-        dispatch({ type: 'CLEAR_DRINKS' });
-        dispatch({ type: 'HIDE_CONFIRM' });
-        showRobotMessage('*beep boop* All drinks cleared! Starting fresh! 🤖');
-      },
-    });
+  const addCustomDrink = (oz, abv) => {
+    const pureAlcoholOz = parseFloat(oz) * (parseFloat(abv) / 100);
+    const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
+    
+    const newDrink = {
+      id: Date.now(),
+      timestamp: Date.now(),
+      standardDrinks: standardDrinks,
+      type: `${oz}oz @ ${abv}%`,
+    };
+    dispatch({ type: 'ADD_DRINK', drink: newDrink });
+    
+    showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! 🤖`);
   };
 
   const tellJoke = () => {
@@ -287,26 +543,66 @@ export default function BACTracker() {
 
   const calculateQuickBAC = () => {
     if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) return;
+    
+    const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
+    const bodyWater = getBodyWaterConstant(state.gender);
+    const numDrinks = parseFloat(state.calcDrinks);
+    const hours = parseFloat(state.calcHours);
+    
+    const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+    const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+    const metabolized = CONSTANTS.METABOLISM_RATE * hours;
+    
+    const result = Math.max(0, initialBAC - metabolized);
+    dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
+  };
 
-    const bac = calcBAC({
-      mode: 'estimate',
-      gender: state.gender,
-      weight: state.weight,
-      drinks: [],
-      startTime: null,
-      estimateDrinks: state.calcDrinks,
-      estimateHours: state.calcHours,
+  const getBACStatus = () => {
+    const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
+    if (currentBAC === 0) return { text: 'Sober', color: 'text-green-600', bg: 'bg-green-50' };
+    if (currentBAC < 0.03) return { text: 'Mild', color: 'text-yellow-600', bg: 'bg-yellow-50' };
+    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return { text: 'Impaired', color: 'text-orange-600', bg: 'bg-orange-50' };
+    return { text: 'Intoxicated', color: 'text-red-600', bg: 'bg-red-50' };
+  };
+
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
     });
+  };
 
-    dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: bac });
+  const getSoberTime = (bac) => {
+    if (bac === 0) return '--:--';
+    const minutesToSober = Math.ceil((bac / CONSTANTS.METABOLISM_RATE) * 60);
+    const soberTime = new Date(Date.now() + minutesToSober * 60000);
+    return soberTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const calculateElapsedTime = () => {
+    if (state.drinks.length === 0) return '0m';
+    const firstDrinkTime = state.startTime || state.drinks[0].timestamp;
+    const elapsedMs = Date.now() - firstDrinkTime;
+    const hours = Math.floor(elapsedMs / (1000 * 60 * 60));
+    const minutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const calculateSoberTime = () => {
+    return getSoberTime(state.bac);
   };
 
   const handleTip = (amount) => {
     if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
-      dispatch({
-        type: 'SET_FIELD',
-        field: 'tipError',
-        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.`
+      dispatch({ 
+        type: 'SET_FIELD', 
+        field: 'tipError', 
+        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.` 
       });
       setTimeout(() => {
         dispatch({ type: 'SET_FIELD', field: 'tipError', value: '' });
@@ -315,32 +611,116 @@ export default function BACTracker() {
     }
 
     showRobotMessage(`*beep boop* Thank you for supporting development! Processing... 🤖`);
-
+    
     setTimeout(() => {
       const receipt = generateReceipt(amount, 'Stripe');
-      dispatch({ type: 'ADD_RECEIPT', receipt });
       dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
       showRobotMessage('*whirrs happily* Payment successful! Receipt generated! 🎉');
     }, 1500);
   };
 
-  const handleReset = () => {
-    resetApp();
-  };
-
-  const status = getBACStatus(state.bac);
-  const currentStatus = state.calcBAC !== null && state.activeTab === 'calculator'
-    ? getBACStatus(state.calcBAC)
-    : status;
+  const status = getBACStatus();
 
   // Age Verification Screen
   if (!state.ageVerified) {
-    return <AgeVerification onVerify={handleAgeVerification} />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-red-100 rounded-full">
+              <ShieldAlert className="w-16 h-16 text-red-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Age Verification Required</h1>
+            <p className="text-lg text-gray-700 mb-2">
+              This app involves alcohol consumption tracking.
+            </p>
+            <p className="text-md text-gray-600">
+              You must be {CONSTANTS.LEGAL_DRINKING_AGE} years or older to continue.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => handleAgeVerification(true)}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
+            >
+              I am {CONSTANTS.LEGAL_DRINKING_AGE} or Older
+            </button>
+
+            <button
+              onClick={() => handleAgeVerification(false)}
+              className="w-full bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-300 transition"
+            >
+              I am Under {CONSTANTS.LEGAL_DRINKING_AGE}
+            </button>
+          </div>
+
+          <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <p className="text-xs text-amber-800 text-center">
+              By clicking "I am {CONSTANTS.LEGAL_DRINKING_AGE} or Older", you confirm that you are of legal drinking age in your jurisdiction.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Geographic Consent Dialog
   if (state.showGeoConsent && state.ageVerified && !state.geoConsentGiven) {
-    return <GeoConsent onAccept={handleGeoConsentAccept} onDecline={handleGeoConsentDecline} />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-blue-100 rounded-full">
+              <Globe className="w-16 h-16 text-blue-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">🇺🇸 USA Location Verification</h1>
+            <p className="text-lg text-gray-700 mb-4">
+              This is a USA-only service. We need to verify you're in the United States.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-6 mb-6 border-2 border-blue-200">
+            <p className="text-gray-800 font-semibold mb-3">What We Check:</p>
+            <ul className="text-sm text-gray-700 space-y-2 text-left">
+              <li>✓ Your country only (via IP address)</li>
+              <li>✓ One-time verification only</li>
+              <li>✓ NOT your precise location within USA (no GPS)</li>
+              <li>✓ IP address is NOT stored</li>
+            </ul>
+          </div>
+
+          <div className="bg-amber-50 rounded-lg p-4 mb-6 border border-amber-200">
+            <p className="text-amber-900 font-semibold mb-2">🇺🇸 USA-Only Access:</p>
+            <p className="text-sm text-amber-800">
+              DrinkBot3000 is only available to users physically located in the United States. We must verify your location for legal compliance and service restrictions.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={handleGeoConsentAccept}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg"
+            >
+              I Consent to USA Location Verification
+            </button>
+
+            <button
+              onClick={handleGeoConsentDecline}
+              className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+            >
+              I Do Not Consent
+            </button>
+          </div>
+
+          <div className="mt-4 text-center">
+            <a href="/privacy.html" target="_blank" className="text-xs text-blue-600 hover:underline">
+              Read our Privacy Policy
+            </a>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Geographic Blocked Screen
@@ -367,6 +747,24 @@ export default function BACTracker() {
             </p>
             <p className="text-sm text-red-800 font-semibold">
               This restriction is in place for legal compliance and service availability reasons.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+            <p className="text-sm text-blue-900 font-semibold mb-2">
+              If you believe this is an error:
+            </p>
+            <ul className="text-xs text-blue-800 space-y-1">
+              <li>• Check if you're using a VPN or proxy routing through a non-US server</li>
+              <li>• Disable VPN/proxy and reload the page</li>
+              <li>• Ensure you're physically located in the United States</li>
+              <li>• Contact support at drinkbot3000@gmail.com</li>
+            </ul>
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs text-gray-600">
+              USA location verification is required for service access.
             </p>
           </div>
         </div>
@@ -402,8 +800,14 @@ export default function BACTracker() {
               <p className="font-semibold mt-4">ACCURACY DISCLAIMER:</p>
               <p>BAC calculations are based on general population averages. Individual metabolism varies significantly due to genetics, health conditions, medications, food consumption, hydration, and other factors. Actual BAC may be higher or lower than estimated.</p>
 
+              <p className="font-semibold mt-4">LEGAL CONSEQUENCES:</p>
+              <p>Using this app does NOT protect you from DUI/DWI charges or other legal consequences. Law enforcement uses certified breathalyzer devices. You may be impaired even if this app shows a low BAC.</p>
+
               <p className="font-semibold mt-4">NEVER DRINK AND DRIVE:</p>
               <p>Impairment begins at ANY BAC level. Even small amounts of alcohol impair judgment, reaction time, and coordination. Never drive, operate machinery, or engage in dangerous activities after consuming ANY amount of alcohol.</p>
+
+              <p className="font-semibold mt-4">ASSUMPTION OF RISK:</p>
+              <p>By using this app, you assume all risks and agree that the developer, its affiliates, and contributors are NOT liable for any damages, injuries, accidents, legal issues, or other consequences arising from your use of this application or decisions based on its output.</p>
 
               <p className="font-bold text-red-700 mt-6 text-base">
                 IF YOU DO NOT AGREE TO THESE TERMS, DO NOT USE THIS APP.
@@ -418,7 +822,7 @@ export default function BACTracker() {
             >
               I Understand and Accept
             </button>
-
+            
             <button
               onClick={() => {
                 dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
@@ -434,23 +838,304 @@ export default function BACTracker() {
     );
   }
 
-  // Safety Screens
+  // NEW: Multi-Screen Safety Warnings
   if (!state.safetyScreensComplete && state.disclaimerAccepted) {
+    // Safety Screen 1: DUI / Impairment to the Slightest Degree
     if (state.currentSafetyScreen === 0) {
-      return <SafetyScreen1 onNext={handleSafetyScreenNext} onDecline={handleSafetyScreenDecline} />;
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-red-100 rounded-full">
+                <Car className="w-16 h-16 text-red-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">NEVER DRIVE IMPAIRED</h1>
+              <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-200">
+                <p className="text-gray-800 font-bold text-lg mb-4">
+                  "Impairment to the Slightest Degree"
+                </p>
+                <p className="text-gray-700 mb-4">
+                  You can be charged with DUI even BELOW the 0.08% legal limit if you show ANY signs of impairment.
+                </p>
+                <p className="text-red-700 font-semibold">
+                  ANY alcohol consumption = impairment
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4 border border-blue-200">
+                <p className="font-semibold text-gray-800 mb-3">Use Rideshare Instead:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <span className="px-3 py-1 bg-black text-white rounded-full text-sm">Uber</span>
+                  <span className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm">Lyft</span>
+                  <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm">Taxi</span>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <p className="font-semibold text-gray-800 mb-3">Or Order Delivery:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <span className="px-3 py-1 bg-red-600 text-white rounded-full text-sm">DoorDash</span>
+                  <span className="px-3 py-1 bg-green-600 text-white rounded-full text-sm">Instacart</span>
+                  <span className="px-3 py-1 bg-orange-600 text-white rounded-full text-sm">Postmates</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand (1 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      );
     }
+
+    // Safety Screen 2: Don't Sleep When Drunk
     if (state.currentSafetyScreen === 1) {
-      return <SafetyScreen2 onNext={handleSafetyScreenNext} onDecline={handleSafetyScreenDecline} />;
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-purple-100 rounded-full">
+                <Bed className="w-16 h-16 text-purple-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">Don't Go to Bed Drunk</h1>
+              <div className="bg-purple-50 rounded-lg p-6 mb-6 border-2 border-purple-200">
+                <p className="text-gray-800 font-bold text-lg mb-4">
+                  ⚠️ Sleep Can Be Dangerous When Intoxicated
+                </p>
+                <ul className="text-left text-gray-700 space-y-3">
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Risk of choking on vomit</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Alcohol poisoning symptoms worsen</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Dehydration and injuries from falls</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
+                <p className="font-semibold text-gray-800 mb-3">Plan Ahead:</p>
+                <ul className="text-left text-sm text-gray-700 space-y-2">
+                  <li>─œ“ Drink water throughout the evening</li>
+                  <li>─œ“ Eat food before drinking</li>
+                  <li>─œ“ Stay with friends who can monitor you</li>
+                  <li>─œ“ Sleep on your side, not back</li>
+                  <li>─œ“ Set multiple alarms</li>
+                </ul>
+              </div>
+
+              <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+                <p className="text-sm text-red-800 font-semibold">
+                  If someone is passed out drunk, place them in the recovery position and seek medical help if needed.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand (2 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      );
     }
+
+    // Safety Screen 3: Benzodiazepines Warning
     if (state.currentSafetyScreen === 2) {
-      return <SafetyScreen3 onNext={handleSafetyScreenNext} onDecline={handleSafetyScreenDecline} />;
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-900 via-orange-800 to-orange-900 p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-orange-100 rounded-full">
+                <Pill className="w-16 h-16 text-orange-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">BENZODIAZEPINES WARNING</h1>
+              <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-300">
+                <p className="text-red-900 font-bold text-xl mb-4">
+                  ─˜ ï¸ DEADLY COMBINATION ─˜ ï¸
+                </p>
+                <p className="text-gray-800 mb-4">
+                  <strong>Never mix alcohol with benzodiazepines!</strong>
+                </p>
+                <p className="text-gray-700 mb-4">
+                  Common benzos include:
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-white p-2 rounded border border-red-200">Xanax</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Valium</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Ativan</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Klonopin</div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 rounded-lg p-4 mb-4 border border-orange-200">
+                <p className="font-semibold text-gray-800 mb-3">Dangers:</p>
+                <ul className="text-left text-sm text-gray-700 space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Extreme sedation and respiratory depression</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Increased risk of overdose and death</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Severe impairment even at low doses</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span>Memory blackouts and dangerous behavior</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-red-100 rounded-lg p-4 border-2 border-red-300">
+                <p className="text-red-900 font-bold text-sm">
+                  If you take benzodiazepines, DO NOT drink alcohol. If you've been drinking, DO NOT take benzos. This combination can be fatal.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand (3 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      );
     }
+
+    // Safety Screen 4: Opiates Warning
     if (state.currentSafetyScreen === 3) {
-      return <SafetyScreen4 onNext={handleSafetyScreenNext} onDecline={handleSafetyScreenDecline} />;
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-gray-100 rounded-full">
+                <AlertTriangle className="w-16 h-16 text-red-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">OPIATES WARNING</h1>
+              <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-300">
+                <p className="text-red-900 font-bold text-xl mb-4">
+                  ─˜ ï¸ FATAL COMBINATION ─˜ ï¸
+                </p>
+                <p className="text-gray-800 font-bold mb-4">
+                  Alcohol + Opiates = HIGH RISK OF DEATH
+                </p>
+                <p className="text-gray-700 mb-4">
+                  Common opiates/opioids:
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-white p-2 rounded border border-red-200">Oxycodone</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Hydrocodone</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Morphine</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Fentanyl</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Codeine</div>
+                  <div className="bg-white p-2 rounded border border-red-200">Heroin</div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                <p className="font-semibold text-gray-800 mb-3">Why It's Deadly:</p>
+                <ul className="text-left text-sm text-gray-700 space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span><strong>Respiratory Depression:</strong> Both slow breathing</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span><strong>You can stop breathing:</strong> Even in your sleep</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span><strong>Overdose risk:</strong> Dramatically increased</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-600 font-bold mr-2">─¢</span>
+                    <span><strong>Death can occur quickly:</strong> Minutes, not hours</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-red-100 rounded-lg p-4 border-2 border-red-300 mb-4">
+                <p className="text-red-900 font-bold text-sm mb-2">
+                  🚨 NEVER MIX ALCOHOL WITH OPIATES 🚨
+                </p>
+                <p className="text-red-800 text-sm">
+                  If you take prescription pain medication, DO NOT drink. If you've been drinking, DO NOT take opiates. This combination kills thousands every year.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                <p className="text-sm text-blue-900">
+                  <strong>Emergency:</strong> If someone is unresponsive after mixing alcohol and opiates, call 911 immediately. Mention both substances.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleSafetyScreenNext}
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
+              >
+                I Understand - Continue to App (4 of 4)
+              </button>
+
+              <button
+                onClick={handleSafetyScreenDecline}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                I Do Not Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      );
     }
   }
 
-  // Main Splash Screen
+  // Main Splash Screen (original drunk driving statistic)
   if (state.showSplash && state.safetyScreensComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 p-6 flex items-center justify-center">
@@ -482,7 +1167,7 @@ export default function BACTracker() {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-600 italic">
-              Estimates only • Not medical advice • Drink responsibly • Never drink and drive
+              Estimates only ─¢ Not medical advice ─¢ Drink responsibly ─¢ Never drink and drive
             </p>
           </div>
         </div>
@@ -490,7 +1175,9 @@ export default function BACTracker() {
     );
   }
 
-  // Setup screen
+  // Setup screen and rest of the app continues...
+  // (For brevity, keeping the rest of the app the same as before)
+  
   if (!state.setupComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
@@ -506,15 +1193,15 @@ export default function BACTracker() {
           {!state.mode ? (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-800 text-center mb-4">Choose Mode</h2>
-              <button
-                onClick={() => handleModeSelect('live')}
+              <button 
+                onClick={() => handleModeSelect('live')} 
                 className="w-full bg-indigo-600 text-white py-4 rounded-lg font-semibold hover:bg-indigo-700 transition"
               >
                 Live Tracking
                 <p className="text-sm font-normal mt-1">Track drinks in real-time</p>
               </button>
-              <button
-                onClick={() => handleModeSelect('estimate')}
+              <button 
+                onClick={() => handleModeSelect('estimate')} 
                 className="w-full bg-purple-600 text-white py-4 rounded-lg font-semibold hover:bg-purple-700 transition"
               >
                 Quick Estimate
@@ -529,13 +1216,13 @@ export default function BACTracker() {
                   Gender
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button
+                  <button 
                     onClick={() => dispatch({ type: 'SET_FIELD', field: 'gender', value: 'male' })}
                     className={`py-3 px-4 rounded-lg font-medium transition ${state.gender === 'male' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
                   >
                     Male
                   </button>
-                  <button
+                  <button 
                     onClick={() => dispatch({ type: 'SET_FIELD', field: 'gender', value: 'female' })}
                     className={`py-3 px-4 rounded-lg font-medium transition ${state.gender === 'female' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
                   >
@@ -549,15 +1236,15 @@ export default function BACTracker() {
                   <Scale className="inline w-4 h-4 mr-1" />
                   Weight (lbs)
                 </label>
-                <input
-                  type="number"
-                  value={state.weight}
+                <input 
+                  type="number" 
+                  value={state.weight} 
                   onChange={(e) => {
                     dispatch({ type: 'SET_FIELD', field: 'weight', value: e.target.value });
                     const error = validateWeight(e.target.value);
                     dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
                   }}
-                  placeholder="Enter your weight"
+                  placeholder="Enter your weight" 
                   className={`w-full px-4 py-3 border rounded-lg ${state.weightError ? 'border-red-500' : 'border-gray-300'}`}
                   min={CONSTANTS.MIN_WEIGHT}
                   max={CONSTANTS.MAX_WEIGHT}
@@ -574,40 +1261,40 @@ export default function BACTracker() {
                       <Beer className="inline w-4 h-4 mr-1" />
                       Number of Drinks
                     </label>
-                    <input
-                      type="number"
-                      value={state.estimateDrinks}
+                    <input 
+                      type="number" 
+                      value={state.estimateDrinks} 
                       onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value: e.target.value })}
-                      placeholder="How many drinks?"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                      min="0"
+                      placeholder="How many drinks?" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg" 
+                      min="0" 
                       step="0.5"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Hours Since First Drink</label>
-                    <input
-                      type="number"
-                      value={state.estimateHours}
+                    <input 
+                      type="number" 
+                      value={state.estimateHours} 
                       onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'estimateHours', value: e.target.value })}
-                      placeholder="How many hours ago?"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                      min="0"
+                      placeholder="How many hours ago?" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg" 
+                      min="0" 
                       step="0.5"
                     />
                   </div>
                 </>
               )}
 
-              <button
-                onClick={handleSetup}
-                disabled={!state.gender || !state.weight || state.weightError || (state.mode === 'estimate' && (!state.estimateDrinks || !state.estimateHours))}
+              <button 
+                onClick={handleSetup} 
+                disabled={!state.gender || !state.weight || state.weightError || (state.mode === 'estimate' && (!state.estimateDrinks || !state.estimateHours))} 
                 className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-300"
               >
                 {state.mode === 'estimate' ? 'Calculate BAC' : 'Start Tracking'}
               </button>
 
-              <button
+              <button 
                 onClick={() => {
                   dispatch({ type: 'SET_FIELD', field: 'mode', value: '' });
                   dispatch({ type: 'SET_FIELD', field: 'gender', value: '' });
@@ -615,7 +1302,7 @@ export default function BACTracker() {
                   dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value: '' });
                   dispatch({ type: 'SET_FIELD', field: 'estimateHours', value: '' });
                   dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
-                }}
+                }} 
                 className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
               >
                 Back
@@ -634,7 +1321,7 @@ export default function BACTracker() {
     );
   }
 
-  // Main Tracker Interface (abbreviated for file size - would need full implementation)
+  // Main Tracker Interface
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-24">
@@ -729,12 +1416,12 @@ export default function BACTracker() {
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <Clock className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                      <div className="text-2xl font-bold text-gray-800">{calculateElapsedTime(state.drinks, state.startTime)}</div>
+                      <div className="text-2xl font-bold text-gray-800">{calculateElapsedTime()}</div>
                       <div className="text-xs text-gray-500">Time Elapsed</div>
                     </div>
                     <div>
                       <Coffee className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                      <div className="text-2xl font-bold text-gray-800">{getSoberTime(state.bac)}</div>
+                      <div className="text-2xl font-bold text-gray-800">{calculateSoberTime()}</div>
                       <div className="text-xs text-gray-500">Until Sober</div>
                     </div>
                   </div>
@@ -842,7 +1529,7 @@ export default function BACTracker() {
 
                   {state.showDrinkHistory && (
                     <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
-                      {state.drinks.map((drink) => (
+                      {state.drinks.map((drink, index) => (
                         <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
                             <div className="font-medium text-gray-800">
@@ -852,7 +1539,7 @@ export default function BACTracker() {
                               {drink.type === 'custom' && '🍹 Custom'}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {drink.oz}oz, {drink.abv}% ABV • {formatTime(drink.time)}
+                              {drink.oz}oz, {drink.abv}% ABV • {new Date(drink.time).toLocaleTimeString()}
                             </div>
                           </div>
                           <button
@@ -995,7 +1682,7 @@ export default function BACTracker() {
                 </div>
 
                 <button
-                  onClick={calculateQuickBAC}
+                  onClick={calculateBAC}
                   disabled={!state.calcDrinks || !state.calcHours}
                   className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-300"
                 >
@@ -1003,17 +1690,17 @@ export default function BACTracker() {
                 </button>
 
                 {state.calcBAC !== null && (
-                  <div className={`rounded-lg p-6 ${currentStatus.bgColor}`}>
+                  <div className={`rounded-lg p-6 ${getBACStatus().bgColor}`}>
                     <div className="text-center">
                       <div className="text-5xl font-bold text-white mb-2">
                         {state.calcBAC.toFixed(3)}%
                       </div>
                       <div className="text-xl text-white font-medium mb-3">
-                        {currentStatus.label}
+                        {getBACStatus().label}
                       </div>
                       <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
                         <p className="text-white text-sm">
-                          {currentStatus.message}
+                          {getBACStatus().message}
                         </p>
                       </div>
                     </div>
@@ -1065,7 +1752,6 @@ export default function BACTracker() {
                   <a
                     href="/privacy.html"
                     target="_blank"
-                    rel="noopener noreferrer"
                     className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
                   >
                     <FileText className="w-4 h-4 inline mr-2" />
@@ -1075,7 +1761,6 @@ export default function BACTracker() {
                   <a
                     href="/terms.html"
                     target="_blank"
-                    rel="noopener noreferrer"
                     className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
                   >
                     <FileText className="w-4 h-4 inline mr-2" />
