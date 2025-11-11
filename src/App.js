@@ -3,6 +3,86 @@ import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, 
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
 
+/* =============================================================================
+ * APP STORE DEPLOYMENT CONSIDERATIONS
+ * =============================================================================
+ *
+ * IMPORTANT: This PWA is currently designed for web deployment. Converting to
+ * native mobile apps requires additional compliance work:
+ *
+ * GOOGLE PLAY STORE REQUIREMENTS:
+ * ---------------------------------
+ * 1. Age Rating: Must be rated "Mature 17+" (alcohol content)
+ * 2. Privacy Policy: Must add privacy policy URL in store listing
+ * 3. Data Safety: Declare in console:
+ *    - Health & Fitness data collected (BAC, weight, gender, drink history)
+ *    - Data stored locally (not shared with third parties)
+ *    - Optional: User can request data deletion
+ * 4. Content Rating: Use IARC rating system, select alcohol reference
+ * 5. Geographic Restrictions: Consider restricting in regions that prohibit
+ *    alcohol tracking apps (some Middle Eastern countries)
+ * 6. Disclaimers: Add prominent disclaimer that app is for education only
+ * 7. In-App Purchases: Stripe integration needs Google Play Billing API
+ * 8. Package Name: com.drinkbot3000.tracker (or similar)
+ * 9. Health Claims: Cannot claim medical accuracy - keep "educational only"
+ * 10. Permissions: INTERNET (for payments), VIBRATE (notifications)
+ *
+ * IOS APP STORE REQUIREMENTS:
+ * ----------------------------
+ * 1. Age Rating: Must be rated "17+" (alcohol reference)
+ * 2. Privacy Policy: Required URL in App Store Connect
+ * 3. App Privacy: Declare in App Store Connect:
+ *    - Health & Fitness data collected
+ *    - Used for app functionality only (not tracking)
+ *    - User can request deletion
+ * 4. HealthKit: Consider integration to sync weight data (optional)
+ * 5. App Tracking Transparency: Not needed (no third-party tracking)
+ * 6. Content Description: Must include "Alcohol Reference" warning
+ * 7. Geographic Availability: Restrict in countries with alcohol app bans
+ * 8. Disclaimers: Prominent disclaimer required - not medical advice
+ * 9. In-App Purchases: Must use Apple's IAP system (not direct Stripe)
+ * 10. Bundle ID: com.drinkbot3000.tracker
+ * 11. Functionality: Cannot encourage dangerous behavior
+ * 12. Human Interface Guidelines: Follow native iOS patterns
+ *
+ * SHARED REQUIREMENTS:
+ * --------------------
+ * 1. Terms of Service must be accessible in-app
+ * 2. Privacy policy must be accessible in-app
+ * 3. Age gate at first launch (21+ in US, varies by region)
+ * 4. Cannot promote excessive drinking
+ * 5. Must include safety warnings and alternatives (rideshare, etc)
+ * 6. BAC calculations must include accuracy disclaimers
+ * 7. Cannot claim to prevent DUI or medical issues
+ * 8. Consider adding "Don't Drink and Drive" messaging
+ * 9. Payment processing must comply with store guidelines
+ * 10. App icon must not glamorize alcohol
+ *
+ * TECHNICAL IMPLEMENTATION NOTES:
+ * --------------------------------
+ * - Use React Native or Capacitor to wrap PWA for native deployment
+ * - Replace Stripe direct links with native IAP SDKs
+ * - Add native share sheet integration (replaces Web Share API)
+ * - Implement native notifications (replace web notifications)
+ * - Add splash screen and native app icons
+ * - Consider offline data sync strategies
+ * - Test on actual devices for BAC calculation accuracy
+ * - Add analytics (Firebase) with proper privacy consent
+ * - Implement crash reporting (Sentry, Firebase)
+ * - Add deep linking support for sharing
+ *
+ * LEGAL & MEDICAL DISCLAIMERS:
+ * ----------------------------
+ * - Consult legal counsel before mobile app store submission
+ * - Consider liability insurance for health-related apps
+ * - BAC formulas are estimates only - actual BAC varies significantly
+ * - App cannot replace breathalyzer or medical testing
+ * - Include warnings about medications, food, individual metabolism
+ * - Consider adding emergency contact features
+ *
+ * =============================================================================
+ */
+
 // Constants
 const CONSTANTS = {
   METABOLISM_RATE: 0.015,
@@ -13,7 +93,8 @@ const CONSTANTS = {
   STANDARD_DRINK_OZ: 0.6,
   LEGAL_LIMIT: 0.08,
   MIN_WEIGHT: 50,
-  MAX_WEIGHT: 500,
+  // MAX_WEIGHT removed - no upper limit for inclusivity and accessibility
+  // App should work for users of all body types without discrimination
   ROBOT_MESSAGE_DURATION: 5000,
   JOKE_DURATION: 7000,
   MIN_TIP_AMOUNT: 3,
@@ -243,7 +324,8 @@ export default function BACTracker() {
     const w = parseFloat(weight);
     if (isNaN(w)) return 'Please enter a valid number';
     if (w < CONSTANTS.MIN_WEIGHT) return `Weight must be at least ${CONSTANTS.MIN_WEIGHT} lbs`;
-    if (w > CONSTANTS.MAX_WEIGHT) return `Weight must be less than ${CONSTANTS.MAX_WEIGHT} lbs`;
+    // No upper weight limit - app should be inclusive for all body types
+    // BAC calculations remain scientifically valid across full weight spectrum
     return '';
   };
 
@@ -1273,18 +1355,17 @@ Questions? Contact: support@drinkbot3000.com
                   <Scale className="inline w-4 h-4 mr-1" />
                   Weight (lbs)
                 </label>
-                <input 
-                  type="number" 
-                  value={state.weight} 
+                <input
+                  type="number"
+                  value={state.weight}
                   onChange={(e) => {
                     dispatch({ type: 'SET_FIELD', field: 'weight', value: e.target.value });
                     const error = validateWeight(e.target.value);
                     dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
                   }}
-                  placeholder="Enter your weight" 
+                  placeholder="Enter your weight"
                   className={`w-full px-4 py-3 border rounded-lg ${state.weightError ? 'border-red-500' : 'border-gray-300'}`}
                   min={CONSTANTS.MIN_WEIGHT}
-                  max={CONSTANTS.MAX_WEIGHT}
                 />
                 {state.weightError && (
                   <p className="text-red-600 text-sm mt-1">{state.weightError}</p>
