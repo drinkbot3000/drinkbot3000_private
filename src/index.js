@@ -2,11 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import ErrorBoundary from './ErrorBoundary';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
@@ -16,7 +19,9 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/service-worker.js')
       .then((registration) => {
-        console.log('✅ Service Worker registered successfully:', registration.scope);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Service Worker registered successfully:', registration.scope);
+        }
 
         // Check for updates periodically
         setInterval(() => {
@@ -39,12 +44,14 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch((error) => {
-        console.log('❌ Service Worker registration failed:', error);
+        console.error('❌ Service Worker registration failed:', error);
       });
 
     // Handle controller change
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('Service Worker controller changed');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Service Worker controller changed');
+      }
     });
   });
 }
@@ -61,19 +68,25 @@ window.addEventListener('beforeinstallprompt', (e) => {
   // Dispatch custom event that can be caught in React components
   window.dispatchEvent(new CustomEvent('pwa-install-available', { detail: e }));
 
-  console.log('💾 PWA install prompt available');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('💾 PWA install prompt available');
+  }
 });
 
 // Track PWA installation
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA was installed successfully');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ PWA was installed successfully');
+  }
   deferredPrompt = null;
 });
 
 // Expose install function globally for components to use
 window.showInstallPrompt = async () => {
   if (!deferredPrompt) {
-    console.log('❌ Install prompt not available');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('❌ Install prompt not available');
+    }
     return false;
   }
 
@@ -83,10 +96,12 @@ window.showInstallPrompt = async () => {
   // Wait for the user to respond to the prompt
   const { outcome } = await deferredPrompt.userChoice;
 
-  if (outcome === 'accepted') {
-    console.log('✅ User accepted the install prompt');
-  } else {
-    console.log('❌ User dismissed the install prompt');
+  if (process.env.NODE_ENV === 'development') {
+    if (outcome === 'accepted') {
+      console.log('✅ User accepted the install prompt');
+    } else {
+      console.log('❌ User dismissed the install prompt');
+    }
   }
 
   // Clear the deferred prompt
