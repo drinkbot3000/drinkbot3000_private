@@ -512,6 +512,13 @@ Questions? Contact: support@drinkbot3000.com
     }
   };
 
+  const clearDrinks = () => {
+    if (state.drinks.length > 0) {
+      dispatch({ type: 'CLEAR_DRINKS' });
+      showRobotMessage('*whirrs loudly* All drinks cleared from records! Starting fresh! 🤖');
+    }
+  };
+
   const deleteDrink = (id) => {
     dispatch({ type: 'REMOVE_DRINK', id });
     showRobotMessage('*whirrs* Drink removed from records! 🤖');
