@@ -1545,7 +1545,7 @@ Questions? Contact: support@drinkbot3000.com
                       <button
                         onClick={() => {
                           if (state.customDrinkOz && state.customDrinkABV) {
-                            addDrink('custom', parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
+                            addCustomDrink(state.customDrinkOz, state.customDrinkABV);
                             dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
                             dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
                           }
