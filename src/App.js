@@ -629,7 +629,7 @@ Questions? Contact: support@drinkbot3000.com
       showRobotMessage(`*beep boop* Redirecting to secure Stripe checkout... 🤖`);
 
       // Open Stripe checkout in new window
-      const stripePaymentLink = 'https://buy.stripe.com/6oU14m8oI9Yj2EX8wM5sA00';
+      const stripePaymentLink = 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01';
       window.open(stripePaymentLink, '_blank', 'noopener,noreferrer');
 
       // Show confirmation message
