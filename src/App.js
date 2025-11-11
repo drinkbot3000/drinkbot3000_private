@@ -1643,6 +1643,16 @@ Questions? Contact: support@drinkbot3000.com
                   <span>Support with $5</span>
                 </button>
 
+                {/* Prominent Share Button */}
+                <button
+                  onClick={handleShare}
+                  className="w-full mt-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-4 rounded-xl font-bold text-xl transition shadow-lg flex items-center justify-center space-x-2 animate-pulse hover:animate-none"
+                  title="Share DrinkBot3000 - Help spread safety awareness!"
+                >
+                  <Share2 className="w-6 h-6" />
+                  <span>Share & Save Lives!</span>
+                </button>
+
                 <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
                   <p className="text-sm text-blue-900 font-semibold mb-2">
                     💡 Help us save lives!
