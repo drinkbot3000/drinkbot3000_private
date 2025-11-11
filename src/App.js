@@ -64,9 +64,6 @@ const initialState = {
   geoBlocked: false,
   geoCountry: '',
   geoError: null,
-  // Payment consent state
-  showPaymentConsent: false,
-  pendingPaymentAmount: null,
 };
 
 // Reducer
@@ -596,42 +593,6 @@ Questions? Contact: support@drinkbot3000.com
 
   const calculateSoberTime = () => {
     return getSoberTime(state.bac);
-  };
-
-  const handleTip = (amount) => {
-    // Show payment consent modal before redirecting
-    dispatch({
-      type: 'SET_MULTIPLE',
-      values: {
-        showPaymentConsent: true,
-        pendingPaymentAmount: amount,
-      }
-    });
-  };
-
-  const handlePaymentConsent = (accepted) => {
-    if (accepted) {
-      // User consented - redirect to Stripe Payment Link
-      showRobotMessage(`*beep boop* Redirecting to secure Stripe checkout... 🤖`);
-
-      // Open Stripe checkout in new window
-      const stripePaymentLink = 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01';
-      window.open(stripePaymentLink, '_blank', 'noopener,noreferrer');
-
-      // Show confirmation message
-      setTimeout(() => {
-        showRobotMessage('*whirrs happily* Thank you for your support! 🎉');
-      }, 1000);
-    }
-
-    // Close modal and reset pending amount
-    dispatch({
-      type: 'SET_MULTIPLE',
-      values: {
-        showPaymentConsent: false,
-        pendingPaymentAmount: null,
-      }
-    });
   };
 
   const status = getBACStatus();
@@ -1595,13 +1556,15 @@ Questions? Contact: support@drinkbot3000.com
                   Enjoying DrinkBot3000? Support development with a $5 tip! Secure checkout via Stripe.
                 </p>
 
-                <button
-                  onClick={() => handleTip(5)}
+                <a
+                  href="https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 rounded-lg font-semibold text-lg transition shadow-lg flex items-center justify-center gap-2"
                 >
                   <DollarSign className="w-5 h-5" />
                   Support with $5
-                </button>
+                </a>
 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-900">
@@ -1778,80 +1741,6 @@ Questions? Contact: support@drinkbot3000.com
                 </button>
                 <button
                   onClick={() => dispatch({ type: 'HIDE_CONFIRM' })}
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Payment Consent Modal */}
-        {state.showPaymentConsent && state.pendingPaymentAmount && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-              <div className="text-center mb-6">
-                <DollarSign className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Confirm Payment</h3>
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  ${state.pendingPaymentAmount.toFixed(2)}
-                </div>
-                <p className="text-gray-600">You're about to make a voluntary donation to support DrinkBot3000</p>
-              </div>
-
-              <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200 text-left">
-                <p className="text-sm text-blue-900 mb-3">
-                  <strong>Please confirm you understand:</strong>
-                </p>
-                <ul className="text-sm text-blue-800 space-y-2">
-                  <li className="flex items-start">
-                    <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>This is a <strong>voluntary donation</strong> - not required to use the app</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>You'll be redirected to <strong>Stripe's secure checkout</strong></span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-                    <span><strong>{CONSTANTS.REFUND_WINDOW_DAYS}-day refund policy</strong> applies - see our{' '}
-                      <button
-                        onClick={() => {
-                          dispatch({ type: 'SET_FIELD', field: 'showPaymentConsent', value: false });
-                          dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true });
-                        }}
-                        className="text-blue-600 underline hover:text-blue-800"
-                      >
-                        Refund Policy
-                      </button>
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>By continuing, you agree to our{' '}
-                      <a
-                        href="/terms.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline hover:text-blue-800"
-                      >
-                        Terms of Service
-                      </a>
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handlePaymentConsent(true)}
-                  className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition"
-                >
-                  I Agree & Continue to Stripe
-                </button>
-                <button
-                  onClick={() => handlePaymentConsent(false)}
                   className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
                 >
                   Cancel
