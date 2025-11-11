@@ -41,14 +41,23 @@ export async function checkGeographicRestriction() {
     }
 
     const { countryCode, country } = geoData;
+
+    // Ensure we have valid country information
+    if (!countryCode) {
+      throw new Error('Country code not provided by geolocation service');
+    }
+
     const isAllowed = ALLOWED_COUNTRIES.includes(countryCode);
 
+    // Use country name if available, otherwise use country code
+    const countryName = country || countryCode || 'Unknown';
+
     // Cache verification result (NOT the IP address)
-    cacheVerification(isAllowed, country);
+    cacheVerification(isAllowed, countryName);
 
     return {
       allowed: isAllowed,
-      country,
+      country: countryName,
       countryCode,
       error: null
     };

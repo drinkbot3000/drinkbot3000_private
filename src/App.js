@@ -190,12 +190,18 @@ export default function BACTracker() {
     // Enforce geographic restriction on load
     if (geoVerifiedCheck !== null) {
       const isGeoVerified = geoVerifiedCheck === 'true';
+      console.log('Loading geo state from localStorage:', {
+        geoVerified: isGeoVerified,
+        userCountry: userCountryCheck
+      });
       dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: isGeoVerified });
 
       // If verification failed (not in USA), set blocked state
       if (!isGeoVerified) {
+        const countryToDisplay = userCountryCheck || 'Unknown';
+        console.log('User was previously blocked. Country:', countryToDisplay);
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
-        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: userCountryCheck || 'Unknown' });
+        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: countryToDisplay });
       }
     }
 
@@ -427,6 +433,7 @@ Questions? Contact: support@drinkbot3000.com
 
     try {
       const result = await checkGeographicRestriction();
+      console.log('Geolocation result:', result);
 
       if (result.error) {
         // API returned an error - this is a verification failure, not a block
@@ -439,6 +446,7 @@ Questions? Contact: support@drinkbot3000.com
 
       if (result.allowed) {
         // User is in an allowed country
+        console.log('User allowed - Country:', result.country);
         dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
@@ -447,6 +455,7 @@ Questions? Contact: support@drinkbot3000.com
         dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
       } else {
         // User is in a prohibited country - this is a real block
+        console.log('User blocked - Country:', result.country, 'CountryCode:', result.countryCode);
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
         dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: false });
@@ -854,8 +863,22 @@ Questions? Contact: support@drinkbot3000.com
 
           <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-200">
             <p className="text-gray-800 font-bold text-lg mb-3">
-              Detected Location: {state.geoCountry}
+              Detected Location: {state.geoCountry || 'Outside USA'}
             </p>
+            {state.geoCountry === 'Unknown' || !state.geoCountry ? (
+              <div className="mb-4">
+                <p className="text-gray-700 mb-2">
+                  Our system detected that you are not accessing from the United States.
+                </p>
+                <p className="text-sm text-gray-600">
+                  (Specific country information unavailable)
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-700 mb-4">
+                Our system detected that you are accessing from <strong>{state.geoCountry}</strong>.
+              </p>
+            )}
             <p className="text-gray-700 mb-4">
               DrinkBot3000 is a USA-only service. Access is restricted to users physically located within the United States.
             </p>
