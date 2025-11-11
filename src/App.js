@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package, Globe, HelpCircle } from 'lucide-react';
+import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package, Globe, HelpCircle, Share2 } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
 
@@ -19,6 +19,13 @@ const CONSTANTS = {
   MIN_TIP_AMOUNT: 3,
   LEGAL_DRINKING_AGE: 21,
   REFUND_WINDOW_DAYS: 30,
+  // Stripe Payment Links - Replace these with your actual Stripe Payment Links
+  STRIPE_PAYMENT_LINKS: {
+    3: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_3_DOLLAR_LINK',
+    5: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_5_DOLLAR_LINK',
+    10: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_10_DOLLAR_LINK',
+    custom: 'https://buy.stripe.com/test_REPLACE_WITH_YOUR_CUSTOM_LINK'
+  }
 };
 
 // Initial state
@@ -416,9 +423,9 @@ Questions? Contact: support@drinkbot3000.com
     } catch (error) {
       console.error('Geographic verification failed:', error);
       dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
-      // On error, allow access and show disclaimer
-      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
-      dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
+      // On error, block access for USA-only service (fail-closed)
+      dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'Unknown' });
     }
   };
 
@@ -600,10 +607,10 @@ Questions? Contact: support@drinkbot3000.com
 
   const handleTip = (amount) => {
     if (amount < CONSTANTS.MIN_TIP_AMOUNT) {
-      dispatch({ 
-        type: 'SET_FIELD', 
-        field: 'tipError', 
-        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.` 
+      dispatch({
+        type: 'SET_FIELD',
+        field: 'tipError',
+        value: `Minimum support amount is $${CONSTANTS.MIN_TIP_AMOUNT} due to payment processing fees.`
       });
       setTimeout(() => {
         dispatch({ type: 'SET_FIELD', field: 'tipError', value: '' });
@@ -611,13 +618,33 @@ Questions? Contact: support@drinkbot3000.com
       return;
     }
 
-    showRobotMessage(`*beep boop* Thank you for supporting development! Processing... 🤖`);
-    
-    setTimeout(() => {
-      const receipt = generateReceipt(amount, 'Stripe');
-      dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
-      showRobotMessage('*whirrs happily* Payment successful! Receipt generated! 🎉');
-    }, 1500);
+    // Open Stripe Payment Link in new tab
+    const paymentLink = CONSTANTS.STRIPE_PAYMENT_LINKS[amount] || CONSTANTS.STRIPE_PAYMENT_LINKS.custom;
+    window.open(paymentLink, '_blank', 'noopener,noreferrer');
+    showRobotMessage(`*beep boop* Opening payment page... Thank you for your support! 🤖`);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'DrinkBot3000',
+      text: 'Check out DrinkBot3000 - A responsible drinking companion that helps you track your BAC and stay safe!',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        showRobotMessage('*beep boop* Thanks for sharing! 🤖');
+      } else {
+        // Fallback for browsers that don't support Web Share API
+        await navigator.clipboard.writeText(window.location.href);
+        showRobotMessage('*beep* Link copied to clipboard! 📋');
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+      }
+    }
   };
 
   const status = getBACStatus();
@@ -1360,6 +1387,13 @@ Questions? Contact: support@drinkbot3000.com
             </div>
             <div className="flex items-center space-x-2">
               <button
+                onClick={handleShare}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                title="Share DrinkBot3000"
+              >
+                <Share2 className="w-5 h-5 text-gray-600" />
+              </button>
+              <button
                 onClick={() => dispatch({ type: 'SET_FIELD', field: 'showHelp', value: true })}
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
                 title="How to use"
@@ -1608,24 +1642,27 @@ Questions? Contact: support@drinkbot3000.com
               <div className="bg-white rounded-lg p-6 shadow">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Support DrinkBot3000</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Enjoying DrinkBot3000? Support development with a tip!
+                  Enjoying DrinkBot3000? Support development with a secure payment via Stripe!
                 </p>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <button
                     onClick={() => handleTip(3)}
-                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
+                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
+                    title="Opens Stripe payment page"
                   >
                     $3
                   </button>
                   <button
                     onClick={() => handleTip(5)}
-                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
+                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
+                    title="Opens Stripe payment page"
                   >
                     $5
                   </button>
                   <button
                     onClick={() => handleTip(10)}
-                    className="bg-green-100 hover:bg-green-200 text-green-800 py-3 rounded-lg font-semibold transition"
+                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center"
+                    title="Opens Stripe payment page"
                   >
                     $10
                   </button>
@@ -1660,15 +1697,19 @@ Questions? Contact: support@drinkbot3000.com
                       }}
                       className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
                       disabled={!state.customTipAmount || parseFloat(state.customTipAmount) < CONSTANTS.MIN_TIP_AMOUNT}
+                      title="Opens Stripe payment page"
                     >
-                      Send Tip
+                      Pay with Stripe
                     </button>
                   </div>
                 )}
 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-900">
+                  <p className="text-xs text-blue-900 mb-2">
                     💡 Tips help keep DrinkBot3000 free and ad-free for everyone!
+                  </p>
+                  <p className="text-xs text-blue-800">
+                    Secure payments via Stripe with automatic tax collection
                   </p>
                 </div>
               </div>
@@ -1713,7 +1754,7 @@ Questions? Contact: support@drinkbot3000.com
                 </div>
 
                 <button
-                  onClick={calculateBAC}
+                  onClick={calculateQuickBAC}
                   disabled={!state.calcDrinks || !state.calcHours}
                   className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-300"
                 >
