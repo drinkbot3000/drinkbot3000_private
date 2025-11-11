@@ -893,11 +893,24 @@ Questions? Contact: support@drinkbot3000.com
             </p>
             <ul className="text-xs text-blue-800 space-y-1">
               <li>• Check if you're using a VPN or proxy routing through a non-US server</li>
-              <li>• Disable VPN/proxy and reload the page</li>
+              <li>• Disable VPN/proxy and click "Refresh & Retry Detection" below</li>
               <li>• Ensure you're physically located in the United States</li>
               <li>• Contact support at drinkbot3000@gmail.com</li>
             </ul>
           </div>
+
+          {/* Extra help for unknown country case */}
+          {(state.geoCountry === 'Unknown' || !state.geoCountry) && (
+            <div className="bg-amber-50 rounded-lg p-4 mb-4 border border-amber-300">
+              <p className="text-sm text-amber-900 font-semibold mb-2">
+                🔄 Location Detection Issue
+              </p>
+              <p className="text-xs text-amber-800">
+                We couldn't determine your specific country. This might be temporary.
+                If you disabled your VPN or are in the USA, click "Refresh & Retry Detection" to try again.
+              </p>
+            </div>
+          )}
 
           <div className="text-center">
             <p className="text-xs text-gray-600 mb-4">
@@ -905,25 +918,63 @@ Questions? Contact: support@drinkbot3000.com
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              // Clear all verification state
-              localStorage.removeItem('ageVerified');
-              localStorage.removeItem('geoVerified');
-              localStorage.removeItem('userCountry');
-              localStorage.removeItem('geoConsentGiven');
-              // Reset state to start over
-              dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: '' });
-            }}
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
-          >
-            ← Go Back
-          </button>
+          {/* Show refresh option when country is unknown */}
+          {state.geoCountry === 'Unknown' || !state.geoCountry ? (
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  // Clear geo verification and refresh the page to retry
+                  localStorage.removeItem('geoVerified');
+                  localStorage.removeItem('userCountry');
+                  window.location.reload();
+                }}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg"
+              >
+                <RefreshCw className="w-5 h-5 inline mr-2" />
+                Refresh & Retry Detection
+              </button>
+
+              <button
+                onClick={() => {
+                  // Clear all verification state
+                  localStorage.removeItem('ageVerified');
+                  localStorage.removeItem('geoVerified');
+                  localStorage.removeItem('userCountry');
+                  localStorage.removeItem('geoConsentGiven');
+                  // Reset state to start over
+                  dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: '' });
+                }}
+                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                ← Go Back
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                // Clear all verification state
+                localStorage.removeItem('ageVerified');
+                localStorage.removeItem('geoVerified');
+                localStorage.removeItem('userCountry');
+                localStorage.removeItem('geoConsentGiven');
+                // Reset state to start over
+                dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: '' });
+              }}
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            >
+              ← Go Back
+            </button>
+          )}
         </div>
       </div>
     );
