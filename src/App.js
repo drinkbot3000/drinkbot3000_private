@@ -661,9 +661,9 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const handleOpenSettings = () => {
-    // Initialize edit fields with current values
-    dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: state.gender });
-    dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: state.weight });
+    // Initialize edit fields with current values (with fallbacks)
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: state.gender || 'male' });
+    dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: state.weight || '' });
     dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
     dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true });
   };
@@ -2114,8 +2114,8 @@ Questions? Contact: support@drinkbot3000.com
 
                   {!state.settingsEditMode ? (
                     <div className="space-y-2 text-sm">
-                      <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : 'Female'}</p>
-                      <p><strong>Weight:</strong> {state.weight} lbs</p>
+                      <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : state.gender === 'female' ? 'Female' : 'Not set'}</p>
+                      <p><strong>Weight:</strong> {state.weight ? `${state.weight} lbs` : 'Not set'}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
