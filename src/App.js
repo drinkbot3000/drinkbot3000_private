@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package, Globe } from 'lucide-react';
+import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Trash2, Clock, X, Heart, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, CheckCircle, Pill, Bed, Car, Phone, Package, Globe } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
+import {
+  BACDisplay,
+  DrinkButtonGrid,
+  HeaderBar,
+  SettingsModal,
+  RobotMessageDisplay,
+  TimeInfoBox
+} from './components';
+import { getBACStatus as getBACStatusUtil } from './utils/bacStatus';
 
 // Constants
 const CONSTANTS = {
@@ -559,10 +568,7 @@ Questions? Contact: support@drinkbot3000.com
 
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
-    if (currentBAC === 0) return { text: 'Sober', color: 'text-green-600', bg: 'bg-green-50' };
-    if (currentBAC < 0.03) return { text: 'Mild', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    if (currentBAC < CONSTANTS.LEGAL_LIMIT) return { text: 'Impaired', color: 'text-orange-600', bg: 'bg-orange-50' };
-    return { text: 'Intoxicated', color: 'text-red-600', bg: 'bg-red-50' };
+    return getBACStatusUtil(currentBAC);
   };
 
   const formatTime = (timestamp) => {
@@ -1326,25 +1332,9 @@ Questions? Contact: support@drinkbot3000.com
     <>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-24">
         {/* Header */}
-        <div className="bg-white shadow-sm">
-          <div className="max-w-md mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">🤖</span>
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-800">DrinkBot3000</h1>
-                <p className="text-xs text-gray-500">Responsible tracking</p>
-              </div>
-            </div>
-            <button
-              onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true })}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <Settings className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-        </div>
+        <HeaderBar
+          onSettingsClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true })}
+        />
 
         {/* Tab Navigation */}
         <div className="bg-white border-b border-gray-200">
@@ -1381,24 +1371,10 @@ Questions? Contact: support@drinkbot3000.com
           {state.activeTab === 'tracker' ? (
             <>
               {/* BAC Display */}
-              <div className={`rounded-2xl shadow-xl p-8 mb-6 ${status.bgColor}`}>
-                <div className="text-center">
-                  <div className="text-6xl font-bold text-white mb-2">
-                    {state.bac.toFixed(3)}%
-                  </div>
-                  <div className="text-xl text-white font-medium mb-4">{status.label}</div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p className="text-white text-sm">{status.message}</p>
-                  </div>
-                </div>
-              </div>
+              <BACDisplay bac={state.bac} status={status} />
 
               {/* Robot Message */}
-              {state.robotMessage && (
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border-2 border-purple-200 animate-pulse">
-                  <p className="text-purple-900 font-medium text-center">{state.robotMessage}</p>
-                </div>
-              )}
+              <RobotMessageDisplay message={state.robotMessage} isVisible={!!state.robotMessage} />
 
               {/* Joke Display */}
               {state.showJoke && state.currentJoke && (
@@ -1411,60 +1387,24 @@ Questions? Contact: support@drinkbot3000.com
               )}
 
               {/* Time Info */}
-              {state.drinks.length > 0 && (
-                <div className="bg-white rounded-lg p-4 mb-6 shadow">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <Clock className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                      <div className="text-2xl font-bold text-gray-800">{calculateElapsedTime()}</div>
-                      <div className="text-xs text-gray-500">Time Elapsed</div>
-                    </div>
-                    <div>
-                      <Coffee className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                      <div className="text-2xl font-bold text-gray-800">{calculateSoberTime()}</div>
-                      <div className="text-xs text-gray-500">Until Sober</div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <TimeInfoBox
+                elapsedTime={calculateElapsedTime()}
+                soberTime={calculateSoberTime()}
+                showWhen={state.drinks.length > 0}
+              />
 
               {/* Add Drink Buttons */}
-              <div className="bg-white rounded-lg p-6 mb-6 shadow">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Drink</h3>
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <button
-                    onClick={() => addDrink('beer', 12, 5)}
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🍺 Beer<br />
-                    <span className="text-xs">12 oz, 5% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => addDrink('wine', 5, 12)}
-                    className="bg-purple-100 hover:bg-purple-200 text-purple-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🍷 Wine<br />
-                    <span className="text-xs">5 oz, 12% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => addDrink('shot', 1.5, 40)}
-                    className="bg-red-100 hover:bg-red-200 text-red-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🥃 Shot<br />
-                    <span className="text-xs">1.5 oz, 40% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: true })}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 p-4 rounded-lg font-medium transition"
-                  >
-                    ➕ Custom<br />
-                    <span className="text-xs">Custom drink</span>
-                  </button>
-                </div>
+              <DrinkButtonGrid
+                onAddBeer={() => addDrink('beer', 12, 5)}
+                onAddWine={() => addDrink('wine', 5, 12)}
+                onAddShot={() => addDrink('shot', 1.5, 40)}
+                onShowCustom={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: true })}
+              />
 
-                {/* Custom Drink Input */}
-                {state.showCustomDrink && (
-                  <div className="border-t pt-4 space-y-3">
+              {/* Custom Drink Input */}
+              {state.showCustomDrink && (
+                <div className="bg-white rounded-lg p-6 mb-6 shadow">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Volume (oz)</label>
                       <input
@@ -1509,8 +1449,8 @@ Questions? Contact: support@drinkbot3000.com
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Drink History */}
               {state.drinks.length > 0 && (
@@ -1718,74 +1658,14 @@ Questions? Contact: support@drinkbot3000.com
         </div>
 
         {/* Settings Modal */}
-        {state.showSettings && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Settings</h2>
-                <button
-                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false })}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3">Your Profile</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : 'Female'}</p>
-                    <p><strong>Weight:</strong> {state.weight} lbs</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={handleReset}
-                    className="w-full bg-red-100 text-red-700 py-3 rounded-lg font-medium hover:bg-red-200 transition"
-                  >
-                    <RefreshCw className="w-4 h-4 inline mr-2" />
-                    Reset App
-                  </button>
-
-                  <a
-                    href="/privacy.html"
-                    target="_blank"
-                    className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
-                  >
-                    <FileText className="w-4 h-4 inline mr-2" />
-                    Privacy Policy
-                  </a>
-
-                  <a
-                    href="/terms.html"
-                    target="_blank"
-                    className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
-                  >
-                    <FileText className="w-4 h-4 inline mr-2" />
-                    Terms of Service
-                  </a>
-
-                  <button
-                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true })}
-                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition"
-                  >
-                    <DollarSign className="w-4 h-4 inline mr-2" />
-                    Refund Policy
-                  </button>
-                </div>
-
-                <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                  <p className="text-xs text-indigo-900">
-                    <strong>Version:</strong> 1.0.0<br />
-                    <strong>Made with:</strong> Responsibility & Care 🤖
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <SettingsModal
+          isOpen={state.showSettings}
+          onClose={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false })}
+          userProfile={{ gender: state.gender, weight: state.weight }}
+          onReset={resetApp}
+          onShowRefundPolicy={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true })}
+          appVersion="1.0.0"
+        />
 
         {/* Confirmation Modal */}
         {state.showConfirmModal && (
