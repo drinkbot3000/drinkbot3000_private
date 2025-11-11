@@ -9,6 +9,7 @@
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Simple drag-and-drop deployment guide
 - **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Full codebase documentation
 - **[START_HERE.md](START_HERE.md)** - Getting started guide
+- **[PUBLIC_HEALTH_REQUIREMENTS.md](PUBLIC_HEALTH_REQUIREMENTS.md)** - Why DrinkBot3000 doesn't need IRB/HIPAA compliance
 
 ## 📦 What's Included
 
