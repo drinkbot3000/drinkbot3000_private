@@ -287,15 +287,28 @@ export default function BACTracker() {
     return 0;
   };
 
-  // Update BAC every second
+  // Update BAC using requestAnimationFrame for better performance
   useEffect(() => {
     if (!state.setupComplete) return;
 
-    const interval = setInterval(() => {
-      dispatch({ type: 'SET_FIELD', field: 'bac', value: calculateBAC() });
-    }, 1000);
+    let rafId;
+    let lastUpdateTime = Date.now();
 
-    return () => clearInterval(interval);
+    const updateBAC = () => {
+      const currentTime = Date.now();
+
+      // Only update if at least 1 second has passed
+      if (currentTime - lastUpdateTime >= 1000) {
+        dispatch({ type: 'SET_FIELD', field: 'bac', value: calculateBAC() });
+        lastUpdateTime = currentTime;
+      }
+
+      rafId = requestAnimationFrame(updateBAC);
+    };
+
+    rafId = requestAnimationFrame(updateBAC);
+
+    return () => cancelAnimationFrame(rafId);
   }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours]);
 
   const showRobotMessage = (message) => {
