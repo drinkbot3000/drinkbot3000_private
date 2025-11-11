@@ -67,6 +67,7 @@ const initialState = {
   geoBlocked: false,
   geoCountry: '',
   geoError: null,
+  geoVerificationFailed: false, // Separate from geoBlocked - indicates API error vs wrong country
 };
 
 // Reducer
@@ -416,31 +417,45 @@ Questions? Contact: support@drinkbot3000.com
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
 
     // Perform geographic verification
+    await performGeoVerification();
+  };
+
+  const performGeoVerification = async () => {
+    // Clear any previous errors
+    dispatch({ type: 'SET_FIELD', field: 'geoError', value: null });
+    dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: false });
+
     try {
       const result = await checkGeographicRestriction();
+
+      if (result.error) {
+        // API returned an error - this is a verification failure, not a block
+        console.error('Geographic verification error:', result.error);
+        dispatch({ type: 'SET_FIELD', field: 'geoError', value: result.error });
+        dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: true });
+        // Don't cache failed verification
+        return;
+      }
 
       if (result.allowed) {
         // User is in an allowed country
         dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+        dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: false });
         // Continue to disclaimer
         dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
       } else {
-        // User is in a prohibited country
+        // User is in a prohibited country - this is a real block
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
-      }
-
-      if (result.error) {
-        dispatch({ type: 'SET_FIELD', field: 'geoError', value: result.error });
+        dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: false });
       }
     } catch (error) {
-      console.error('Geographic verification failed:', error);
+      console.error('Geographic verification exception:', error);
       dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
-      // SECURITY: Fail-closed - block access on error (never allow on error)
-      dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
-      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'Unknown (Error)' });
+      dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: true });
+      // Don't cache failed verification
     }
   };
 
@@ -740,6 +755,82 @@ Questions? Contact: support@drinkbot3000.com
             <a href="/privacy.html" target="_blank" className="text-xs text-blue-600 hover:underline">
               Read our Privacy Policy
             </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Geographic Verification Error Screen
+  if (state.geoVerificationFailed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-amber-100 rounded-full">
+              <RefreshCw className="w-16 h-16 text-amber-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Verification Error</h1>
+            <p className="text-lg text-gray-700 mb-4">
+              We couldn't verify your location.
+            </p>
+          </div>
+
+          <div className="bg-amber-50 rounded-lg p-6 mb-6 border-2 border-amber-200">
+            <p className="text-gray-800 font-bold text-lg mb-3">
+              What happened?
+            </p>
+            <p className="text-gray-700 mb-4">
+              There was a problem connecting to our location verification service. This could be due to:
+            </p>
+            <ul className="text-sm text-gray-700 space-y-2">
+              <li>• Network connectivity issues</li>
+              <li>• Temporary service interruption</li>
+              <li>• Firewall or security settings blocking the request</li>
+            </ul>
+            {state.geoError && (
+              <div className="mt-4 p-3 bg-white rounded border border-amber-300">
+                <p className="text-xs text-gray-600 font-mono">{state.geoError}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+            <p className="text-sm text-blue-900 font-semibold mb-2">
+              What to try:
+            </p>
+            <ul className="text-xs text-blue-800 space-y-1">
+              <li>• Click "Retry" below to try again</li>
+              <li>• Check your internet connection</li>
+              <li>• If using VPN, try disabling it temporarily</li>
+              <li>• Try refreshing the page</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={performGeoVerification}
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-amber-700 hover:to-orange-700 transition shadow-lg"
+            >
+              <RefreshCw className="w-5 h-5 inline mr-2" />
+              Retry Verification
+            </button>
+
+            <button
+              onClick={() => {
+                // Go back to start
+                localStorage.removeItem('ageVerified');
+                localStorage.removeItem('geoConsentGiven');
+                dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoVerificationFailed', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoError', value: null });
+              }}
+              className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
+            >
+              ← Start Over
+            </button>
           </div>
         </div>
       </div>
