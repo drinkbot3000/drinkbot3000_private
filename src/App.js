@@ -5,7 +5,12 @@ import { checkGeographicRestriction } from './geolocation';
 
 // Constants
 const CONSTANTS = {
-  METABOLISM_RATE: 0.015,
+  // Conservative BAC elimination rate based on Jones, A.W. (2010)
+  // "Evidence-based survey of the elimination rates of ethanol from blood with applications in forensic casework"
+  // Forensic Science International, 200(1-3), 1-20.
+  // Using 10 mg/100mL/h (0.010% per hour) - the lower end of the physiological range
+  // for fasted subjects, providing safer, more conservative estimates for sobriety time.
+  METABOLISM_RATE: 0.010,
   GRAMS_PER_STANDARD_DRINK: 14,
   LBS_TO_KG: 0.453592,
   MALE_BODY_WATER: 0.68,
