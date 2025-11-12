@@ -962,7 +962,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🚨 CRITICAL - CALL 911',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-black via-red-900 to-black animate-pulse',
-      message: '🚨 IMMEDIATE MEDICAL EMERGENCY - CALL 911 NOW! Risk of coma, respiratory failure, and death. DO NOT leave person alone. Monitor breathing and consciousness.',
+      message: `🚨 EXTREME DANGER - CALL AN AMBULANCE IMMEDIATELY! Estimated BAC ${currentBAC.toFixed(3)}% but could be as high as ${margin.max.toFixed(3)}%. This level is LIFE-THREATENING with high risk of coma, respiratory failure, and DEATH. DO NOT wait - call 911 NOW. DO NOT leave person alone. Monitor breathing and consciousness constantly. Be prepared to perform CPR.`,
       emergencyLevel: 'CRITICAL',
       margin,
       showEmergency: true
@@ -972,7 +972,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🚨 LIFE-THREATENING',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-900 via-red-700 to-red-900',
-      message: '🚨 MEDICAL EMERGENCY: Loss of consciousness likely. Respiratory depression. CALL 911 IMMEDIATELY. Stay with person, monitor breathing, be prepared to perform CPR.',
+      message: `🚨 MEDICAL EMERGENCY - STRONGLY CONSIDER CALLING 911! Estimated BAC ${currentBAC.toFixed(3)}% but with margin of error could be ${margin.max.toFixed(3)}%. Loss of consciousness likely. Respiratory depression possible. Call an ambulance if person shows ANY signs of distress. Stay with person, monitor breathing continuously, be prepared to perform CPR.`,
       emergencyLevel: 'LIFE_THREATENING',
       margin,
       showEmergency: true
@@ -982,7 +982,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '⚠️ ALCOHOL POISONING RISK',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-700 via-red-600 to-red-700',
-      message: '⚠️ SEVERE DANGER: Risk of alcohol poisoning. Seek medical attention NOW. Signs: confusion, vomiting, seizures, slow breathing, pale/blue skin. DO NOT hesitate to call 911.',
+      message: `⚠️ SEVERE DANGER - CONSIDER CALLING AN AMBULANCE! Estimated BAC ${currentBAC.toFixed(3)}% but could be as high as ${margin.max.toFixed(3)}%. High risk of alcohol poisoning at this level. Watch for signs: confusion, vomiting, seizures, slow breathing (less than 8 breaths/min), pale or blue-tinged skin. If ANY of these symptoms appear, call 911 immediately. DO NOT hesitate - better safe than sorry.`,
       emergencyLevel: 'POISONING_RISK',
       margin,
       showEmergency: true
@@ -992,7 +992,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🛑 DANGEROUS LEVEL',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-600 via-red-500 to-red-600',
-      message: '🛑 DANGEROUS: Severe confusion, disorientation, inability to walk. Person needs immediate assistance. May need medical help. Monitor closely for worsening symptoms. Do NOT drive or operate anything.' + impairmentWarning,
+      message: `🛑 DANGEROUS - MEDICAL ATTENTION MAY BE NEEDED! Estimated BAC ${currentBAC.toFixed(3)}% with possible range up to ${margin.max.toFixed(3)}%. Severe confusion, disorientation, inability to walk. Person needs immediate assistance and close monitoring. STRONGLY CONSIDER calling 911 if condition worsens or if person cannot be safely cared for. Watch for worsening symptoms. Absolutely NO driving or operating anything.` + impairmentWarning,
       emergencyLevel: 'DANGEROUS',
       margin,
       showEmergency: true
@@ -2270,26 +2270,41 @@ Questions? Contact: support@drinkbot3000.com
                 <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mb-6 animate-pulse shadow-2xl">
                   <div className="text-center">
                     <div className="text-4xl mb-3">🚨</div>
-                    <h3 className="text-2xl font-bold text-white mb-3">MEDICAL EMERGENCY</h3>
+                    <h3 className="text-2xl font-bold text-white mb-3">DANGEROUS BAC LEVEL DETECTED</h3>
+
+                    <div className="bg-yellow-400 rounded-lg p-4 mb-4">
+                      <p className="text-red-900 font-bold text-lg mb-2">⚠️ ELEVATED RISK - MARGIN OF ERROR WARNING</p>
+                      <p className="text-red-900 text-sm font-semibold">
+                        Your estimated BAC is {state.bac.toFixed(3)}%, but due to individual variation in metabolism,
+                        your actual BAC could be as high as {status.margin.max.toFixed(3)}%.
+                        This is in the DANGEROUS range where alcohol poisoning is a real risk.
+                      </p>
+                    </div>
+
                     <div className="bg-white rounded-lg p-4 mb-4">
-                      <p className="text-red-900 font-bold text-lg mb-2">Signs of Alcohol Poisoning:</p>
-                      <ul className="text-left text-sm text-red-900 space-y-1">
-                        <li>• Confusion, stupor, unconsciousness</li>
-                        <li>• Vomiting or seizures</li>
-                        <li>• Slow breathing (less than 8 breaths/min)</li>
-                        <li>• Irregular breathing (10+ seconds between breaths)</li>
-                        <li>• Pale or blue-tinged skin</li>
-                        <li>• Low body temperature</li>
+                      <p className="text-red-900 font-bold text-lg mb-2">STRONGLY CONSIDER CALLING AN AMBULANCE IF:</p>
+                      <ul className="text-left text-sm text-red-900 space-y-1 font-semibold">
+                        <li>• Person is confused, unconscious, or cannot be awakened</li>
+                        <li>• Vomiting while unconscious or semi-conscious</li>
+                        <li>• Seizures or irregular breathing</li>
+                        <li>• Breathing is slow (less than 8 breaths per minute)</li>
+                        <li>• Gaps of 10+ seconds between breaths</li>
+                        <li>• Pale, blue-tinged, or cold/clammy skin</li>
+                        <li>• Person cannot stand or walk without help</li>
                       </ul>
                     </div>
+
                     <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
-                      📞 CALL 911 NOW
+                      📞 CONSIDER CALLING 911
                     </div>
                     <p className="text-yellow-300 text-xs mb-3 font-bold">
-                      Manually dial 9-1-1 on your phone
+                      Manually dial 9-1-1 on your phone if you see ANY warning signs above
+                    </p>
+                    <p className="text-white text-sm font-bold mb-2">
+                      DO NOT wait for all symptoms to appear!
                     </p>
                     <p className="text-white text-sm">
-                      DO NOT wait for all symptoms to appear. DO NOT leave person alone.
+                      DO NOT leave person alone. Monitor constantly. Better to call for help and not need it than to wait too long.
                     </p>
                   </div>
                 </div>
@@ -2653,34 +2668,54 @@ Questions? Contact: support@drinkbot3000.com
                     </div>
 
                     {/* Emergency Warning for Calculator */}
-                    {getBACStatus().showEmergency && (
-                      <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mt-4 animate-pulse shadow-2xl">
-                        <div className="text-center">
-                          <div className="text-4xl mb-3">🚨</div>
-                          <h3 className="text-2xl font-bold text-white mb-3">MEDICAL EMERGENCY</h3>
-                          <div className="bg-white rounded-lg p-4 mb-4">
-                            <p className="text-red-900 font-bold text-lg mb-2">Signs of Alcohol Poisoning:</p>
-                            <ul className="text-left text-sm text-red-900 space-y-1">
-                              <li>• Confusion, stupor, unconsciousness</li>
-                              <li>• Vomiting or seizures</li>
-                              <li>• Slow breathing (less than 8 breaths/min)</li>
-                              <li>• Irregular breathing (10+ seconds between breaths)</li>
-                              <li>• Pale or blue-tinged skin</li>
-                              <li>• Low body temperature</li>
-                            </ul>
+                    {(() => {
+                      const calcStatus = getBACStatus();
+                      if (!calcStatus.showEmergency) return null;
+
+                      return (
+                        <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mt-4 animate-pulse shadow-2xl">
+                          <div className="text-center">
+                            <div className="text-4xl mb-3">🚨</div>
+                            <h3 className="text-2xl font-bold text-white mb-3">DANGEROUS BAC LEVEL DETECTED</h3>
+
+                            <div className="bg-yellow-400 rounded-lg p-4 mb-4">
+                              <p className="text-red-900 font-bold text-lg mb-2">⚠️ ELEVATED RISK - MARGIN OF ERROR WARNING</p>
+                              <p className="text-red-900 text-sm font-semibold">
+                                Your estimated BAC is {state.calcBAC.toFixed(3)}%, but due to individual variation in metabolism,
+                                your actual BAC could be as high as {calcStatus.margin.max.toFixed(3)}%.
+                                This is in the DANGEROUS range where alcohol poisoning is a real risk.
+                              </p>
+                            </div>
+
+                            <div className="bg-white rounded-lg p-4 mb-4">
+                              <p className="text-red-900 font-bold text-lg mb-2">STRONGLY CONSIDER CALLING AN AMBULANCE IF:</p>
+                              <ul className="text-left text-sm text-red-900 space-y-1 font-semibold">
+                                <li>• Person is confused, unconscious, or cannot be awakened</li>
+                                <li>• Vomiting while unconscious or semi-conscious</li>
+                                <li>• Seizures or irregular breathing</li>
+                                <li>• Breathing is slow (less than 8 breaths per minute)</li>
+                                <li>• Gaps of 10+ seconds between breaths</li>
+                                <li>• Pale, blue-tinged, or cold/clammy skin</li>
+                                <li>• Person cannot stand or walk without help</li>
+                              </ul>
+                            </div>
+
+                            <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
+                              📞 CONSIDER CALLING 911
+                            </div>
+                            <p className="text-yellow-300 text-xs mb-3 font-bold">
+                              Manually dial 9-1-1 on your phone if you see ANY warning signs above
+                            </p>
+                            <p className="text-white text-sm font-bold mb-2">
+                              DO NOT wait for all symptoms to appear!
+                            </p>
+                            <p className="text-white text-sm">
+                              DO NOT leave person alone. Monitor constantly. Better to call for help and not need it than to wait too long.
+                            </p>
                           </div>
-                          <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
-                            📞 CALL 911 NOW
-                          </div>
-                          <p className="text-yellow-300 text-xs mb-3 font-bold">
-                            Manually dial 9-1-1 on your phone
-                          </p>
-                          <p className="text-white text-sm">
-                            DO NOT wait for all symptoms to appear. DO NOT leave person alone.
-                          </p>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </>
                 )}
 
