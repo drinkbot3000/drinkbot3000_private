@@ -2243,7 +2243,7 @@ Questions? Contact: support@drinkbot3000.com
           {state.activeTab === 'tracker' ? (
             <>
               {/* BAC Display */}
-              <div className={`rounded-2xl shadow-xl p-8 mb-6 ${status.bgColor}`}>
+              <div className={`rounded-2xl shadow-xl p-8 mb-6 ${status.bgColor || 'bg-gray-500'}`}>
                 <div className="text-center">
                   <div className="text-6xl font-bold text-white mb-2">
                     {state.bac.toFixed(3)}%
@@ -2253,9 +2253,9 @@ Questions? Contact: support@drinkbot3000.com
                       Range: {status.margin.min.toFixed(3)}% - {status.margin.max.toFixed(3)}%
                     </div>
                   )}
-                  <div className="text-xl text-white font-medium mb-4">{status.label}</div>
+                  <div className="text-xl text-white font-medium mb-4">{status.label || 'Unknown'}</div>
                   <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p className="text-white text-sm">{status.message}</p>
+                    <p className="text-white text-sm">{status.message || 'Calculating...'}</p>
                   </div>
                   {state.bac > 0 && status.margin && (
                     <div className="mt-3 text-xs text-white/80">
@@ -2266,7 +2266,7 @@ Questions? Contact: support@drinkbot3000.com
               </div>
 
               {/* Emergency Warning Banner */}
-              {status.showEmergency && (
+              {status.showEmergency && status.margin && (
                 <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mb-6 animate-pulse shadow-2xl">
                   <div className="text-center">
                     <div className="text-5xl mb-3">🚨☠️🚨</div>
@@ -2673,40 +2673,38 @@ Questions? Contact: support@drinkbot3000.com
                   Calculate BAC
                 </button>
 
-                {state.calcBAC !== null && (
+                {state.calcBAC !== null && (() => {
+                  const calcStatus = getBACStatus();
+                  return (
                   <>
-                    <div className={`rounded-lg p-6 ${getBACStatus().bgColor}`}>
+                    <div className={`rounded-lg p-6 ${calcStatus.bgColor || 'bg-gray-500'}`}>
                       <div className="text-center">
                         <div className="text-5xl font-bold text-white mb-2">
                           {state.calcBAC.toFixed(3)}%
                         </div>
-                        {state.calcBAC > 0 && getBACStatus().margin && (
+                        {state.calcBAC > 0 && calcStatus.margin && (
                           <div className="text-sm text-white/90 mb-2">
-                            Range: {getBACStatus().margin.min.toFixed(3)}% - {getBACStatus().margin.max.toFixed(3)}%
+                            Range: {calcStatus.margin.min.toFixed(3)}% - {calcStatus.margin.max.toFixed(3)}%
                           </div>
                         )}
                         <div className="text-xl text-white font-medium mb-3">
-                          {getBACStatus().label}
+                          {calcStatus.label || 'Unknown'}
                         </div>
                         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
                           <p className="text-white text-sm">
-                            {getBACStatus().message}
+                            {calcStatus.message || 'Calculating...'}
                           </p>
                         </div>
-                        {state.calcBAC > 0 && getBACStatus().margin && (
+                        {state.calcBAC > 0 && calcStatus.margin && (
                           <div className="mt-3 text-xs text-white/80">
-                            ⚠️ Margin of error: ±{(getBACStatus().margin.max - state.calcBAC).toFixed(3)}% (±{getBACStatus().margin.marginPercent.toFixed(0)}%)
+                            ⚠️ Margin of error: ±{(calcStatus.margin.max - state.calcBAC).toFixed(3)}% (±{calcStatus.margin.marginPercent.toFixed(0)}%)
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Emergency Warning for Calculator */}
-                    {(() => {
-                      const calcStatus = getBACStatus();
-                      if (!calcStatus.showEmergency) return null;
-
-                      return (
+                    {calcStatus.showEmergency && calcStatus.margin && (
                         <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mt-4 animate-pulse shadow-2xl">
                           <div className="text-center">
                             <div className="text-5xl mb-3">🚨☠️🚨</div>
@@ -2782,10 +2780,10 @@ Questions? Contact: support@drinkbot3000.com
                             </div>
                           </div>
                         </div>
-                      );
-                    })()}
+                    )}
                   </>
-                )}
+                  );
+                })()}
 
                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
                   <p className="text-xs text-amber-800 mb-2">
