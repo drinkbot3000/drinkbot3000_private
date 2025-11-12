@@ -94,6 +94,12 @@ const initialState = {
   settingsEditMode: false,
   // Impairment tracking
   hasBeenImpaired: false,
+  // Notification settings for drink timing
+  notificationConsent: false,
+  notificationsEnabled: false,
+  targetBAC: 0.05, // Default target BAC to maintain (safe social drinking level)
+  lastNotificationTime: null,
+  notificationPermission: 'default',
 };
 
 // Reducer
@@ -248,6 +254,11 @@ export default function BACTracker() {
         estimateHours: state.estimateHours,
         savedCustomDrinks: state.savedCustomDrinks,
         hasBeenImpaired: state.hasBeenImpaired,
+        notificationConsent: state.notificationConsent,
+        notificationsEnabled: state.notificationsEnabled,
+        targetBAC: state.targetBAC,
+        lastNotificationTime: state.lastNotificationTime,
+        notificationPermission: state.notificationPermission,
       };
       localStorage.setItem('bacTrackerData', JSON.stringify(dataToSave));
     }
@@ -262,6 +273,11 @@ export default function BACTracker() {
     state.estimateHours,
     state.savedCustomDrinks,
     state.hasBeenImpaired,
+    state.notificationConsent,
+    state.notificationsEnabled,
+    state.targetBAC,
+    state.lastNotificationTime,
+    state.notificationPermission,
   ]);
 
   // Helper functions
@@ -392,6 +408,95 @@ export default function BACTracker() {
 
     return () => clearInterval(interval);
   }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours, state.hasBeenImpaired]);
+
+  // Notification monitoring for drink timing
+  useEffect(() => {
+    if (!state.notificationsEnabled || !state.notificationConsent || !state.setupComplete) {
+      return;
+    }
+
+    if (state.notificationPermission !== 'granted') {
+      return;
+    }
+
+    // Only monitor in tracker mode
+    if (state.activeTab !== 'tracker') {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const currentBAC = calculateBAC();
+
+      // Only notify if user has started drinking (has at least one drink)
+      if (state.drinks.length === 0) {
+        return;
+      }
+
+      // Don't notify if BAC is too high or dangerous
+      if (currentBAC >= CONSTANTS.LEGAL_LIMIT) {
+        return;
+      }
+
+      // Calculate time until BAC drops below target
+      const timeUntilBelowTarget = (currentBAC - state.targetBAC) / CONSTANTS.METABOLISM_RATE;
+
+      // Notify when BAC is within 5 minutes of dropping below target
+      // or if already below target
+      const shouldNotify = timeUntilBelowTarget <= 0.083 || currentBAC < state.targetBAC; // 0.083 hours = 5 minutes
+
+      if (shouldNotify) {
+        // Prevent spam - only notify once every 15 minutes
+        const now = Date.now();
+        const fifteenMinutes = 15 * 60 * 1000;
+
+        if (state.lastNotificationTime && (now - state.lastNotificationTime) < fifteenMinutes) {
+          return;
+        }
+
+        // Calculate standard drinks needed to reach target BAC
+        const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
+        const bodyWater = state.gender === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
+        const bacIncrease = state.targetBAC - currentBAC;
+        const gramsNeeded = bacIncrease * weightKg * bodyWater * 1000;
+        const drinksNeeded = Math.max(1, Math.ceil(gramsNeeded / CONSTANTS.GRAMS_PER_STANDARD_DRINK));
+
+        // Send notification
+        const notification = new Notification('Time for Another Drink? 🍺', {
+          body: currentBAC < state.targetBAC
+            ? `Your BAC is ${(currentBAC * 100).toFixed(2)}%, below your target of ${(state.targetBAC * 100).toFixed(2)}%. Consider ${drinksNeeded} drink${drinksNeeded > 1 ? 's' : ''} to maintain your desired level.`
+            : `Your BAC will drop below your target of ${(state.targetBAC * 100).toFixed(2)}% in about 5 minutes. Time to pace yourself with another drink!`,
+          icon: '/logo192.png',
+          badge: '/logo192.png',
+          tag: 'drinkbot-timing',
+          requireInteraction: false,
+          silent: false
+        });
+
+        // Handle notification click - focus the app
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        // Update last notification time
+        dispatch({ type: 'SET_FIELD', field: 'lastNotificationTime', value: now });
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [
+    state.notificationsEnabled,
+    state.notificationConsent,
+    state.setupComplete,
+    state.notificationPermission,
+    state.activeTab,
+    state.drinks,
+    state.bac,
+    state.targetBAC,
+    state.lastNotificationTime,
+    state.gender,
+    state.weight
+  ]);
 
   // URL Query Parameter Parsing
   useEffect(() => {
@@ -1185,6 +1290,59 @@ Questions? Contact: support@drinkbot3000.com
     } catch (error) {
       console.error('Error updating profile:', error);
       showRobotMessage('Failed to update profile. Please try again.');
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    try {
+      // If notifications are currently enabled, disable them
+      if (state.notificationsEnabled) {
+        dispatch({ type: 'SET_MULTIPLE', values: {
+          notificationsEnabled: false,
+          notificationConsent: false,
+          lastNotificationTime: null
+        }});
+        showRobotMessage('Drink timing notifications disabled.');
+        return;
+      }
+
+      // Check if browser supports notifications
+      if (!('Notification' in window)) {
+        showRobotMessage('Your browser does not support notifications.');
+        return;
+      }
+
+      // Request permission
+      const permission = await Notification.requestPermission();
+
+      dispatch({ type: 'SET_FIELD', field: 'notificationPermission', value: permission });
+
+      if (permission === 'granted') {
+        // Enable notifications
+        dispatch({ type: 'SET_MULTIPLE', values: {
+          notificationsEnabled: true,
+          notificationConsent: true,
+          notificationPermission: permission
+        }});
+
+        // Show a test notification
+        new Notification('DrinkBot3000 Notifications Enabled', {
+          body: `You'll be notified when it's time for your next drink to maintain your target BAC of ${(state.targetBAC * 100).toFixed(2)}%.`,
+          icon: '/logo192.png',
+          badge: '/logo192.png',
+          tag: 'drinkbot-enabled',
+          requireInteraction: false
+        });
+
+        showRobotMessage(`Notifications enabled! Target BAC: ${(state.targetBAC * 100).toFixed(2)}%`);
+      } else if (permission === 'denied') {
+        showRobotMessage('Notification permission denied. Please enable in browser settings.');
+      } else {
+        showRobotMessage('Notification permission was dismissed.');
+      }
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      showRobotMessage('Failed to toggle notifications. Please try again.');
     }
   };
 
@@ -3021,6 +3179,78 @@ Questions? Contact: support@drinkbot3000.com
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Notification Settings Section */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-800 mb-3">Drink Timing Notifications</h3>
+
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-900">
+                        Get notified when it's time for your next drink to maintain a target BAC level.
+                      </p>
+                    </div>
+
+                    {/* Notification Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Enable Notifications</p>
+                        <p className="text-xs text-gray-500">Optional - you must consent</p>
+                      </div>
+                      <button
+                        onClick={handleToggleNotifications}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                          state.notificationsEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                            state.notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Target BAC Selection - Only show when notifications enabled */}
+                    {state.notificationsEnabled && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Target BAC: {(state.targetBAC * 100).toFixed(2)}%
+                          </label>
+                          <input
+                            type="range"
+                            min="0.02"
+                            max="0.08"
+                            step="0.01"
+                            value={state.targetBAC}
+                            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'targetBAC', value: parseFloat(e.target.value) })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>0.02% (Light)</span>
+                            <span>0.08% (Legal Limit)</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <p className="text-xs text-amber-900">
+                            <strong>Safety Note:</strong> Notifications help you pace drinks, but always prioritize safety.
+                            Never drive after drinking, even below the legal limit.
+                          </p>
+                        </div>
+
+                        {state.notificationPermission === 'denied' && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p className="text-xs text-red-900">
+                              <strong>Notifications Blocked:</strong> Please enable notifications in your browser settings.
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
