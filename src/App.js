@@ -1013,9 +1013,114 @@ Questions? Contact: support@drinkbot3000.com
 
       const result = Math.max(0, initialBAC - metabolized);
       dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
+
+      // Track impairment in calculator mode too (for "Recently Impaired" warning)
+      if (result >= CONSTANTS.LEGAL_LIMIT && !state.hasBeenImpaired) {
+        dispatch({ type: 'SET_FIELD', field: 'hasBeenImpaired', value: true });
+      }
     } catch (error) {
       console.error('Error calculating quick BAC:', error);
       showRobotMessage('Failed to calculate BAC. Please check your inputs and try again.');
+    }
+  };
+
+  /**
+   * Converts calculator estimate to live tracking mode
+   *
+   * This function acts as a "Quick Start" feature - users can get a quick BAC estimate
+   * in calculator mode, then instantly convert it to live tracking for real-time monitoring.
+   *
+   * @workflow:
+   * 1. Validates calculator inputs exist and are valid
+   * 2. Creates drink entries backdated to simulate the drinking session
+   * 3. Switches to 'live' mode for real-time tracking
+   * 4. Switches to tracker tab to show the session
+   * 5. Shows confirmation message
+   *
+   * @benefits:
+   * - Lowers barrier to entry (calculator → tracker conversion funnel)
+   * - Gets users to accept TOS and safety warnings
+   * - Increases engagement with share features
+   * - Spreads safety message more effectively
+   *
+   * @privacy: All data stored locally, no server communication
+   * @viral_growth: Engaged users more likely to share
+   */
+  const handleStartLiveTracking = () => {
+    try {
+      // Validation: Ensure calculator has been run and has valid inputs
+      if (state.calcBAC === null || !state.calcDrinks || !state.calcHours) {
+        showRobotMessage('Please calculate your BAC first before starting live tracking.');
+        return;
+      }
+
+      const numDrinks = parseFloat(state.calcDrinks);
+      const hours = parseFloat(state.calcHours);
+
+      if (isNaN(numDrinks) || numDrinks <= 0) {
+        showRobotMessage('Invalid number of drinks. Please recalculate.');
+        return;
+      }
+
+      if (isNaN(hours) || hours < 0) {
+        showRobotMessage('Invalid time period. Please recalculate.');
+        return;
+      }
+
+      // Calculate the start time (X hours ago)
+      const hoursInMs = hours * 60 * 60 * 1000;
+      const sessionStartTime = Date.now() - hoursInMs;
+
+      // Create drink entries
+      // Strategy: Add all drinks at the start time for conservative estimate
+      // This assumes all drinks were consumed at the beginning of the time period
+      const newDrinks = [];
+      for (let i = 0; i < Math.floor(numDrinks); i++) {
+        newDrinks.push({
+          id: Date.now() + i, // Unique ID for each drink
+          name: 'Standard Drink',
+          oz: CONSTANTS.STANDARD_DRINK_OZ,
+          abv: 40, // Standard drink equivalent (40% spirits)
+          standardDrinks: 1,
+          time: sessionStartTime,
+          icon: '🍺'
+        });
+      }
+
+      // Handle fractional drinks (e.g., 3.5 drinks)
+      const fractionalPart = numDrinks - Math.floor(numDrinks);
+      if (fractionalPart > 0) {
+        newDrinks.push({
+          id: Date.now() + newDrinks.length,
+          name: `${fractionalPart.toFixed(1)} Standard Drink`,
+          oz: CONSTANTS.STANDARD_DRINK_OZ * fractionalPart,
+          abv: 40,
+          standardDrinks: fractionalPart,
+          time: sessionStartTime,
+          icon: '🥃'
+        });
+      }
+
+      // Atomic state update: switch to live mode with all drinks
+      dispatch({
+        type: 'SET_MULTIPLE',
+        values: {
+          mode: 'live',
+          drinks: newDrinks,
+          startTime: sessionStartTime,
+          activeTab: 'tracker',
+          // Clear calculator values to prevent confusion
+          calcBAC: null,
+          calcDrinks: '',
+          calcHours: ''
+        }
+      });
+
+      // Success message
+      showRobotMessage(`*whirrs excitedly* 🤖 Live tracking started with ${numDrinks} drink${numDrinks !== 1 ? 's' : ''} from ${hours} hour${hours !== 1 ? 's' : ''} ago! Stay safe!`);
+    } catch (error) {
+      console.error('Error starting live tracking from calculator:', error);
+      showRobotMessage('Failed to start live tracking. Please try again.');
     }
   };
 
@@ -3035,6 +3140,44 @@ Questions? Contact: support@drinkbot3000.com
                           </div>
                         </div>
                     )}
+
+                    {/* Quick Start: Convert to Live Tracking */}
+                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-5 border-2 border-indigo-300">
+                      <div className="text-center mb-3">
+                        <h4 className="text-lg font-bold text-indigo-900 mb-2">
+                          🎯 Want Real-Time Tracking?
+                        </h4>
+                        <p className="text-sm text-indigo-800 mb-4">
+                          Start live tracking now and get real-time BAC updates as you drink, time-until-sober countdown, drink history, and more!
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={handleStartLiveTracking}
+                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg transform hover:scale-105"
+                      >
+                        🚀 Start Live Tracking Now
+                      </button>
+
+                      <div className="mt-3 flex items-center justify-center gap-4 text-xs text-indigo-700">
+                        <span className="flex items-center gap-1">
+                          <Activity className="w-3 h-3" />
+                          Real-time updates
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Sober countdown
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Share2 className="w-3 h-3" />
+                          Easy sharing
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-center text-indigo-600 mt-3 font-medium">
+                        Converts your estimate into live tracking in one click!
+                      </p>
+                    </div>
                   </>
                   );
                 })()}
@@ -3093,16 +3236,20 @@ Questions? Contact: support@drinkbot3000.com
                 <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
                   <h3 className="font-semibold text-purple-900 mb-2 flex items-center">
                     <Calculator className="w-4 h-4 mr-2" />
-                    Calculator Tab
+                    Calculator Tab - Quick Start
                   </h3>
-                  <p className="text-sm text-purple-800 mb-2">
-                    Plan ahead or check what your BAC might be:
+                  <p className="text-sm text-purple-800 mb-2 font-semibold">
+                    🚀 Already drinking? Get started instantly:
                   </p>
                   <ul className="text-sm text-purple-800 space-y-1">
-                    <li>• Enter number of drinks and time period</li>
-                    <li>• Get estimated BAC without logging drinks</li>
-                    <li>• Useful for planning your night</li>
+                    <li>• Enter how many drinks you've had + hours elapsed</li>
+                    <li>• Get instant BAC estimate and safety warnings</li>
+                    <li>• Click "Start Live Tracking" to convert to real-time monitoring</li>
+                    <li>• Perfect for joining mid-session!</li>
                   </ul>
+                  <p className="text-xs text-purple-700 mt-2 italic">
+                    💡 Tip: Calculator is the fastest way to get your BAC, then upgrade to live tracking for real-time updates!
+                  </p>
                 </div>
 
                 <div className="bg-green-50 rounded-lg p-4 border border-green-200">
