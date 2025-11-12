@@ -125,6 +125,111 @@ Displayed at 0.20% and above with:
 - Some IPs mislocated (especially mobile carriers, military)
 - Free API rate limits (1000-1500 requests/day)
 
+### Notification System (Optional Drink Timing Feature)
+
+**Purpose:** Help users maintain a target BAC level by notifying them when to have their next drink
+
+**User Requirements:**
+- Must be explicitly enabled in Settings (opt-in only)
+- Requires browser notification permission
+- User must set target BAC (0.02% - 0.08% range, default 0.05%)
+
+**Implementation:** src/App.js:427-558 (monitoring useEffect) + src/App.js:1355-1443 (toggle handler)
+
+**Architecture:**
+
+1. **State Management:**
+   - `notificationConsent` - User has agreed to notifications
+   - `notificationsEnabled` - Feature is turned on
+   - `targetBAC` - Desired BAC level to maintain
+   - `lastNotificationTime` - Throttling/spam prevention
+   - `notificationPermission` - Browser permission status
+
+2. **Monitoring Logic (useEffect):**
+   - Runs every 30 seconds when enabled (configurable via `CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS`)
+   - Only monitors in Tracker mode (not Calculator mode)
+   - Safety: Disabled if BAC ≥ 0.08% (legal limit)
+   - Wrapped in try-catch for graceful error handling
+
+3. **Notification Triggers:**
+   - BAC drops below target level, OR
+   - BAC will drop below target within 5 minutes (configurable via `CONSTANTS.NOTIFICATION_ADVANCE_HOURS`)
+   - Throttled to max 1 notification per 15 minutes (configurable via `CONSTANTS.NOTIFICATION_COOLDOWN_MS`)
+
+4. **Drink Calculation:**
+   - Uses reverse Widmark formula: drinks = (BAC increase × body water volume) / grams per drink
+   - Calculates minimum standard drinks needed to reach target BAC
+   - Accounts for user's gender, weight, current BAC
+
+**Constants (src/App.js:36-50):**
+```javascript
+NOTIFICATION_CHECK_INTERVAL_MS: 30000,     // 30-second check interval
+NOTIFICATION_COOLDOWN_MS: 15 * 60 * 1000, // 15-minute cooldown
+NOTIFICATION_ADVANCE_HOURS: 0.083,         // 5-minute advance warning
+DEFAULT_TARGET_BAC: 0.05,                  // Safe social drinking level
+MIN_TARGET_BAC: 0.02,                      // Light buzz minimum
+MAX_TARGET_BAC: 0.08,                      // Legal limit maximum
+```
+
+**Safety Features:**
+- Only active when: consent given, permission granted, tracker mode, has drinks
+- Automatically disabled at dangerous BAC levels
+- Graceful error handling prevents crashes
+- No notifications if user has no drinks logged
+- Clear opt-out path (toggle off in Settings)
+
+**Privacy Considerations:**
+- All processing happens client-side (no server calls)
+- Notification data stored in localStorage only
+- User can disable anytime
+- No tracking of notification events
+- Browser-native notification permission flow
+
+**UI/UX:**
+- Toggle switch in Settings modal (src/App.js:3267-3349)
+- Slider to adjust target BAC with visual feedback
+- Test notification sent on first enable
+- Clear feedback messages via DrinkBot robot
+- Permission denied state handled gracefully
+- Clicking notification focuses the app
+
+**Performance:**
+- 30-second interval balances responsiveness vs battery life
+- Minimal CPU impact (simple arithmetic)
+- No network requests
+- Efficient guard clauses exit early
+- Cleanup function clears interval on unmount
+
+**Error Handling:**
+- Try-catch around calculateBAC() call
+- Graceful fallback if Notification API fails
+- Browser support detection
+- Permission state validation
+- Console logging for debugging
+
+**Known Limitations:**
+- Browser must support Notification API (most modern browsers do)
+- User might dismiss/block permission
+- Notifications may not work on iOS in some contexts
+- No service worker push notifications (local only)
+- Requires app to be open/background (not fully closed)
+
+**Testing Considerations:**
+- Test with different target BAC levels (0.02%, 0.05%, 0.08%)
+- Test permission denied/dismissed scenarios
+- Test disabling notifications mid-session
+- Verify throttling (only 1 notification per 15 min)
+- Test with multiple drinks at different times
+- Verify safety cutoff at 0.08% BAC
+- Test browser compatibility (Chrome, Firefox, Safari, Edge)
+
+**Future Enhancements:**
+- Service Worker integration for offline notifications
+- Notification sound/vibration customization
+- Multiple target BAC presets
+- Smart scheduling based on typical drinking patterns
+- Hydration reminders integration
+
 ---
 
 ## Critical Functions Explained
@@ -664,5 +769,5 @@ Before continuing development, clarify:
 
 ---
 
-*Last Updated: 2025-11-12*
+*Last Updated: 2025-11-12 - Added Notification System documentation*
 *Version: 1.0.0*

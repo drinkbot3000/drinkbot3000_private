@@ -33,6 +33,21 @@ const CONSTANTS = {
   MIN_TIP_AMOUNT: 3,
   LEGAL_DRINKING_AGE: 21,
   REFUND_WINDOW_DAYS: 30,
+  // Notification timing constants (for optional drink timing feature)
+  // 30-second check interval balances responsiveness with battery/performance impact
+  NOTIFICATION_CHECK_INTERVAL_MS: 30000,
+  // 15-minute cooldown prevents notification spam while remaining helpful
+  // User can still check app manually between notifications
+  NOTIFICATION_COOLDOWN_MS: 15 * 60 * 1000,
+  // 5-minute advance warning (0.083 hours) gives user time to prepare next drink
+  // Calculated based on average time to order/pour a drink in social settings
+  NOTIFICATION_ADVANCE_HOURS: 0.083,
+  // Default target BAC: 0.05% is below legal limit, allows safe social drinking
+  // Users can adjust from 0.02% (light buzz) to 0.08% (legal limit)
+  DEFAULT_TARGET_BAC: 0.05,
+  // Target BAC range constraints
+  MIN_TARGET_BAC: 0.02,
+  MAX_TARGET_BAC: 0.08,
   // Stripe Payment Link - $5 payment to support DrinkBot3000 and spread safety messages!
   STRIPE_PAYMENT_LINK: 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01'
 };
@@ -97,7 +112,7 @@ const initialState = {
   // Notification settings for drink timing
   notificationConsent: false,
   notificationsEnabled: false,
-  targetBAC: 0.05, // Default target BAC to maintain (safe social drinking level)
+  targetBAC: CONSTANTS.DEFAULT_TARGET_BAC,
   lastNotificationTime: null,
   notificationPermission: 'default',
 };
@@ -409,79 +424,123 @@ export default function BACTracker() {
     return () => clearInterval(interval);
   }, [state.drinks, state.setupComplete, state.gender, state.weight, state.startTime, state.mode, state.estimateDrinks, state.estimateHours, state.hasBeenImpaired]);
 
-  // Notification monitoring for drink timing
+  /**
+   * Notification Monitoring for Drink Timing (Optional Feature)
+   *
+   * Monitors BAC levels and sends browser notifications when user's BAC approaches their target level,
+   * helping them pace drinks to maintain a desired BAC range (e.g., 0.05% for social drinking).
+   *
+   * @requires User consent - Must be explicitly enabled in Settings
+   * @requires Browser permission - User must grant notification permission
+   * @requires Active drinking session - Only monitors when drinks have been logged
+   *
+   * @safety Features:
+   * - Only active in tracker mode (not calculator mode)
+   * - Automatically disabled if BAC >= 0.08% (legal limit) - safety first
+   * - Throttled to max 1 notification per 15 minutes (prevents spam)
+   * - Graceful error handling - failures don't crash the app
+   *
+   * @performance:
+   * - Checks every 30 seconds (balances responsiveness vs battery life)
+   * - Minimal CPU impact - simple arithmetic calculations
+   * - No network calls - all calculations are local
+   *
+   * @algorithm:
+   * 1. Calculate current BAC using Widmark formula
+   * 2. Predict time until BAC drops below target
+   * 3. Notify when within 5 minutes of target OR already below target
+   * 4. Calculate drinks needed to reach target BAC
+   * 5. Send notification with personalized recommendation
+   *
+   * @fires Notification - Browser notification with drink timing recommendation
+   * @updates state.lastNotificationTime - Tracks when last notification was sent
+   */
   useEffect(() => {
+    // Guard clause: Early exit if notifications not enabled
     if (!state.notificationsEnabled || !state.notificationConsent || !state.setupComplete) {
       return;
     }
 
+    // Guard clause: Early exit if browser permission not granted
     if (state.notificationPermission !== 'granted') {
       return;
     }
 
-    // Only monitor in tracker mode
+    // Guard clause: Only monitor in tracker mode (not calculator mode)
     if (state.activeTab !== 'tracker') {
       return;
     }
 
     const interval = setInterval(() => {
-      const currentBAC = calculateBAC();
+      try {
+        // Calculate current BAC with error handling
+        // If calculateBAC() throws, we skip this cycle gracefully
+        const currentBAC = calculateBAC();
 
-      // Only notify if user has started drinking (has at least one drink)
-      if (state.drinks.length === 0) {
-        return;
-      }
-
-      // Don't notify if BAC is too high or dangerous
-      if (currentBAC >= CONSTANTS.LEGAL_LIMIT) {
-        return;
-      }
-
-      // Calculate time until BAC drops below target
-      const timeUntilBelowTarget = (currentBAC - state.targetBAC) / CONSTANTS.METABOLISM_RATE;
-
-      // Notify when BAC is within 5 minutes of dropping below target
-      // or if already below target
-      const shouldNotify = timeUntilBelowTarget <= 0.083 || currentBAC < state.targetBAC; // 0.083 hours = 5 minutes
-
-      if (shouldNotify) {
-        // Prevent spam - only notify once every 15 minutes
-        const now = Date.now();
-        const fifteenMinutes = 15 * 60 * 1000;
-
-        if (state.lastNotificationTime && (now - state.lastNotificationTime) < fifteenMinutes) {
+        // Guard clause: Only notify if user has started drinking
+        if (state.drinks.length === 0) {
           return;
         }
 
-        // Calculate standard drinks needed to reach target BAC
-        const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
-        const bodyWater = state.gender === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
-        const bacIncrease = state.targetBAC - currentBAC;
-        const gramsNeeded = bacIncrease * weightKg * bodyWater * 1000;
-        const drinksNeeded = Math.max(1, Math.ceil(gramsNeeded / CONSTANTS.GRAMS_PER_STANDARD_DRINK));
+        // Safety check: Don't notify if BAC is at or above legal limit
+        // At this point, user should be stopping, not drinking more
+        if (currentBAC >= CONSTANTS.LEGAL_LIMIT) {
+          return;
+        }
 
-        // Send notification
-        const notification = new Notification('Time for Another Drink? 🍺', {
-          body: currentBAC < state.targetBAC
-            ? `Your BAC is ${(currentBAC * 100).toFixed(2)}%, below your target of ${(state.targetBAC * 100).toFixed(2)}%. Consider ${drinksNeeded} drink${drinksNeeded > 1 ? 's' : ''} to maintain your desired level.`
-            : `Your BAC will drop below your target of ${(state.targetBAC * 100).toFixed(2)}% in about 5 minutes. Time to pace yourself with another drink!`,
-          icon: '/logo192.png',
-          badge: '/logo192.png',
-          tag: 'drinkbot-timing',
-          requireInteraction: false,
-          silent: false
-        });
+        // Calculate time until BAC drops below target (in hours)
+        // Negative value means already below target
+        const timeUntilBelowTarget = (currentBAC - state.targetBAC) / CONSTANTS.METABOLISM_RATE;
 
-        // Handle notification click - focus the app
-        notification.onclick = () => {
-          window.focus();
-          notification.close();
-        };
+        // Determine if notification should be sent
+        // Notify if: (1) within advance warning time, OR (2) already below target
+        const shouldNotify = timeUntilBelowTarget <= CONSTANTS.NOTIFICATION_ADVANCE_HOURS ||
+                           currentBAC < state.targetBAC;
 
-        // Update last notification time
-        dispatch({ type: 'SET_FIELD', field: 'lastNotificationTime', value: now });
+        if (shouldNotify) {
+          // Anti-spam protection: Only notify once per cooldown period
+          const now = Date.now();
+          if (state.lastNotificationTime &&
+              (now - state.lastNotificationTime) < CONSTANTS.NOTIFICATION_COOLDOWN_MS) {
+            return; // Still in cooldown period, skip this notification
+          }
+
+          // Calculate drinks needed to reach target BAC
+          // Using Widmark formula in reverse: drinks = (target BAC increase × body water volume) / grams per drink
+          const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
+          const bodyWater = state.gender === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
+          const bacIncrease = state.targetBAC - currentBAC;
+          const gramsNeeded = bacIncrease * weightKg * bodyWater * 1000;
+          const drinksNeeded = Math.max(1, Math.ceil(gramsNeeded / CONSTANTS.GRAMS_PER_STANDARD_DRINK));
+
+          // Send browser notification
+          const notification = new Notification('Time for Another Drink? 🍺', {
+            body: currentBAC < state.targetBAC
+              ? `Your BAC is ${(currentBAC * 100).toFixed(2)}%, below your target of ${(state.targetBAC * 100).toFixed(2)}%. Consider ${drinksNeeded} drink${drinksNeeded > 1 ? 's' : ''} to maintain your desired level.`
+              : `Your BAC will drop below your target of ${(state.targetBAC * 100).toFixed(2)}% in about 5 minutes. Time to pace yourself with another drink!`,
+            icon: '/logo192.png',
+            badge: '/logo192.png',
+            tag: 'drinkbot-timing',
+            requireInteraction: false,
+            silent: false
+          });
+
+          // Handle notification click - focus the app window
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+
+          // Update last notification time to enforce cooldown
+          dispatch({ type: 'SET_FIELD', field: 'lastNotificationTime', value: now });
+        }
+      } catch (error) {
+        // Graceful error handling - log but don't crash the app
+        // This protects against potential issues in calculateBAC() or notification API
+        console.error('Error in notification monitoring cycle:', error);
+        // Continue monitoring - skip this cycle but keep interval running
       }
-    }, 30000); // Check every 30 seconds
+    }, CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [
@@ -1293,9 +1352,42 @@ Questions? Contact: support@drinkbot3000.com
     }
   };
 
+  /**
+   * Handles toggling of drink timing notifications on/off
+   *
+   * This function manages the complete lifecycle of the notification feature:
+   * - Enabling: Requests browser permission, validates support, sends test notification
+   * - Disabling: Cleans up state, revokes consent, stops monitoring
+   *
+   * @async Function uses async/await for Notification.requestPermission()
+   *
+   * @workflow When Enabling:
+   * 1. Check browser supports Notification API
+   * 2. Request user permission via browser prompt
+   * 3. Update state with permission result
+   * 4. If granted: Enable notifications, send test notification
+   * 5. Show feedback message to user via DrinkBot
+   *
+   * @workflow When Disabling:
+   * 1. Clear notification state (enabled, consent, last notification time)
+   * 2. Show confirmation message
+   * 3. Monitoring useEffect will automatically stop
+   *
+   * @privacy User must explicitly consent - this is NOT automatic
+   * @browser_support Gracefully handles browsers without Notification API
+   * @user_feedback All actions provide feedback via showRobotMessage()
+   *
+   * @fires Notification - Test notification sent on successful enable
+   * @updates state.notificationsEnabled - Toggles notification system
+   * @updates state.notificationConsent - Records user consent
+   * @updates state.notificationPermission - Stores browser permission result
+   * @updates state.lastNotificationTime - Reset to null when disabled
+   *
+   * @throws Will catch and log any errors, showing user-friendly message
+   */
   const handleToggleNotifications = async () => {
     try {
-      // If notifications are currently enabled, disable them
+      // DISABLING PATH: If notifications are currently enabled, disable them
       if (state.notificationsEnabled) {
         dispatch({ type: 'SET_MULTIPLE', values: {
           notificationsEnabled: false,
@@ -1306,26 +1398,27 @@ Questions? Contact: support@drinkbot3000.com
         return;
       }
 
-      // Check if browser supports notifications
+      // ENABLING PATH: Check if browser supports notifications
       if (!('Notification' in window)) {
         showRobotMessage('Your browser does not support notifications.');
         return;
       }
 
-      // Request permission
+      // Request permission from browser (triggers browser prompt)
       const permission = await Notification.requestPermission();
 
+      // Store permission result in state
       dispatch({ type: 'SET_FIELD', field: 'notificationPermission', value: permission });
 
       if (permission === 'granted') {
-        // Enable notifications
+        // Enable notifications in app state
         dispatch({ type: 'SET_MULTIPLE', values: {
           notificationsEnabled: true,
           notificationConsent: true,
           notificationPermission: permission
         }});
 
-        // Show a test notification
+        // Send test notification to confirm it's working
         new Notification('DrinkBot3000 Notifications Enabled', {
           body: `You'll be notified when it's time for your next drink to maintain your target BAC of ${(state.targetBAC * 100).toFixed(2)}%.`,
           icon: '/logo192.png',
@@ -1336,11 +1429,14 @@ Questions? Contact: support@drinkbot3000.com
 
         showRobotMessage(`Notifications enabled! Target BAC: ${(state.targetBAC * 100).toFixed(2)}%`);
       } else if (permission === 'denied') {
+        // User explicitly denied - inform them how to fix
         showRobotMessage('Notification permission denied. Please enable in browser settings.');
       } else {
+        // User dismissed prompt (permission === 'default')
         showRobotMessage('Notification permission was dismissed.');
       }
     } catch (error) {
+      // Catch any unexpected errors (e.g., Notification API failures)
       console.error('Error toggling notifications:', error);
       showRobotMessage('Failed to toggle notifications. Please try again.');
     }
@@ -3221,16 +3317,16 @@ Questions? Contact: support@drinkbot3000.com
                           </label>
                           <input
                             type="range"
-                            min="0.02"
-                            max="0.08"
+                            min={CONSTANTS.MIN_TARGET_BAC}
+                            max={CONSTANTS.MAX_TARGET_BAC}
                             step="0.01"
                             value={state.targetBAC}
                             onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'targetBAC', value: parseFloat(e.target.value) })}
                             className="w-full"
                           />
                           <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>0.02% (Light)</span>
-                            <span>0.08% (Legal Limit)</span>
+                            <span>{(CONSTANTS.MIN_TARGET_BAC * 100).toFixed(2)}% (Light)</span>
+                            <span>{(CONSTANTS.MAX_TARGET_BAC * 100).toFixed(2)}% (Legal Limit)</span>
                           </div>
                         </div>
 
