@@ -11,12 +11,21 @@ const CONSTANTS = {
   // Using 10 mg/100mL/h (0.010% per hour) - the lower end of the physiological range
   // for fasted subjects, providing safer, more conservative estimates for sobriety time.
   METABOLISM_RATE: 0.010,
+  // Typical variation in metabolism rate between individuals: ±30-50%
+  METABOLISM_RATE_MIN: 0.007, // Slow metabolizers
+  METABOLISM_RATE_MAX: 0.015, // Fast metabolizers
   GRAMS_PER_STANDARD_DRINK: 14,
   LBS_TO_KG: 0.453592,
   MALE_BODY_WATER: 0.68,
   FEMALE_BODY_WATER: 0.55,
   STANDARD_DRINK_OZ: 0.6,
   LEGAL_LIMIT: 0.08,
+  // Dangerous BAC thresholds based on medical research
+  SEVERE_IMPAIRMENT: 0.15, // Severe impairment, blackout risk
+  DANGEROUS: 0.20,          // Confusion, disorientation, needs assistance
+  POISONING_RISK: 0.25,     // Risk of alcohol poisoning, medical attention needed
+  LIFE_THREATENING: 0.30,   // Loss of consciousness, respiratory depression
+  CRITICAL: 0.40,           // Coma, respiratory failure, death risk
   MIN_WEIGHT: 50,
   MAX_WEIGHT: 500,
   ROBOT_MESSAGE_DURATION: 5000,
@@ -823,44 +832,131 @@ Questions? Contact: support@drinkbot3000.com
     }
   };
 
+  // Calculate margin of error for BAC estimate
+  // Based on individual variation in metabolism and body composition
+  const calculateBACMargin = (bac) => {
+    if (bac === 0) return { min: 0, max: 0, marginPercent: 0 };
+
+    // Margin of error factors:
+    // - Metabolism rate variation: ±30-50%
+    // - Body composition variation: ±10-20%
+    // - Combined typical error: ±0.01-0.02% for most users
+    // Using conservative ±0.015% (±15 mg/dL) as base margin
+    const baseMargin = 0.015;
+
+    // Margin increases with higher BAC due to compounding uncertainties
+    const scaledMargin = Math.min(baseMargin + (bac * 0.1), bac * 0.3);
+
+    return {
+      min: Math.max(0, bac - scaledMargin),
+      max: bac + scaledMargin,
+      marginPercent: ((scaledMargin / bac) * 100)
+    };
+  };
+
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
+    const margin = calculateBACMargin(currentBAC);
 
     // Special handling for users who have been impaired but are now sober
     if (currentBAC === 0 && state.hasBeenImpaired) return {
       label: 'Recently Impaired',
       color: 'text-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
-      message: '⚠️ WARNING: You recently exceeded the legal limit. Wait until fully recovered before driving. Impairment effects may persist even at 0.00% BAC.'
+      message: '⚠️ WARNING: You recently exceeded the legal limit. Wait until fully recovered before driving. Impairment effects may persist even at 0.00% BAC.',
+      margin,
+      showEmergency: false
     };
 
     if (currentBAC === 0) return {
       label: 'Sober',
       color: 'text-green-600',
       bgColor: 'bg-gradient-to-br from-green-400 to-green-600',
-      message: 'You are completely sober. Safe to drive and operate machinery.'
+      message: 'You are completely sober. Safe to drive and operate machinery.',
+      margin,
+      showEmergency: false
     };
 
     // Add impairment warning to all non-zero BAC levels if they've been impaired
     const impairmentWarning = state.hasBeenImpaired ? ' ⚠️ YOU HAVE BEEN OVER THE LEGAL LIMIT - DO NOT DRIVE.' : '';
 
+    // CRITICAL & LIFE-THREATENING LEVELS - Medical Emergency
+    if (currentBAC >= CONSTANTS.CRITICAL) return {
+      label: '🚨 CRITICAL - CALL 911',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-black via-red-900 to-black animate-pulse',
+      message: '🚨 IMMEDIATE MEDICAL EMERGENCY - CALL 911 NOW! Risk of coma, respiratory failure, and death. DO NOT leave person alone. Monitor breathing and consciousness.',
+      emergencyLevel: 'CRITICAL',
+      margin,
+      showEmergency: true
+    };
+
+    if (currentBAC >= CONSTANTS.LIFE_THREATENING) return {
+      label: '🚨 LIFE-THREATENING',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-red-900 via-red-700 to-red-900',
+      message: '🚨 MEDICAL EMERGENCY: Loss of consciousness likely. Respiratory depression. CALL 911 IMMEDIATELY. Stay with person, monitor breathing, be prepared to perform CPR.',
+      emergencyLevel: 'LIFE_THREATENING',
+      margin,
+      showEmergency: true
+    };
+
+    if (currentBAC >= CONSTANTS.POISONING_RISK) return {
+      label: '⚠️ ALCOHOL POISONING RISK',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-red-700 via-red-600 to-red-700',
+      message: '⚠️ SEVERE DANGER: Risk of alcohol poisoning. Seek medical attention NOW. Signs: confusion, vomiting, seizures, slow breathing, pale/blue skin. DO NOT hesitate to call 911.',
+      emergencyLevel: 'POISONING_RISK',
+      margin,
+      showEmergency: true
+    };
+
+    if (currentBAC >= CONSTANTS.DANGEROUS) return {
+      label: '🛑 DANGEROUS LEVEL',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-red-600 via-red-500 to-red-600',
+      message: '🛑 DANGEROUS: Severe confusion, disorientation, inability to walk. Person needs immediate assistance. May need medical help. Monitor closely for worsening symptoms. Do NOT drive or operate anything.' + impairmentWarning,
+      emergencyLevel: 'DANGEROUS',
+      margin,
+      showEmergency: true
+    };
+
+    if (currentBAC >= CONSTANTS.SEVERE_IMPAIRMENT) return {
+      label: '🔴 SEVERE IMPAIRMENT',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-red-500 via-red-400 to-red-500',
+      message: '🔴 SEVERE IMPAIRMENT: High risk of blackout, severe loss of coordination and judgment. Vomiting likely. Person may need assistance. Absolutely NO driving, operating machinery, or dangerous activities.' + impairmentWarning,
+      emergencyLevel: 'SEVERE',
+      margin,
+      showEmergency: false
+    };
+
+    // Standard levels
     if (currentBAC < 0.03) return {
       label: 'Mild Effect',
       color: 'text-yellow-600',
       bgColor: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
-      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory.' + impairmentWarning
+      message: 'Slight euphoria and relaxation. Minor impairment of reasoning and memory.' + impairmentWarning,
+      margin,
+      showEmergency: false
     };
+
     if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
       label: 'Impaired',
       color: 'text-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
-      message: 'Reduced coordination and judgment. Do not drive or operate machinery.' + impairmentWarning
+      message: 'Reduced coordination and judgment. Do not drive or operate machinery.' + impairmentWarning,
+      margin,
+      showEmergency: false
     };
+
     return {
       label: 'Intoxicated',
       color: 'text-red-600',
       bgColor: 'bg-gradient-to-br from-red-400 to-red-600',
-      message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.' + impairmentWarning
+      message: 'Significant impairment. Do NOT drive. Seek safe transportation and stay hydrated.' + impairmentWarning,
+      margin,
+      showEmergency: false
     };
   };
 
@@ -2044,12 +2140,52 @@ Questions? Contact: support@drinkbot3000.com
                   <div className="text-6xl font-bold text-white mb-2">
                     {state.bac.toFixed(3)}%
                   </div>
+                  {state.bac > 0 && status.margin && (
+                    <div className="text-sm text-white/90 mb-2">
+                      Range: {status.margin.min.toFixed(3)}% - {status.margin.max.toFixed(3)}%
+                    </div>
+                  )}
                   <div className="text-xl text-white font-medium mb-4">{status.label}</div>
                   <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
                     <p className="text-white text-sm">{status.message}</p>
                   </div>
+                  {state.bac > 0 && status.margin && (
+                    <div className="mt-3 text-xs text-white/80">
+                      ⚠️ Margin of error: ±{(status.margin.max - state.bac).toFixed(3)}% (±{status.margin.marginPercent.toFixed(0)}%)
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Emergency Warning Banner */}
+              {status.showEmergency && (
+                <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mb-6 animate-pulse shadow-2xl">
+                  <div className="text-center">
+                    <div className="text-4xl mb-3">🚨</div>
+                    <h3 className="text-2xl font-bold text-white mb-3">MEDICAL EMERGENCY</h3>
+                    <div className="bg-white rounded-lg p-4 mb-4">
+                      <p className="text-red-900 font-bold text-lg mb-2">Signs of Alcohol Poisoning:</p>
+                      <ul className="text-left text-sm text-red-900 space-y-1">
+                        <li>• Confusion, stupor, unconsciousness</li>
+                        <li>• Vomiting or seizures</li>
+                        <li>• Slow breathing (less than 8 breaths/min)</li>
+                        <li>• Irregular breathing (10+ seconds between breaths)</li>
+                        <li>• Pale or blue-tinged skin</li>
+                        <li>• Low body temperature</li>
+                      </ul>
+                    </div>
+                    <a
+                      href="tel:911"
+                      className="block w-full bg-yellow-400 hover:bg-yellow-300 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3 transition"
+                    >
+                      📞 CALL 911 NOW
+                    </a>
+                    <p className="text-white text-sm">
+                      DO NOT wait for all symptoms to appear. DO NOT leave person alone.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Impairment History Warning */}
               {state.hasBeenImpaired && state.bac > 0 && (
@@ -2381,26 +2517,74 @@ Questions? Contact: support@drinkbot3000.com
                 </button>
 
                 {state.calcBAC !== null && (
-                  <div className={`rounded-lg p-6 ${getBACStatus().bgColor}`}>
-                    <div className="text-center">
-                      <div className="text-5xl font-bold text-white mb-2">
-                        {state.calcBAC.toFixed(3)}%
-                      </div>
-                      <div className="text-xl text-white font-medium mb-3">
-                        {getBACStatus().label}
-                      </div>
-                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
-                        <p className="text-white text-sm">
-                          {getBACStatus().message}
-                        </p>
+                  <>
+                    <div className={`rounded-lg p-6 ${getBACStatus().bgColor}`}>
+                      <div className="text-center">
+                        <div className="text-5xl font-bold text-white mb-2">
+                          {state.calcBAC.toFixed(3)}%
+                        </div>
+                        {state.calcBAC > 0 && getBACStatus().margin && (
+                          <div className="text-sm text-white/90 mb-2">
+                            Range: {getBACStatus().margin.min.toFixed(3)}% - {getBACStatus().margin.max.toFixed(3)}%
+                          </div>
+                        )}
+                        <div className="text-xl text-white font-medium mb-3">
+                          {getBACStatus().label}
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
+                          <p className="text-white text-sm">
+                            {getBACStatus().message}
+                          </p>
+                        </div>
+                        {state.calcBAC > 0 && getBACStatus().margin && (
+                          <div className="mt-3 text-xs text-white/80">
+                            ⚠️ Margin of error: ±{(getBACStatus().margin.max - state.calcBAC).toFixed(3)}% (±{getBACStatus().margin.marginPercent.toFixed(0)}%)
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
+
+                    {/* Emergency Warning for Calculator */}
+                    {getBACStatus().showEmergency && (
+                      <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mt-4 animate-pulse shadow-2xl">
+                        <div className="text-center">
+                          <div className="text-4xl mb-3">🚨</div>
+                          <h3 className="text-2xl font-bold text-white mb-3">MEDICAL EMERGENCY</h3>
+                          <div className="bg-white rounded-lg p-4 mb-4">
+                            <p className="text-red-900 font-bold text-lg mb-2">Signs of Alcohol Poisoning:</p>
+                            <ul className="text-left text-sm text-red-900 space-y-1">
+                              <li>• Confusion, stupor, unconsciousness</li>
+                              <li>• Vomiting or seizures</li>
+                              <li>• Slow breathing (less than 8 breaths/min)</li>
+                              <li>• Irregular breathing (10+ seconds between breaths)</li>
+                              <li>• Pale or blue-tinged skin</li>
+                              <li>• Low body temperature</li>
+                            </ul>
+                          </div>
+                          <a
+                            href="tel:911"
+                            className="block w-full bg-yellow-400 hover:bg-yellow-300 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3 transition"
+                          >
+                            📞 CALL 911 NOW
+                          </a>
+                          <p className="text-white text-sm">
+                            DO NOT wait for all symptoms to appear. DO NOT leave person alone.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                  <p className="text-xs text-amber-800 mb-2">
+                    <strong>Calculation Method:</strong> Uses scientifically-validated Widmark formula with conservative metabolism rate (0.010%/hr).
+                  </p>
+                  <p className="text-xs text-amber-800 mb-2">
+                    <strong>Margin of Error:</strong> Individual metabolism varies ±30-50%. Actual BAC could be higher or lower than estimated range.
+                  </p>
                   <p className="text-xs text-amber-800">
-                    <strong>Note:</strong> This calculator uses your saved profile ({state.gender}, weight configured). Results are estimates only.
+                    <strong>Factors Affecting Accuracy:</strong> Food intake, hydration, medications, genetics, liver function, body composition.
                   </p>
                 </div>
               </div>
@@ -2469,13 +2653,38 @@ Questions? Contact: support@drinkbot3000.com
                   </ul>
                 </div>
 
+                <div className="bg-red-50 rounded-lg p-4 border-2 border-red-300 mb-4">
+                  <h3 className="font-semibold text-red-900 mb-2 flex items-center">
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    Dangerous BAC Levels
+                  </h3>
+                  <ul className="text-xs text-red-900 space-y-1">
+                    <li><strong>0.15%:</strong> Severe impairment, blackout risk</li>
+                    <li><strong>0.20%:</strong> Confusion, needs assistance</li>
+                    <li><strong>0.25%:</strong> Alcohol poisoning risk</li>
+                    <li><strong>0.30%:</strong> Life-threatening, loss of consciousness</li>
+                    <li><strong>0.40%+:</strong> Coma, respiratory failure, death</li>
+                    <li className="mt-2 pt-2 border-t border-red-200"><strong>⚠️ At dangerous levels, app shows CALL 911 button</strong></li>
+                  </ul>
+                </div>
+
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200 mb-4">
+                  <h3 className="font-semibold text-purple-900 mb-2">Margin of Error</h3>
+                  <p className="text-xs text-purple-900 mb-2">
+                    All BAC estimates include a calculated margin of error shown as a range (e.g., 0.04% - 0.06%).
+                  </p>
+                  <p className="text-xs text-purple-900">
+                    <strong>Why?</strong> Metabolism varies ±30-50% between individuals. Food, hydration, genetics, and medications all affect accuracy.
+                  </p>
+                </div>
+
                 <div className="bg-amber-50 rounded-lg p-4 border-2 border-amber-300">
                   <h3 className="font-semibold text-amber-900 mb-2 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-2" />
                     Important Reminders
                   </h3>
                   <ul className="text-xs text-amber-900 space-y-1">
-                    <li>• BAC estimates are approximations only</li>
+                    <li>• BAC estimates are approximations with ±margin of error</li>
                     <li>• Never drive if you've been drinking</li>
                     <li>• Everyone metabolizes alcohol differently</li>
                     <li>• When in doubt, wait it out or call a ride</li>
