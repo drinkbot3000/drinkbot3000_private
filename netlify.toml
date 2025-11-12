@@ -55,17 +55,18 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# JavaScript and CSS files - moderate cache
+# JavaScript and CSS files - short cache for faster updates (reduced from 24h to 1h)
+# React's content hashing in filenames already provides cache-busting
 [[headers]]
   for = "/*.js"
   [headers.values]
-    Cache-Control = "public, max-age=86400, must-revalidate"
+    Cache-Control = "public, max-age=3600, must-revalidate"
     Content-Type = "application/javascript; charset=utf-8"
 
 [[headers]]
   for = "/*.css"
   [headers.values]
-    Cache-Control = "public, max-age=86400, must-revalidate"
+    Cache-Control = "public, max-age=3600, must-revalidate"
     Content-Type = "text/css; charset=utf-8"
 
 # Images - long-term cache
