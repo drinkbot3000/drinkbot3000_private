@@ -1,21 +1,72 @@
-// Geographic Verification Service
-// Restricts access to USA only for legal and compliance simplicity
-// Privacy: IP address is NOT stored, check is one-time only
+/**
+ * GEOGRAPHIC VERIFICATION SERVICE
+ *
+ * PURPOSE:
+ * Restricts DrinkBot3000 access to USA only to simplify legal compliance.
+ * Different countries have different laws about alcohol apps, BAC limits, and liability.
+ * USA-only focus avoids complex multi-jurisdiction legal issues.
+ *
+ * PRIVACY COMMITMENT:
+ * - IP address is NEVER stored or logged
+ * - Only country code is retrieved (not city, ISP, or other details)
+ * - Check happens once per browser session
+ * - Result cached in localStorage (browser-side only, never sent to server)
+ *
+ * RELIABILITY ARCHITECTURE:
+ * - Multi-service fallback (3 independent geolocation APIs)
+ * - Retry logic with exponential backoff (2 attempts per service)
+ * - Graceful degradation (if all services fail, shows technical error not geo-block)
+ * - Rate limit detection and caching (prevents repeated API failures)
+ *
+ * LEGAL NOTES FOR HUMAN DEVELOPERS:
+ * - Using IP geolocation is legally acceptable for age-restricted content screening
+ * - NOT a perfect system (VPNs can bypass, some IPs mislocated)
+ * - Should be combined with Terms of Service requiring USA location
+ * - Consider adding user attestation: "I confirm I am in the USA"
+ *
+ * TODO FOR FUTURE:
+ * - Add manual override for false positives (e.g., military bases abroad)
+ * - Implement user-submitted location verification appeals
+ * - Add analytics (which services fail most often? where are users blocked?)
+ * - Consider expanding to other English-speaking countries (Canada, UK, Australia)
+ */
 
 /**
- * Allowed country codes (USA only)
- * Using allowlist approach for maximum clarity and security
+ * Allowed country codes - USA only
+ * Using allowlist (not blocklist) for security and clarity
+ * To add countries: add ISO 3166-1 alpha-2 codes (e.g., 'CA' for Canada)
  */
 const ALLOWED_COUNTRIES = ['US'];
 
 /**
  * Geolocation API configuration with multiple fallback services
- * Using multiple providers for reliability and uptime
+ *
+ * WHY MULTIPLE SERVICES?
+ * Free geolocation APIs are unreliable:
+ * - Rate limits (usually 1000-1500 requests/day on free tier)
+ * - Downtime and maintenance windows
+ * - Blocking/throttling from certain networks
+ * - Geographic availability issues
+ *
+ * FALLBACK STRATEGY:
+ * Try services in order until one succeeds. If all fail = technical error (not geo-block).
+ *
+ * SERVICE SELECTION CRITERIA:
+ * - Free tier available (no API key required)
+ * - Returns country code in JSON
+ * - HTTPS support (required for secure sites)
+ * - Good uptime track record
+ *
+ * TODO FOR HUMAN DEVELOPERS:
+ * - Monitor which services fail most often (add analytics)
+ * - Consider upgrading to paid tier for primary service (more reliable)
+ * - Test from different networks (corporate, mobile, VPN, etc.)
+ * - Add service health check endpoint
  */
 const GEO_API_CONFIG = {
-  timeout: 8000, // 8 second timeout per service
-  rateLimitCacheDuration: 300000, // 5 minutes - cache rate limit errors
-  maxRetries: 2, // Retry each service up to 2 times
+  timeout: 8000,              // 8 second timeout per service (generous for slow networks)
+  rateLimitCacheDuration: 300000,  // 5 minutes - prevents hammering rate-limited service
+  maxRetries: 2,              // Retry each service up to 2 times (total 3 attempts per service)
   services: [
     {
       name: 'ipapi',

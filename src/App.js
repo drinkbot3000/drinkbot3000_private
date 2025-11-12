@@ -277,9 +277,32 @@ export default function BACTracker() {
     return '';
   };
 
+  /**
+   * Calculate Blood Alcohol Concentration using the Widmark Formula
+   *
+   * FORMULA: BAC = (Alcohol consumed in grams / (Body weight in kg × Body water constant)) × 100 - (Metabolism rate × Time)
+   *
+   * IMPORTANT NOTES FOR HUMAN DEVELOPERS:
+   * - Uses scientifically-validated Widmark formula (established 1932, still industry standard)
+   * - Body water constants: Male = 0.58, Female = 0.49 (biological average, not perfect for all individuals)
+   * - Metabolism rate: 0.015% per hour (conservative estimate, actual range 0.012-0.018%)
+   * - Standard drink = 14g pure alcohol (US definition: 1.5oz 40% spirits, 12oz 5% beer, 5oz 12% wine)
+   *
+   * KNOWN LIMITATIONS (TODO for future improvement):
+   * - Does NOT account for: food intake, hydration, medications, liver health, genetics
+   * - Assumes linear metabolism (reality: varies throughout session)
+   * - No absorption delay modeled (assumes instant absorption - should add 20-30min peak delay)
+   * - Body water constants oversimplify (should use more sophisticated body composition model)
+   *
+   * MODES:
+   * - 'live': Real-time tracking with per-drink timestamps (most accurate for ongoing session)
+   * - 'estimate': Quick calculation for past drinking (less accurate, assumes all drinks at start)
+   *
+   * @returns {number} BAC as percentage (0.00 to potentially 0.50+)
+   */
   const calculateBAC = () => {
     try {
-      // Defensive checks for required data
+      // DEFENSIVE CHECK: Cannot calculate without basic profile data
       if (!state.gender || !state.weight) {
         return 0;
       }
@@ -832,33 +855,87 @@ Questions? Contact: support@drinkbot3000.com
     }
   };
 
-  // Calculate margin of error for BAC estimate
-  // Based on individual variation in metabolism and body composition
+  /**
+   * Calculate scientifically-based margin of error for BAC estimates
+   *
+   * SCIENTIFIC BASIS:
+   * BAC calculators provide ESTIMATES, not exact measurements. Real-world variation comes from:
+   * 1. Metabolism rate varies by person (±30-50% range)
+   * 2. Body water percentage varies by fitness, age, hydration (±10-20%)
+   * 3. Absorption rate varies with food, drink carbonation, etc.
+   * 4. Measurement timing affects accuracy
+   *
+   * IMPLEMENTATION:
+   * - Base margin: ±0.015% (±15 mg/dL) - typical measurement uncertainty
+   * - Scaled margin: Increases with higher BAC due to compounding errors
+   * - Maximum margin: Capped at 30% of calculated BAC
+   *
+   * EXAMPLE:
+   * If calculated BAC = 0.08%, actual BAC could realistically be 0.065% - 0.095%
+   * This is CRITICAL for users to understand - never drive based on estimates!
+   *
+   * TODO FOR HUMAN DEVELOPERS:
+   * - Consider adding user-specific calibration (if they use breathalyzer comparison)
+   * - Add time-of-day metabolism adjustment (metabolism slower at night)
+   * - Factor in drink pacing (rapid consumption = higher peak BAC)
+   *
+   * @param {number} bac - Calculated BAC percentage
+   * @returns {Object} {min, max, marginPercent} - Range of realistic BAC values
+   */
   const calculateBACMargin = (bac) => {
     if (bac === 0) return { min: 0, max: 0, marginPercent: 0 };
 
-    // Margin of error factors:
-    // - Metabolism rate variation: ±30-50%
-    // - Body composition variation: ±10-20%
-    // - Combined typical error: ±0.01-0.02% for most users
-    // Using conservative ±0.015% (±15 mg/dL) as base margin
+    // Base uncertainty: ±0.015% (conservative estimate from medical literature)
     const baseMargin = 0.015;
 
-    // Margin increases with higher BAC due to compounding uncertainties
+    // Scale uncertainty with BAC level (higher BAC = more compounding errors)
+    // Cap at 30% to avoid unrealistic margins
     const scaledMargin = Math.min(baseMargin + (bac * 0.1), bac * 0.3);
 
     return {
-      min: Math.max(0, bac - scaledMargin),
+      min: Math.max(0, bac - scaledMargin),  // Floor at zero (negative BAC impossible)
       max: bac + scaledMargin,
       marginPercent: ((scaledMargin / bac) * 100)
     };
   };
 
+  /**
+   * Determine BAC warning level and emergency status based on medical thresholds
+   *
+   * MEDICAL THRESHOLDS (based on CDC and medical literature):
+   * - 0.00%: Sober (safe)
+   * - 0.03%: Mild effects (slight impairment)
+   * - 0.08%: Legal limit USA (significant impairment - ILLEGAL to drive)
+   * - 0.15%: Severe impairment (blackout risk, vomiting likely)
+   * - 0.20%: Dangerous (confusion, inability to walk, needs assistance)
+   * - 0.25%: Poisoning risk (seizures, loss of consciousness possible)
+   * - 0.30%: Life-threatening (respiratory depression, coma risk)
+   * - 0.40%: Critical emergency (high risk of death without medical intervention)
+   *
+   * EMERGENCY WARNING SYSTEM:
+   * - showEmergency: true → Displays prominent emergency banner with 911 instructions
+   * - Triggers at 0.20% and above (DANGEROUS level)
+   * - Banner removed after user clicked to remove tel:911 functionality
+   *
+   * IMPAIRMENT TRACKING:
+   * - hasBeenImpaired flag persists until BAC returns to 0.00%
+   * - Warns users who were over legal limit (0.08%) not to drive
+   * - Prevents false sense of safety from declining BAC
+   *
+   * TODO FOR HUMAN DEVELOPERS:
+   * - Add symptom checklist (slurred speech, coordination tests)
+   * - Consider adding "time until sober" countdown
+   * - Add breathalyzer comparison/calibration feature
+   * - Implement emergency contact quick-dial (if tel: reliability verified)
+   *
+   * @returns {Object} Status object with label, colors, message, margin, emergency flags
+   */
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
     const margin = calculateBACMargin(currentBAC);
 
-    // Special handling for users who have been impaired but are now sober
+    // SPECIAL CASE: User WAS impaired but is now at 0.00%
+    // Still warn them because effects can persist after BAC reaches zero
     if (currentBAC === 0 && state.hasBeenImpaired) return {
       label: 'Recently Impaired',
       color: 'text-orange-600',
@@ -1042,34 +1119,65 @@ Questions? Contact: support@drinkbot3000.com
     }
   };
 
+  /**
+   * Update user profile (gender/weight) and reset BAC tracking
+   *
+   * CRITICAL: Changing weight invalidates previous BAC calculations
+   * - All drinks must be cleared (BAC calculations depend on weight)
+   * - startTime must reset (new session)
+   * - hasBeenImpaired must reset (previous impairment no longer applies)
+   *
+   * ATOMIC STATE UPDATE PATTERN:
+   * Uses SET_MULTIPLE action to update all related state in ONE dispatch.
+   * This prevents race conditions where UI might render with inconsistent state.
+   *
+   * WHY ATOMIC UPDATES MATTER (for human developers):
+   * BAD APPROACH (DO NOT USE):
+   *   dispatch({ type: 'SET_FIELD', field: 'gender', value: newGender });
+   *   dispatch({ type: 'SET_FIELD', field: 'weight', value: newWeight });
+   *   dispatch({ type: 'SET_FIELD', field: 'drinks', value: [] });
+   *   // ^ Between these dispatches, UI re-renders with INVALID STATE:
+   *   //   New weight + old drinks = WRONG BAC calculation!
+   *
+   * GOOD APPROACH (CURRENT IMPLEMENTATION):
+   *   dispatch({ type: 'SET_MULTIPLE', values: { gender: ..., weight: ..., drinks: [] } });
+   *   // ^ All changes happen together in one state update
+   *
+   * TODO FOR HUMAN DEVELOPERS:
+   * - Consider asking user to confirm before clearing drinks
+   * - Add "profile history" feature to undo accidental changes
+   * - Implement metric system option (kg instead of lbs)
+   */
   const updateProfile = () => {
     try {
-      // Validate before updating - defensive programming
+      // VALIDATION STEP 1: Check weight is within realistic human range
       const newWeight = parseFloat(state.settingsEditWeight);
       if (isNaN(newWeight) || newWeight < 50 || newWeight > 500) {
         showRobotMessage('Invalid weight value. Please enter a weight between 50-500 lbs.');
         return;
       }
 
+      // VALIDATION STEP 2: Ensure gender is exactly 'male' or 'female'
+      // (Required for body water constant in Widmark formula)
       if (!state.settingsEditGender || (state.settingsEditGender !== 'male' && state.settingsEditGender !== 'female')) {
         showRobotMessage('Invalid gender selection. Please select Male or Female.');
         return;
       }
 
-      // Use SET_MULTIPLE for atomic state update - best practice
-      // This ensures all related state changes happen together
+      // ATOMIC UPDATE: All related state changes in single dispatch
+      // Prevents inconsistent intermediate states during render cycles
       dispatch({
         type: 'SET_MULTIPLE',
         values: {
           gender: state.settingsEditGender,
           weight: state.settingsEditWeight,
-          drinks: [],
-          bac: 0,
-          startTime: null,
-          weightError: '',
-          showSettings: false,
-          settingsEditMode: false,
-          hasBeenImpaired: false, // Reset impairment tracking
+          drinks: [],              // Must clear: weight change invalidates BAC calculations
+          bac: 0,                  // Reset to zero (no drinks anymore)
+          startTime: null,         // Reset session start time
+          weightError: '',         // Clear any validation errors
+          showSettings: false,     // Close settings modal
+          settingsEditMode: false, // Exit edit mode
+          hasBeenImpaired: false,  // Reset impairment flag (new session)
         }
       });
 
