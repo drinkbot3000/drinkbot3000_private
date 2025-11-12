@@ -2174,12 +2174,12 @@ Questions? Contact: support@drinkbot3000.com
                         <li>• Low body temperature</li>
                       </ul>
                     </div>
-                    <a
-                      href="tel:911"
-                      className="block w-full bg-yellow-400 hover:bg-yellow-300 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3 transition"
-                    >
+                    <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
                       📞 CALL 911 NOW
-                    </a>
+                    </div>
+                    <p className="text-yellow-300 text-xs mb-3 font-bold">
+                      Manually dial 9-1-1 on your phone
+                    </p>
                     <p className="text-white text-sm">
                       DO NOT wait for all symptoms to appear. DO NOT leave person alone.
                     </p>
@@ -2561,12 +2561,12 @@ Questions? Contact: support@drinkbot3000.com
                               <li>• Low body temperature</li>
                             </ul>
                           </div>
-                          <a
-                            href="tel:911"
-                            className="block w-full bg-yellow-400 hover:bg-yellow-300 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3 transition"
-                          >
+                          <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
                             📞 CALL 911 NOW
-                          </a>
+                          </div>
+                          <p className="text-yellow-300 text-xs mb-3 font-bold">
+                            Manually dial 9-1-1 on your phone
+                          </p>
                           <p className="text-white text-sm">
                             DO NOT wait for all symptoms to appear. DO NOT leave person alone.
                           </p>
