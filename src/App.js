@@ -962,7 +962,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🚨 CRITICAL - CALL 911',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-black via-red-900 to-black animate-pulse',
-      message: `🚨 EXTREME DANGER - CALL AN AMBULANCE IMMEDIATELY! Estimated BAC ${currentBAC.toFixed(3)}% but could be as high as ${margin.max.toFixed(3)}%. This level is LIFE-THREATENING with high risk of coma, respiratory failure, and DEATH. DO NOT wait - call 911 NOW. DO NOT leave person alone. Monitor breathing and consciousness constantly. Be prepared to perform CPR.`,
+      message: `🚨🚨🚨 DEADLY EMERGENCY - CALL 911 IMMEDIATELY! 🚨🚨🚨 Your BAC shows ${currentBAC.toFixed(3)}%, but margin of error means you could actually be at ${margin.max.toFixed(3)}% - a LETHAL level! At this concentration, people DIE from respiratory arrest, coma, choking on vomit, or heart failure. THIS IS NOT A DRILL. CALL AN AMBULANCE NOW - every minute counts. Someone at this level WILL die without immediate medical intervention. DO NOT WAIT. DO NOT SLEEP IT OFF. CALL 911 RIGHT NOW.`,
       emergencyLevel: 'CRITICAL',
       margin,
       showEmergency: true
@@ -972,7 +972,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🚨 LIFE-THREATENING',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-900 via-red-700 to-red-900',
-      message: `🚨 MEDICAL EMERGENCY - STRONGLY CONSIDER CALLING 911! Estimated BAC ${currentBAC.toFixed(3)}% but with margin of error could be ${margin.max.toFixed(3)}%. Loss of consciousness likely. Respiratory depression possible. Call an ambulance if person shows ANY signs of distress. Stay with person, monitor breathing continuously, be prepared to perform CPR.`,
+      message: `🚨 EXTREME DANGER - YOU COULD DIE! Your estimated BAC is ${currentBAC.toFixed(3)}%, but with margin of error it could be ${margin.max.toFixed(3)}% - which is in the LETHAL RANGE. At this level: breathing may stop, consciousness may be lost permanently, brain damage can occur, DEATH is a real possibility. CALL 911 IMMEDIATELY if you see confusion, vomiting, irregular breathing, or inability to wake person. This is NOT "just drunk" - this is MEDICAL EMERGENCY territory. DO NOT risk death by waiting.`,
       emergencyLevel: 'LIFE_THREATENING',
       margin,
       showEmergency: true
@@ -982,7 +982,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '⚠️ ALCOHOL POISONING RISK',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-700 via-red-600 to-red-700',
-      message: `⚠️ SEVERE DANGER - CONSIDER CALLING AN AMBULANCE! Estimated BAC ${currentBAC.toFixed(3)}% but could be as high as ${margin.max.toFixed(3)}%. High risk of alcohol poisoning at this level. Watch for signs: confusion, vomiting, seizures, slow breathing (less than 8 breaths/min), pale or blue-tinged skin. If ANY of these symptoms appear, call 911 immediately. DO NOT hesitate - better safe than sorry.`,
+      message: `⚠️ SEVERE ALCOHOL POISONING RISK! BAC shows ${currentBAC.toFixed(3)}% but margin of error means you could be at ${margin.max.toFixed(3)}% - ENTERING LETHAL TERRITORY! People DIE at these levels from stopped breathing, choking on vomit, seizures, or heart failure. WATCH CLOSELY for: confusion, vomiting (especially while unconscious), seizures, slow/irregular breathing (less than 8 breaths/min), blue or pale skin, low body temperature. If you see ANY of these signs - CALL 911 IMMEDIATELY. Alcohol poisoning KILLS. Do NOT assume they'll "sleep it off" - they could die in their sleep. When in doubt, CALL 911. Better to be wrong than dead.`,
       emergencyLevel: 'POISONING_RISK',
       margin,
       showEmergency: true
@@ -992,7 +992,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🛑 DANGEROUS LEVEL',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-600 via-red-500 to-red-600',
-      message: `🛑 DANGEROUS - MEDICAL ATTENTION MAY BE NEEDED! Estimated BAC ${currentBAC.toFixed(3)}% with possible range up to ${margin.max.toFixed(3)}%. Severe confusion, disorientation, inability to walk. Person needs immediate assistance and close monitoring. STRONGLY CONSIDER calling 911 if condition worsens or if person cannot be safely cared for. Watch for worsening symptoms. Absolutely NO driving or operating anything.` + impairmentWarning,
+      message: `🛑 ENTERING DANGEROUS TERRITORY! Your BAC shows ${currentBAC.toFixed(3)}%, but accounting for margin of error you could be as high as ${margin.max.toFixed(3)}% - which is ALCOHOL POISONING RANGE! At these levels, people can aspirate vomit, stop breathing, have seizures, or slip into comas. This is NOT safe. Severe confusion, disorientation, inability to walk or stand, vomiting likely. Person MUST be monitored constantly. If they cannot be awakened, vomit while unconscious, breathe irregularly, or seem to get worse - CALL 911 IMMEDIATELY. DO NOT leave alone. DO NOT let them "sleep it off" unsupervised - they could die. When BAC is this high, margin of error could mean the difference between drunk and dead.` + impairmentWarning,
       emergencyLevel: 'DANGEROUS',
       margin,
       showEmergency: true
@@ -1002,7 +1002,7 @@ Questions? Contact: support@drinkbot3000.com
       label: '🔴 SEVERE IMPAIRMENT',
       color: 'text-white',
       bgColor: 'bg-gradient-to-br from-red-500 via-red-400 to-red-500',
-      message: '🔴 SEVERE IMPAIRMENT: High risk of blackout, severe loss of coordination and judgment. Vomiting likely. Person may need assistance. Absolutely NO driving, operating machinery, or dangerous activities.' + impairmentWarning,
+      message: `🔴 SEVERE IMPAIRMENT - APPROACHING DANGEROUS LEVELS! Your BAC is ${currentBAC.toFixed(3)}%, but with margin of error could be as high as ${margin.max.toFixed(3)}%. This puts you dangerously close to alcohol poisoning range! High risk of blackout (you may not remember ANY of this), severe loss of coordination and judgment, vomiting likely (risk of choking if unconscious). Person may need assistance walking, standing, or basic tasks. If BAC continues rising or person shows worsening symptoms (can't be awakened, vomiting, irregular breathing) - CALL 911. Absolutely NO driving, operating machinery, or dangerous activities. The margin of error at this level means you could be closer to medical emergency than you think.` + impairmentWarning,
       emergencyLevel: 'SEVERE',
       margin,
       showEmergency: false
@@ -2269,43 +2269,77 @@ Questions? Contact: support@drinkbot3000.com
               {status.showEmergency && (
                 <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mb-6 animate-pulse shadow-2xl">
                   <div className="text-center">
-                    <div className="text-4xl mb-3">🚨</div>
-                    <h3 className="text-2xl font-bold text-white mb-3">DANGEROUS BAC LEVEL DETECTED</h3>
+                    <div className="text-5xl mb-3">🚨☠️🚨</div>
+                    <h3 className="text-3xl font-bold text-white mb-4 uppercase">DEADLY BAC LEVEL - ALCOHOL POISONING RISK</h3>
 
-                    <div className="bg-yellow-400 rounded-lg p-4 mb-4">
-                      <p className="text-red-900 font-bold text-lg mb-2">⚠️ ELEVATED RISK - MARGIN OF ERROR WARNING</p>
-                      <p className="text-red-900 text-sm font-semibold">
-                        Your estimated BAC is {state.bac.toFixed(3)}%, but due to individual variation in metabolism,
-                        your actual BAC could be as high as {status.margin.max.toFixed(3)}%.
-                        This is in the DANGEROUS range where alcohol poisoning is a real risk.
+                    <div className="bg-black rounded-lg p-5 mb-4 border-4 border-red-600">
+                      <p className="text-yellow-400 font-bold text-xl mb-3 uppercase">⚠️ CRITICAL: MARGIN OF ERROR PUTS YOU IN LETHAL RANGE</p>
+                      <p className="text-white text-base font-bold leading-relaxed mb-3">
+                        Your BAC shows {state.bac.toFixed(3)}%, BUT individual metabolism varies by 30-50%.
+                      </p>
+                      <p className="text-red-400 text-lg font-bold">
+                        YOUR ACTUAL BAC COULD BE AS HIGH AS {status.margin.max.toFixed(3)}%
+                      </p>
+                      <p className="text-white text-base font-bold mt-3">
+                        {status.margin.max >= 0.30 ? '☠️ THIS IS THE LETHAL RANGE WHERE PEOPLE DIE ☠️' :
+                         status.margin.max >= 0.25 ? '⚠️ YOU ARE ENTERING LETHAL TERRITORY ⚠️' :
+                         '🚨 HIGH RISK OF ALCOHOL POISONING 🚨'}
                       </p>
                     </div>
 
-                    <div className="bg-white rounded-lg p-4 mb-4">
-                      <p className="text-red-900 font-bold text-lg mb-2">STRONGLY CONSIDER CALLING AN AMBULANCE IF:</p>
-                      <ul className="text-left text-sm text-red-900 space-y-1 font-semibold">
-                        <li>• Person is confused, unconscious, or cannot be awakened</li>
-                        <li>• Vomiting while unconscious or semi-conscious</li>
-                        <li>• Seizures or irregular breathing</li>
-                        <li>• Breathing is slow (less than 8 breaths per minute)</li>
-                        <li>• Gaps of 10+ seconds between breaths</li>
-                        <li>• Pale, blue-tinged, or cold/clammy skin</li>
-                        <li>• Person cannot stand or walk without help</li>
+                    <div className="bg-white rounded-lg p-5 mb-4 border-4 border-red-700">
+                      <p className="text-red-900 font-bold text-xl mb-3 uppercase">⚠️ CALL 911 IMMEDIATELY IF YOU SEE:</p>
+                      <ul className="text-left text-base text-red-900 space-y-2 font-bold">
+                        <li className="flex items-start">
+                          <span className="mr-2">☠️</span>
+                          <span>Person CANNOT be awakened or is unconscious</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">☠️</span>
+                          <span>Vomiting while unconscious (can choke and DIE)</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">☠️</span>
+                          <span>Seizures or convulsions</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">☠️</span>
+                          <span>Slow breathing: Less than 8 breaths/minute (DEADLY)</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">☠️</span>
+                          <span>Gaps of 10+ seconds between breaths (RESPIRATORY FAILURE)</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">☠️</span>
+                          <span>Blue, pale, or cold/clammy skin (ORGAN FAILURE)</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="mr-2">⚠️</span>
+                          <span>Severe confusion or inability to walk/stand</span>
+                        </li>
                       </ul>
+                      <p className="text-red-900 font-bold text-lg mt-4 uppercase">
+                        ANY OF THESE SIGNS = POTENTIAL DEATH WITHOUT TREATMENT
+                      </p>
                     </div>
 
-                    <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
-                      📞 CONSIDER CALLING 911
+                    <div className="block w-full bg-yellow-400 text-red-900 font-bold text-2xl py-5 px-6 rounded-lg mb-3 border-4 border-red-900">
+                      📞 CALL 911 NOW IF ANY SYMPTOMS PRESENT
                     </div>
-                    <p className="text-yellow-300 text-xs mb-3 font-bold">
-                      Manually dial 9-1-1 on your phone if you see ANY warning signs above
+                    <p className="text-yellow-300 text-sm mb-3 font-bold uppercase">
+                      Manually dial 9-1-1 on your phone - DO NOT DELAY
                     </p>
-                    <p className="text-white text-sm font-bold mb-2">
-                      DO NOT wait for all symptoms to appear!
-                    </p>
-                    <p className="text-white text-sm">
-                      DO NOT leave person alone. Monitor constantly. Better to call for help and not need it than to wait too long.
-                    </p>
+                    <div className="bg-red-800 rounded-lg p-4 border-2 border-yellow-400">
+                      <p className="text-white text-base font-bold mb-2 uppercase">
+                        ☠️ PEOPLE DIE FROM ALCOHOL POISONING EVERY DAY ☠️
+                      </p>
+                      <p className="text-white text-sm font-bold">
+                        They thought they'd "sleep it off" - they never woke up. DO NOT take chances at this BAC level.
+                        DO NOT leave person alone. DO NOT assume they'll be fine. CALL 911 if you see ANY warning signs.
+                        Better to call and be wrong than to find someone dead in the morning.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2675,43 +2709,77 @@ Questions? Contact: support@drinkbot3000.com
                       return (
                         <div className="bg-red-900 border-4 border-yellow-400 rounded-lg p-6 mt-4 animate-pulse shadow-2xl">
                           <div className="text-center">
-                            <div className="text-4xl mb-3">🚨</div>
-                            <h3 className="text-2xl font-bold text-white mb-3">DANGEROUS BAC LEVEL DETECTED</h3>
+                            <div className="text-5xl mb-3">🚨☠️🚨</div>
+                            <h3 className="text-3xl font-bold text-white mb-4 uppercase">DEADLY BAC LEVEL - ALCOHOL POISONING RISK</h3>
 
-                            <div className="bg-yellow-400 rounded-lg p-4 mb-4">
-                              <p className="text-red-900 font-bold text-lg mb-2">⚠️ ELEVATED RISK - MARGIN OF ERROR WARNING</p>
-                              <p className="text-red-900 text-sm font-semibold">
-                                Your estimated BAC is {state.calcBAC.toFixed(3)}%, but due to individual variation in metabolism,
-                                your actual BAC could be as high as {calcStatus.margin.max.toFixed(3)}%.
-                                This is in the DANGEROUS range where alcohol poisoning is a real risk.
+                            <div className="bg-black rounded-lg p-5 mb-4 border-4 border-red-600">
+                              <p className="text-yellow-400 font-bold text-xl mb-3 uppercase">⚠️ CRITICAL: MARGIN OF ERROR PUTS YOU IN LETHAL RANGE</p>
+                              <p className="text-white text-base font-bold leading-relaxed mb-3">
+                                Your BAC shows {state.calcBAC.toFixed(3)}%, BUT individual metabolism varies by 30-50%.
+                              </p>
+                              <p className="text-red-400 text-lg font-bold">
+                                YOUR ACTUAL BAC COULD BE AS HIGH AS {calcStatus.margin.max.toFixed(3)}%
+                              </p>
+                              <p className="text-white text-base font-bold mt-3">
+                                {calcStatus.margin.max >= 0.30 ? '☠️ THIS IS THE LETHAL RANGE WHERE PEOPLE DIE ☠️' :
+                                 calcStatus.margin.max >= 0.25 ? '⚠️ YOU ARE ENTERING LETHAL TERRITORY ⚠️' :
+                                 '🚨 HIGH RISK OF ALCOHOL POISONING 🚨'}
                               </p>
                             </div>
 
-                            <div className="bg-white rounded-lg p-4 mb-4">
-                              <p className="text-red-900 font-bold text-lg mb-2">STRONGLY CONSIDER CALLING AN AMBULANCE IF:</p>
-                              <ul className="text-left text-sm text-red-900 space-y-1 font-semibold">
-                                <li>• Person is confused, unconscious, or cannot be awakened</li>
-                                <li>• Vomiting while unconscious or semi-conscious</li>
-                                <li>• Seizures or irregular breathing</li>
-                                <li>• Breathing is slow (less than 8 breaths per minute)</li>
-                                <li>• Gaps of 10+ seconds between breaths</li>
-                                <li>• Pale, blue-tinged, or cold/clammy skin</li>
-                                <li>• Person cannot stand or walk without help</li>
+                            <div className="bg-white rounded-lg p-5 mb-4 border-4 border-red-700">
+                              <p className="text-red-900 font-bold text-xl mb-3 uppercase">⚠️ CALL 911 IMMEDIATELY IF YOU SEE:</p>
+                              <ul className="text-left text-base text-red-900 space-y-2 font-bold">
+                                <li className="flex items-start">
+                                  <span className="mr-2">☠️</span>
+                                  <span>Person CANNOT be awakened or is unconscious</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="mr-2">☠️</span>
+                                  <span>Vomiting while unconscious (can choke and DIE)</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="mr-2">☠️</span>
+                                  <span>Seizures or convulsions</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="mr-2">☠️</span>
+                                  <span>Slow breathing: Less than 8 breaths/minute (DEADLY)</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="mr-2">☠️</span>
+                                  <span>Gaps of 10+ seconds between breaths (RESPIRATORY FAILURE)</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="mr-2">☠️</span>
+                                  <span>Blue, pale, or cold/clammy skin (ORGAN FAILURE)</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="mr-2">⚠️</span>
+                                  <span>Severe confusion or inability to walk/stand</span>
+                                </li>
                               </ul>
+                              <p className="text-red-900 font-bold text-lg mt-4 uppercase">
+                                ANY OF THESE SIGNS = POTENTIAL DEATH WITHOUT TREATMENT
+                              </p>
                             </div>
 
-                            <div className="block w-full bg-yellow-400 text-red-900 font-bold text-xl py-4 px-6 rounded-lg mb-3">
-                              📞 CONSIDER CALLING 911
+                            <div className="block w-full bg-yellow-400 text-red-900 font-bold text-2xl py-5 px-6 rounded-lg mb-3 border-4 border-red-900">
+                              📞 CALL 911 NOW IF ANY SYMPTOMS PRESENT
                             </div>
-                            <p className="text-yellow-300 text-xs mb-3 font-bold">
-                              Manually dial 9-1-1 on your phone if you see ANY warning signs above
+                            <p className="text-yellow-300 text-sm mb-3 font-bold uppercase">
+                              Manually dial 9-1-1 on your phone - DO NOT DELAY
                             </p>
-                            <p className="text-white text-sm font-bold mb-2">
-                              DO NOT wait for all symptoms to appear!
-                            </p>
-                            <p className="text-white text-sm">
-                              DO NOT leave person alone. Monitor constantly. Better to call for help and not need it than to wait too long.
-                            </p>
+                            <div className="bg-red-800 rounded-lg p-4 border-2 border-yellow-400">
+                              <p className="text-white text-base font-bold mb-2 uppercase">
+                                ☠️ PEOPLE DIE FROM ALCOHOL POISONING EVERY DAY ☠️
+                              </p>
+                              <p className="text-white text-sm font-bold">
+                                They thought they'd "sleep it off" - they never woke up. DO NOT take chances at this BAC level.
+                                DO NOT leave person alone. DO NOT assume they'll be fine. CALL 911 if you see ANY warning signs.
+                                Better to call and be wrong than to find someone dead in the morning.
+                              </p>
+                            </div>
                           </div>
                         </div>
                       );
