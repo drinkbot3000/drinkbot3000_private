@@ -1012,12 +1012,9 @@ Questions? Contact: support@drinkbot3000.com
       const metabolized = CONSTANTS.METABOLISM_RATE * hours;
 
       const result = Math.max(0, initialBAC - metabolized);
-      dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
 
-      // Track impairment in calculator mode too (for "Recently Impaired" warning)
-      if (result >= CONSTANTS.LEGAL_LIMIT && !state.hasBeenImpaired) {
-        dispatch({ type: 'SET_FIELD', field: 'hasBeenImpaired', value: true });
-      }
+      // Calculator is completely isolated - only sets calcBAC, doesn't affect live tracker state
+      dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
     } catch (error) {
       console.error('Error calculating quick BAC:', error);
       showRobotMessage('Failed to calculate BAC. Please check your inputs and try again.');
@@ -1202,10 +1199,12 @@ Questions? Contact: support@drinkbot3000.com
   const getBACStatus = () => {
     const currentBAC = state.calcBAC !== null && state.activeTab === 'calculator' ? state.calcBAC : state.bac;
     const margin = calculateBACMargin(currentBAC);
+    const isCalculatorMode = state.activeTab === 'calculator';
 
     // SPECIAL CASE: User WAS impaired but is now at 0.00%
     // Still warn them because effects can persist after BAC reaches zero
-    if (currentBAC === 0 && state.hasBeenImpaired) return {
+    // NOTE: Only applies to live tracker, not calculator (calculator is isolated)
+    if (currentBAC === 0 && state.hasBeenImpaired && !isCalculatorMode) return {
       label: 'Recently Impaired',
       color: 'text-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
@@ -1224,7 +1223,8 @@ Questions? Contact: support@drinkbot3000.com
     };
 
     // Add impairment warning to all non-zero BAC levels if they've been impaired
-    const impairmentWarning = state.hasBeenImpaired ? ' ⚠️ YOU HAVE BEEN OVER THE LEGAL LIMIT - DO NOT DRIVE.' : '';
+    // NOTE: Only applies to live tracker, not calculator (calculator is isolated)
+    const impairmentWarning = (state.hasBeenImpaired && !isCalculatorMode) ? ' ⚠️ YOU HAVE BEEN OVER THE LEGAL LIMIT - DO NOT DRIVE.' : '';
 
     // CRITICAL & LIFE-THREATENING LEVELS - Medical Emergency
     if (currentBAC >= CONSTANTS.CRITICAL) return {
