@@ -269,46 +269,74 @@ export default function BACTracker() {
   };
 
   const calculateBAC = () => {
-    if (state.mode === 'estimate') {
-      if (!state.estimateDrinks || !state.estimateHours) return 0;
-      
-      const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
-      const bodyWater = getBodyWaterConstant(state.gender);
-      const numDrinks = parseFloat(state.estimateDrinks);
-      const hours = parseFloat(state.estimateHours);
-      
-      const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
-      const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
-      const metabolized = CONSTANTS.METABOLISM_RATE * hours;
-      
-      return Math.max(0, initialBAC - metabolized);
+    try {
+      // Defensive checks for required data
+      if (!state.gender || !state.weight) {
+        return 0;
+      }
+
+      const weightValue = parseFloat(state.weight);
+      if (isNaN(weightValue) || weightValue <= 0) {
+        console.warn('Invalid weight value for BAC calculation');
+        return 0;
+      }
+
+      if (state.mode === 'estimate') {
+        if (!state.estimateDrinks || !state.estimateHours) return 0;
+
+        const numDrinks = parseFloat(state.estimateDrinks);
+        const hours = parseFloat(state.estimateHours);
+
+        // Validate parsed values
+        if (isNaN(numDrinks) || isNaN(hours) || numDrinks < 0 || hours < 0) {
+          return 0;
+        }
+
+        const weightKg = weightValue * CONSTANTS.LBS_TO_KG;
+        const bodyWater = getBodyWaterConstant(state.gender);
+
+        const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+        const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+        const metabolized = CONSTANTS.METABOLISM_RATE * hours;
+
+        return Math.max(0, initialBAC - metabolized);
+      }
+
+      if (state.mode === 'live') {
+        if (!state.startTime || state.drinks.length === 0) return 0;
+
+        const weightKg = weightValue * CONSTANTS.LBS_TO_KG;
+        const bodyWater = getBodyWaterConstant(state.gender);
+        const currentTime = Date.now();
+
+        let adjustedBAC = 0;
+
+        state.drinks.forEach(drink => {
+          // Defensive check for drink data
+          if (!drink || typeof drink.standardDrinks !== 'number' || !drink.timestamp) {
+            console.warn('Invalid drink data encountered');
+            return;
+          }
+
+          const standardDrinks = drink.standardDrinks || 1;
+          const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+          const hoursElapsed = (currentTime - drink.timestamp) / (1000 * 60 * 60);
+
+          const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+          const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
+          const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
+
+          adjustedBAC += currentDrinkBAC;
+        });
+
+        return Math.max(0, adjustedBAC);
+      }
+
+      return 0;
+    } catch (error) {
+      console.error('Error calculating BAC:', error);
+      return 0;
     }
-    
-    if (state.mode === 'live') {
-      if (!state.startTime || state.drinks.length === 0) return 0;
-
-      const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
-      const bodyWater = getBodyWaterConstant(state.gender);
-      const currentTime = Date.now();
-      
-      let adjustedBAC = 0;
-
-      state.drinks.forEach(drink => {
-        const standardDrinks = drink.standardDrinks || 1;
-        const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
-        const hoursElapsed = (currentTime - drink.timestamp) / (1000 * 60 * 60);
-        
-        const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
-        const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
-        const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
-        
-        adjustedBAC += currentDrinkBAC;
-      });
-
-      return Math.max(0, adjustedBAC);
-    }
-    
-    return 0;
   };
 
   // Update BAC every second
@@ -539,22 +567,63 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const handleSetup = () => {
-    const error = validateWeight(state.weight);
-    if (error) {
-      dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
-      return;
-    }
+    try {
+      // Comprehensive validation before completing setup
+      if (!state.gender) {
+        showRobotMessage('Please select your gender to continue.');
+        return;
+      }
 
-    if (state.gender && state.weight && parseFloat(state.weight) > 0) {
+      if (!state.weight) {
+        showRobotMessage('Please enter your weight to continue.');
+        return;
+      }
+
+      const error = validateWeight(state.weight);
+      if (error) {
+        dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
+        showRobotMessage(error);
+        return;
+      }
+
+      const weightValue = parseFloat(state.weight);
+      if (isNaN(weightValue) || weightValue <= 0) {
+        showRobotMessage('Please enter a valid weight.');
+        return;
+      }
+
+      if (!state.mode) {
+        showRobotMessage('Please select a tracking mode.');
+        return;
+      }
+
+      // For estimate mode, validate additional required fields
+      if (state.mode === 'estimate') {
+        if (!state.estimateDrinks || !state.estimateHours) {
+          showRobotMessage('Please enter number of drinks and time period for estimate mode.');
+          return;
+        }
+        const drinks = parseFloat(state.estimateDrinks);
+        const hours = parseFloat(state.estimateHours);
+        if (isNaN(drinks) || drinks < 0 || isNaN(hours) || hours < 0) {
+          showRobotMessage('Please enter valid numbers for drinks and hours.');
+          return;
+        }
+      }
+
+      // All validations passed - complete setup
       dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
       dispatch({ type: 'SET_FIELD', field: 'setupComplete', value: true });
-      
+
       if (state.mode === 'live') {
         dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
       }
-      
+
       const greeting = robotGreetings[Math.floor(Math.random() * robotGreetings.length)];
       showRobotMessage(greeting);
+    } catch (error) {
+      console.error('Error during setup:', error);
+      showRobotMessage('Setup failed. Please try again.');
     }
   };
 
@@ -564,6 +633,20 @@ Questions? Contact: support@drinkbot3000.com
 
   const addDrink = (name = 'Standard Drink', oz = null, abv = null) => {
     try {
+      // Defensive check: ensure setup is complete
+      if (!state.setupComplete) {
+        console.warn('Cannot add drink: setup not complete');
+        showRobotMessage('Please complete setup first before adding drinks.');
+        return;
+      }
+
+      // Defensive check: ensure profile is valid
+      if (!state.gender || !state.weight) {
+        console.warn('Cannot add drink: profile incomplete');
+        showRobotMessage('Please set your gender and weight in settings before adding drinks.');
+        return;
+      }
+
       let standardDrinks = 1;
       let drinkType = name;
 
@@ -572,7 +655,7 @@ Questions? Contact: support@drinkbot3000.com
         const ozValue = parseFloat(oz);
         const abvValue = parseFloat(abv);
 
-        // Validate inputs
+        // Validate inputs with clear error messages
         if (isNaN(ozValue) || ozValue <= 0 || ozValue > 64) {
           showRobotMessage('Invalid drink size. Please use a value between 0 and 64 oz.');
           return;
@@ -594,6 +677,11 @@ Questions? Contact: support@drinkbot3000.com
         type: drinkType,
       };
 
+      // For live mode, ensure startTime is initialized
+      if (state.mode === 'live' && !state.startTime) {
+        dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
+      }
+
       dispatch({ type: 'ADD_DRINK', drink: newDrink });
 
       const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
@@ -605,37 +693,84 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const undoDrink = () => {
-    if (state.drinks.length > 0) {
-      dispatch({ type: 'UNDO_DRINK' });
-      showRobotMessage('*beep boop* Last drink removed from records! 🤖');
+    try {
+      if (state.drinks.length > 0) {
+        dispatch({ type: 'UNDO_DRINK' });
+        showRobotMessage('*beep boop* Last drink removed from records! 🤖');
+      } else {
+        showRobotMessage('No drinks to undo!');
+      }
+    } catch (error) {
+      console.error('Error undoing drink:', error);
+      showRobotMessage('Failed to undo drink. Please try again.');
     }
   };
 
   const clearDrinks = () => {
-    if (state.drinks.length > 0) {
-      dispatch({ type: 'CLEAR_DRINKS' });
-      showRobotMessage('*whirrs loudly* All drinks cleared from memory! Starting fresh! 🤖');
+    try {
+      if (state.drinks.length > 0) {
+        dispatch({ type: 'CLEAR_DRINKS' });
+        showRobotMessage('*whirrs loudly* All drinks cleared from memory! Starting fresh! 🤖');
+      } else {
+        showRobotMessage('No drinks to clear!');
+      }
+    } catch (error) {
+      console.error('Error clearing drinks:', error);
+      showRobotMessage('Failed to clear drinks. Please try again.');
     }
   };
 
   const deleteDrink = (id) => {
-    dispatch({ type: 'REMOVE_DRINK', id });
-    showRobotMessage('*whirrs* Drink removed from records! 🤖');
+    try {
+      if (!id) {
+        console.warn('Attempted to delete drink without valid ID');
+        return;
+      }
+      dispatch({ type: 'REMOVE_DRINK', id });
+      showRobotMessage('*whirrs* Drink removed from records! 🤖');
+    } catch (error) {
+      console.error('Error deleting drink:', error);
+      showRobotMessage('Failed to delete drink. Please try again.');
+    }
   };
 
   const addCustomDrink = (oz, abv) => {
-    const pureAlcoholOz = parseFloat(oz) * (parseFloat(abv) / 100);
-    const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
-    
-    const newDrink = {
-      id: Date.now(),
-      timestamp: Date.now(),
-      standardDrinks: standardDrinks,
-      type: `${oz}oz @ ${abv}%`,
-    };
-    dispatch({ type: 'ADD_DRINK', drink: newDrink });
-    
-    showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! 🤖`);
+    try {
+      const ozValue = parseFloat(oz);
+      const abvValue = parseFloat(abv);
+
+      // Defensive validation
+      if (isNaN(ozValue) || ozValue <= 0 || ozValue > 64) {
+        showRobotMessage('Invalid drink size. Please use a value between 0 and 64 oz.');
+        return;
+      }
+      if (isNaN(abvValue) || abvValue <= 0 || abvValue > 100) {
+        showRobotMessage('Invalid ABV%. Please use a value between 0 and 100%.');
+        return;
+      }
+
+      const pureAlcoholOz = ozValue * (abvValue / 100);
+      const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
+
+      const newDrink = {
+        id: Date.now(),
+        timestamp: Date.now(),
+        standardDrinks: standardDrinks,
+        type: `${ozValue}oz @ ${abvValue}%`,
+      };
+
+      // For live mode, ensure startTime is initialized
+      if (state.mode === 'live' && !state.startTime) {
+        dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
+      }
+
+      dispatch({ type: 'ADD_DRINK', drink: newDrink });
+
+      showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! 🤖`);
+    } catch (error) {
+      console.error('Error adding custom drink:', error);
+      showRobotMessage('Failed to add custom drink. Please try again.');
+    }
   };
 
   const tellJoke = () => {
@@ -648,19 +783,44 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const calculateQuickBAC = () => {
-    if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) return;
-    
-    const weightKg = parseFloat(state.weight) * CONSTANTS.LBS_TO_KG;
-    const bodyWater = getBodyWaterConstant(state.gender);
-    const numDrinks = parseFloat(state.calcDrinks);
-    const hours = parseFloat(state.calcHours);
-    
-    const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
-    const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
-    const metabolized = CONSTANTS.METABOLISM_RATE * hours;
-    
-    const result = Math.max(0, initialBAC - metabolized);
-    dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
+    try {
+      // Defensive checks for all required inputs
+      if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) {
+        showRobotMessage('Please fill in all fields to calculate BAC.');
+        return;
+      }
+
+      const weightValue = parseFloat(state.weight);
+      const numDrinks = parseFloat(state.calcDrinks);
+      const hours = parseFloat(state.calcHours);
+
+      // Validate all parsed values
+      if (isNaN(weightValue) || weightValue <= 0) {
+        showRobotMessage('Invalid weight value.');
+        return;
+      }
+      if (isNaN(numDrinks) || numDrinks < 0) {
+        showRobotMessage('Please enter a valid number of drinks (0 or more).');
+        return;
+      }
+      if (isNaN(hours) || hours < 0) {
+        showRobotMessage('Please enter a valid time period (0 or more hours).');
+        return;
+      }
+
+      const weightKg = weightValue * CONSTANTS.LBS_TO_KG;
+      const bodyWater = getBodyWaterConstant(state.gender);
+
+      const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+      const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+      const metabolized = CONSTANTS.METABOLISM_RATE * hours;
+
+      const result = Math.max(0, initialBAC - metabolized);
+      dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
+    } catch (error) {
+      console.error('Error calculating quick BAC:', error);
+      showRobotMessage('Failed to calculate BAC. Please check your inputs and try again.');
+    }
   };
 
   const getBACStatus = () => {
@@ -746,49 +906,82 @@ Questions? Contact: support@drinkbot3000.com
   };
 
   const handleSaveSettings = () => {
-    // Validate inputs
-    const weight = parseFloat(state.settingsEditWeight);
-    if (isNaN(weight) || weight < 50 || weight > 500) {
-      dispatch({ type: 'SET_FIELD', field: 'weightError', value: 'Please enter a valid weight between 50-500 lbs' });
-      return;
-    }
+    try {
+      // Validate inputs with clear feedback
+      const weight = parseFloat(state.settingsEditWeight);
+      if (isNaN(weight) || weight < 50 || weight > 500) {
+        dispatch({ type: 'SET_FIELD', field: 'weightError', value: 'Please enter a valid weight between 50-500 lbs' });
+        showRobotMessage('Please enter a valid weight between 50-500 lbs.');
+        return;
+      }
 
-    // Check if values actually changed
-    if (state.settingsEditGender === state.gender && weight === parseFloat(state.weight)) {
-      dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false });
-      return;
-    }
+      // Validate gender
+      if (!state.settingsEditGender || (state.settingsEditGender !== 'male' && state.settingsEditGender !== 'female')) {
+        showRobotMessage('Please select a valid gender (Male or Female).');
+        return;
+      }
 
-    // Warn user that changing profile will reset tracking
-    if (state.drinks.length > 0 || state.bac > 0) {
-      dispatch({
-        type: 'SHOW_CONFIRM',
-        message: 'Changing your profile will reset your current BAC tracking and drink history. Continue?',
-        action: () => {
-          updateProfile();
-        }
-      });
-    } else {
-      updateProfile();
+      // Check if values actually changed
+      if (state.settingsEditGender === state.gender && weight === parseFloat(state.weight)) {
+        dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false });
+        showRobotMessage('No changes detected.');
+        return;
+      }
+
+      // Warn user that changing profile will reset tracking
+      if (state.drinks.length > 0 || state.bac > 0) {
+        dispatch({
+          type: 'SHOW_CONFIRM',
+          message: 'Changing your profile will reset your current BAC tracking and drink history. Continue?',
+          action: () => {
+            updateProfile();
+          }
+        });
+      } else {
+        updateProfile();
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showRobotMessage('Failed to save settings. Please try again.');
     }
   };
 
   const updateProfile = () => {
-    // Update profile
-    dispatch({ type: 'SET_FIELD', field: 'gender', value: state.settingsEditGender });
-    dispatch({ type: 'SET_FIELD', field: 'weight', value: state.settingsEditWeight });
+    try {
+      // Validate before updating - defensive programming
+      const newWeight = parseFloat(state.settingsEditWeight);
+      if (isNaN(newWeight) || newWeight < 50 || newWeight > 500) {
+        showRobotMessage('Invalid weight value. Please enter a weight between 50-500 lbs.');
+        return;
+      }
 
-    // Reset BAC tracking
-    dispatch({ type: 'SET_FIELD', field: 'drinks', value: [] });
-    dispatch({ type: 'SET_FIELD', field: 'bac', value: 0 });
-    dispatch({ type: 'SET_FIELD', field: 'startTime', value: null });
+      if (!state.settingsEditGender || (state.settingsEditGender !== 'male' && state.settingsEditGender !== 'female')) {
+        showRobotMessage('Invalid gender selection. Please select Male or Female.');
+        return;
+      }
 
-    // Clear weight error and close settings
-    dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
-    dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false });
-    dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
+      // Use SET_MULTIPLE for atomic state update - best practice
+      // This ensures all related state changes happen together
+      dispatch({
+        type: 'SET_MULTIPLE',
+        values: {
+          gender: state.settingsEditGender,
+          weight: state.settingsEditWeight,
+          drinks: [],
+          bac: 0,
+          startTime: null,
+          weightError: '',
+          showSettings: false,
+          settingsEditMode: false,
+          hasBeenImpaired: false, // Reset impairment tracking
+        }
+      });
 
-    showRobotMessage('Profile updated successfully! BAC tracking has been reset.');
+      showRobotMessage('Profile updated successfully! BAC tracking has been reset.');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showRobotMessage('Failed to update profile. Please try again.');
+    }
   };
 
   const handleSaveCustomDrink = () => {
