@@ -9,21 +9,50 @@
 const ALLOWED_COUNTRIES = ['US'];
 
 /**
- * Geolocation API configuration
+ * Geolocation API configuration with multiple fallback services
+ * Using multiple providers for reliability and uptime
  */
 const GEO_API_CONFIG = {
-  endpoint: 'https://ip-api.com/json/',
-  fields: 'status,country,countryCode',
-  timeout: 10000, // 10 second timeout
+  timeout: 8000, // 8 second timeout per service
   rateLimitCacheDuration: 300000, // 5 minutes - cache rate limit errors
+  maxRetries: 2, // Retry each service up to 2 times
+  services: [
+    {
+      name: 'ipapi',
+      endpoint: 'https://ipapi.co/json/',
+      parseResponse: (data) => ({
+        status: data.country_code ? 'success' : 'fail',
+        countryCode: data.country_code,
+        country: data.country_name
+      })
+    },
+    {
+      name: 'ip-api',
+      endpoint: 'https://ip-api.com/json/?fields=status,country,countryCode',
+      parseResponse: (data) => ({
+        status: data.status,
+        countryCode: data.countryCode,
+        country: data.country
+      })
+    },
+    {
+      name: 'ipwhois',
+      endpoint: 'https://ipwhois.app/json/',
+      parseResponse: (data) => ({
+        status: data.success ? 'success' : 'fail',
+        countryCode: data.country_code,
+        country: data.country
+      })
+    }
+  ]
 };
 
 /**
  * Check if user is accessing from USA
- * Uses IP-API.com free tier (no API key required)
+ * Uses multiple geolocation APIs with fallback for reliability
  * Privacy-focused: only country code is retrieved, IP never stored
  *
- * @returns {Promise<{allowed: boolean, country: string, countryCode?: string, error: string|null}>}
+ * @returns {Promise<{allowed: boolean, country: string, countryCode?: string, error: string|null, technicalError?: boolean}>}
  */
 export async function checkGeographicRestriction() {
   try {
@@ -39,59 +68,124 @@ export async function checkGeographicRestriction() {
       return rateLimitError;
     }
 
-    // Fetch user's country from IP geolocation service
-    const geoData = await fetchGeolocation();
+    // Try each geolocation service in order until one succeeds
+    let lastError = null;
+    const errors = [];
 
-    // Validate response
-    if (geoData.status !== 'success') {
-      throw new Error('Could not determine country');
+    for (const service of GEO_API_CONFIG.services) {
+      try {
+        // Attempt to fetch from this service with retry logic
+        const geoData = await fetchGeolocationWithRetry(service);
+
+        // Validate response
+        if (geoData.status !== 'success' || !geoData.countryCode) {
+          throw new Error(`${service.name}: Invalid response format`);
+        }
+
+        const { countryCode, country } = geoData;
+        const isAllowed = ALLOWED_COUNTRIES.includes(countryCode);
+
+        // Cache verification result (NOT the IP address)
+        cacheVerification(isAllowed, country, countryCode);
+
+        // Clear any previous errors on success
+        clearRateLimit();
+        sessionStorage.removeItem('geoErrorLogged');
+
+        return {
+          allowed: isAllowed,
+          country,
+          countryCode,
+          error: null,
+          service: service.name
+        };
+
+      } catch (error) {
+        // Log this service's failure and try next service
+        errors.push(`${service.name}: ${error.message}`);
+        lastError = error;
+        console.warn(`Geolocation service ${service.name} failed:`, error.message);
+        continue;
+      }
     }
 
-    const { countryCode, country } = geoData;
-    const isAllowed = ALLOWED_COUNTRIES.includes(countryCode);
+    // All services failed - this is a technical error, not geo-blocking
+    console.error('All geolocation services failed:', errors);
+    sessionStorage.setItem('geoErrorLogged', 'true');
 
-    // Cache verification result (NOT the IP address)
-    cacheVerification(isAllowed, country);
-
-    return {
-      allowed: isAllowed,
-      country,
-      countryCode,
-      error: null
-    };
-
-  } catch (error) {
-    // Only log to console once, not repeatedly
-    if (!sessionStorage.getItem('geoErrorLogged')) {
-      console.error('Geographic verification error:', error);
-      sessionStorage.setItem('geoErrorLogged', 'true');
-    }
-
-    // Fail closed: deny access on error for USA-only service
-    // This prevents unauthorized access if verification fails
+    // Return technical error response
     return {
       allowed: false,
       country: 'Unknown',
-      error: error.message,
-      warning: 'Geographic verification failed - access denied for security'
+      error: 'Unable to verify location due to technical issues. All geolocation services are currently unavailable.',
+      technicalError: true,
+      errorDetails: errors,
+      warning: 'This appears to be a temporary technical issue, not a geographic restriction.'
+    };
+
+  } catch (error) {
+    // Unexpected error in verification logic
+    console.error('Unexpected geographic verification error:', error);
+
+    return {
+      allowed: false,
+      country: 'Unknown',
+      error: error.message || 'Geographic verification failed unexpectedly',
+      technicalError: true,
+      warning: 'This appears to be a technical issue. Please try again or contact support.'
     };
   }
 }
 
 /**
- * Fetch geolocation data from IP-API service
+ * Fetch geolocation data with retry logic for a specific service
  * @private
  */
-async function fetchGeolocation() {
-  const url = `${GEO_API_CONFIG.endpoint}?fields=${GEO_API_CONFIG.fields}`;
+async function fetchGeolocationWithRetry(service) {
+  let lastError;
 
+  for (let attempt = 0; attempt < GEO_API_CONFIG.maxRetries; attempt++) {
+    try {
+      const rawData = await fetchGeolocation(service.endpoint);
+      const parsedData = service.parseResponse(rawData);
+
+      // Validate parsed data
+      if (!parsedData.countryCode) {
+        throw new Error('Response missing country code');
+      }
+
+      return parsedData;
+    } catch (error) {
+      lastError = error;
+
+      // If it's a rate limit error, don't retry
+      if (error.message.includes('rate limit') || error.message.includes('Too many requests')) {
+        throw error;
+      }
+
+      // Wait before retry (exponential backoff)
+      if (attempt < GEO_API_CONFIG.maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * Fetch geolocation data from a specific endpoint
+ * @private
+ */
+async function fetchGeolocation(endpoint) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), GEO_API_CONFIG.timeout);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(endpoint, {
       method: 'GET',
       credentials: 'omit', // No cookies
+      cache: 'no-cache',
       headers: {
         'Accept': 'application/json'
       },
@@ -101,24 +195,26 @@ async function fetchGeolocation() {
     if (!response.ok) {
       // Handle specific error codes
       if (response.status === 403) {
-        // Rate limit or access restriction - cache this error
-        cacheRateLimit();
-        throw new Error('Geolocation service temporarily unavailable (rate limit). Please try again in a few minutes.');
+        throw new Error('Service temporarily unavailable (rate limit or access restriction)');
       } else if (response.status === 429) {
-        // Explicit rate limit
+        // Cache rate limit for this session
         cacheRateLimit();
-        throw new Error('Too many requests. Please try again in a few minutes.');
+        throw new Error('Too many requests. Service rate limited.');
       } else if (response.status >= 500) {
-        throw new Error('Geolocation service is currently down. Please try again later.');
+        throw new Error('Service is currently down');
       } else {
-        throw new Error(`Geolocation service error: ${response.status}`);
+        throw new Error(`Service error: ${response.status}`);
       }
     }
 
-    // Clear any cached rate limit on success
-    clearRateLimit();
+    const data = await response.json();
+    return data;
 
-    return await response.json();
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - service took too long to respond');
+    }
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -132,9 +228,13 @@ function getCachedVerification() {
   const geoVerified = localStorage.getItem('geoVerified');
   if (!geoVerified) return null;
 
+  const countryCode = localStorage.getItem('userCountryCode');
+  const country = localStorage.getItem('userCountry') || 'Unknown';
+
   return {
     allowed: geoVerified === 'true',
-    country: localStorage.getItem('userCountry') || 'Unknown',
+    country,
+    countryCode: countryCode || undefined,
     error: null,
     cached: true
   };
@@ -144,9 +244,12 @@ function getCachedVerification() {
  * Cache verification result in localStorage
  * @private
  */
-function cacheVerification(allowed, country) {
+function cacheVerification(allowed, country, countryCode) {
   localStorage.setItem('geoVerified', allowed.toString());
   localStorage.setItem('userCountry', country);
+  if (countryCode) {
+    localStorage.setItem('userCountryCode', countryCode);
+  }
 }
 
 /**
@@ -198,6 +301,7 @@ function clearRateLimit() {
 export function resetGeographicVerification() {
   localStorage.removeItem('geoVerified');
   localStorage.removeItem('userCountry');
+  localStorage.removeItem('userCountryCode');
   clearRateLimit();
   sessionStorage.removeItem('geoErrorLogged');
 }

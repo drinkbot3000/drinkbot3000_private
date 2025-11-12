@@ -78,6 +78,7 @@ const initialState = {
   geoCountry: '',
   geoError: null,
   geoVerifying: false,
+  geoTechnicalError: false,
   // Settings edit state
   settingsEditGender: '',
   settingsEditWeight: '',
@@ -470,12 +471,22 @@ Questions? Contact: support@drinkbot3000.com
         dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
         dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
         dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+        dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
         // Continue to disclaimer
         dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
       } else {
-        // User is in a prohibited country
-        dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
-        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
+        // Check if this is a technical error or actual geo-blocking
+        if (result.technicalError) {
+          // Technical error - show special error screen with bypass option
+          dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: true });
+          dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+          dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
+        } else {
+          // User is actually in a prohibited country
+          dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+          dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
+          dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
+        }
       }
 
       if (result.error) {
@@ -485,8 +496,9 @@ Questions? Contact: support@drinkbot3000.com
       console.error('Geographic verification failed:', error);
       dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: false });
       dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
-      // On error, block access for USA-only service (fail-closed)
+      // On unexpected error, treat as technical error
       dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: true });
       dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'Unknown' });
     }
   };
@@ -1033,71 +1045,179 @@ Questions? Contact: support@drinkbot3000.com
 
   // Geographic Blocked Screen
   if (state.geoBlocked) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 p-6 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-red-100 rounded-full">
-              <AlertTriangle className="w-16 h-16 text-red-600" />
+    // Show different UI for technical errors vs actual geo-blocking
+    if (state.geoTechnicalError) {
+      // Technical Error Screen - with bypass option
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-900 via-orange-800 to-orange-900 p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-orange-100 rounded-full">
+                <AlertCircle className="w-16 h-16 text-orange-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">⚠️ Verification Service Issue</h1>
+              <p className="text-lg text-gray-700 mb-4">
+                We couldn't verify your location due to a technical issue.
+              </p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">🇺🇸 USA-Only Service</h1>
-            <p className="text-lg text-gray-700 mb-4">
-              This app is only available in the United States.
-            </p>
-          </div>
 
-          <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-200">
-            <p className="text-gray-800 font-bold text-lg mb-3">
-              Detected Location: {state.geoCountry}
-            </p>
-            <p className="text-gray-700 mb-4">
-              DrinkBot3000 is a USA-only service. Access is restricted to users physically located within the United States.
-            </p>
-            <p className="text-sm text-red-800 font-semibold">
-              This restriction is in place for legal compliance and service availability reasons.
-            </p>
-          </div>
+            <div className="bg-orange-50 rounded-lg p-6 mb-6 border-2 border-orange-200">
+              <p className="text-gray-800 font-bold text-lg mb-3">
+                Technical Error Details:
+              </p>
+              <p className="text-gray-700 mb-4 text-sm">
+                {state.geoError || 'All geolocation services are currently unavailable.'}
+              </p>
+              <p className="text-sm text-orange-800 font-semibold">
+                This appears to be a temporary service issue, not a geographic restriction.
+              </p>
+            </div>
 
-          <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
-            <p className="text-sm text-blue-900 font-semibold mb-2">
-              If you believe this is an error:
-            </p>
-            <ul className="text-xs text-blue-800 space-y-1">
-              <li>• Check if you're using a VPN or proxy routing through a non-US server</li>
-              <li>• Disable VPN/proxy and reload the page</li>
-              <li>• Ensure you're physically located in the United States</li>
-              <li>• Contact support at drinkbot3000@gmail.com</li>
-            </ul>
-          </div>
+            <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+              <p className="text-sm text-blue-900 font-semibold mb-2">
+                What you can do:
+              </p>
+              <ul className="text-xs text-blue-800 space-y-1">
+                <li>• Wait a few minutes and try again (recommended)</li>
+                <li>• Check your internet connection</li>
+                <li>• Disable any ad blockers or privacy extensions</li>
+                <li>• If you're in the USA, you can bypass this error</li>
+              </ul>
+            </div>
 
-          <div className="text-center">
-            <p className="text-xs text-gray-600 mb-4">
-              USA location verification is required for service access.
-            </p>
-          </div>
+            <div className="bg-yellow-50 rounded-lg p-4 mb-4 border border-yellow-300">
+              <p className="text-xs text-yellow-900 font-semibold mb-2">
+                ⚠️ Important Notice:
+              </p>
+              <p className="text-xs text-yellow-800">
+                DrinkBot3000 is only available in the USA. By bypassing this error, you confirm that you are physically located in the United States. Using this service from outside the USA may violate terms of service and local laws.
+              </p>
+            </div>
 
-          <button
-            onClick={() => {
-              // Clear all verification state
-              localStorage.removeItem('ageVerified');
-              localStorage.removeItem('geoVerified');
-              localStorage.removeItem('userCountry');
-              localStorage.removeItem('geoConsentGiven');
-              // Reset state to start over
-              dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
-              dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: '' });
-            }}
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
-          >
-            ← Go Back
-          </button>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  // Bypass the technical error and proceed with manual verification
+                  dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+                  dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'USA (Manual Override)' });
+                  localStorage.setItem('geoVerified', 'true');
+                  localStorage.setItem('userCountry', 'USA (Manual Override)');
+                  localStorage.setItem('userCountryCode', 'US');
+                  dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              >
+                I'm in the USA - Continue Anyway
+              </button>
+
+              <button
+                onClick={() => {
+                  // Retry verification
+                  dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoError', value: null });
+                  dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: true });
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              >
+                🔄 Try Again
+              </button>
+
+              <button
+                onClick={() => {
+                  // Clear all verification state and go back
+                  localStorage.removeItem('ageVerified');
+                  localStorage.removeItem('geoVerified');
+                  localStorage.removeItem('userCountry');
+                  localStorage.removeItem('userCountryCode');
+                  localStorage.removeItem('geoConsentGiven');
+                  dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
+                  dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: '' });
+                }}
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              >
+                ← Go Back
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // Actual Geo-Blocking Screen
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 p-6 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-red-100 rounded-full">
+                <AlertTriangle className="w-16 h-16 text-red-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">🇺🇸 USA-Only Service</h1>
+              <p className="text-lg text-gray-700 mb-4">
+                This app is only available in the United States.
+              </p>
+            </div>
+
+            <div className="bg-red-50 rounded-lg p-6 mb-6 border-2 border-red-200">
+              <p className="text-gray-800 font-bold text-lg mb-3">
+                Detected Location: {state.geoCountry}
+              </p>
+              <p className="text-gray-700 mb-4">
+                DrinkBot3000 is a USA-only service. Access is restricted to users physically located within the United States.
+              </p>
+              <p className="text-sm text-red-800 font-semibold">
+                This restriction is in place for legal compliance and service availability reasons.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+              <p className="text-sm text-blue-900 font-semibold mb-2">
+                If you believe this is an error:
+              </p>
+              <ul className="text-xs text-blue-800 space-y-1">
+                <li>• Check if you're using a VPN or proxy routing through a non-US server</li>
+                <li>• Disable VPN/proxy and reload the page</li>
+                <li>• Ensure you're physically located in the United States</li>
+                <li>• Contact support at drinkbot3000@gmail.com</li>
+              </ul>
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs text-gray-600 mb-4">
+                USA location verification is required for service access.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                // Clear all verification state
+                localStorage.removeItem('ageVerified');
+                localStorage.removeItem('geoVerified');
+                localStorage.removeItem('userCountry');
+                localStorage.removeItem('userCountryCode');
+                localStorage.removeItem('geoConsentGiven');
+                // Reset state to start over
+                dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: false });
+                dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: '' });
+              }}
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            >
+              ← Go Back
+            </button>
+          </div>
+        </div>
+      );
+    }
   }
 
   // Legal Disclaimer Modal
