@@ -69,12 +69,12 @@ const GEO_API_CONFIG = {
   maxRetries: 2,              // Retry each service up to 2 times (total 3 attempts per service)
   services: [
     {
-      name: 'ipapi',
-      endpoint: 'https://ipapi.co/json/',
+      name: 'geojs',
+      endpoint: 'https://get.geojs.io/v1/ip/country.json',
       parseResponse: (data) => ({
         status: data.country_code ? 'success' : 'fail',
         countryCode: data.country_code,
-        country: data.country_name
+        country: data.country
       })
     },
     {
@@ -87,12 +87,21 @@ const GEO_API_CONFIG = {
       })
     },
     {
-      name: 'ipwhois',
-      endpoint: 'https://ipwhois.app/json/',
+      name: 'freeipapi',
+      endpoint: 'https://freeipapi.com/api/json',
       parseResponse: (data) => ({
-        status: data.success ? 'success' : 'fail',
+        status: data.countryCode ? 'success' : 'fail',
+        countryCode: data.countryCode,
+        country: data.countryName
+      })
+    },
+    {
+      name: 'ipapi-fallback',
+      endpoint: 'https://ipapi.co/json/',
+      parseResponse: (data) => ({
+        status: data.country_code ? 'success' : 'fail',
         countryCode: data.country_code,
-        country: data.country
+        country: data.country_name
       })
     }
   ]
@@ -238,7 +247,10 @@ async function fetchGeolocation(endpoint) {
       credentials: 'omit', // No cookies
       cache: 'no-cache',
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        // User-Agent is set by browser, but some services check for it
+        'Referer': window.location.origin
       },
       signal: controller.signal
     });
@@ -246,7 +258,9 @@ async function fetchGeolocation(endpoint) {
     if (!response.ok) {
       // Handle specific error codes
       if (response.status === 403) {
-        throw new Error('Service temporarily unavailable (rate limit or access restriction)');
+        // 403 typically means the service is blocking automated requests or rate limiting
+        // Don't cache this as rate limit - let the system try other services
+        throw new Error(`Access denied by service (403 - likely blocking automated requests)`);
       } else if (response.status === 429) {
         // Cache rate limit for this session
         cacheRateLimit();
