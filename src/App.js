@@ -727,6 +727,8 @@ Questions? Contact: support@drinkbot3000.com
         timestamp: Date.now(),
         standardDrinks: standardDrinks,
         type: drinkType,
+        oz: oz,
+        abv: abv,
       };
 
       // For live mode, ensure startTime is initialized
@@ -2359,11 +2361,11 @@ Questions? Contact: support@drinkbot3000.com
                               {drink.type === 'custom' && '🍹 Custom'}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {drink.oz}oz, {drink.abv}% ABV • {new Date(drink.time).toLocaleTimeString()}
+                              {drink.oz && drink.abv ? `${drink.oz}oz, ${drink.abv}% ABV • ` : ''}{new Date(drink.timestamp).toLocaleTimeString()}
                             </div>
                           </div>
                           <button
-                            onClick={() => removeDrink(drink.id)}
+                            onClick={() => deleteDrink(drink.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                           >
                             <Trash2 className="w-4 h-4" />
