@@ -345,6 +345,22 @@ export default function BACTracker() {
 
     const interval = setInterval(() => {
       const currentBAC = calculateBAC();
+
+      // Validate BAC calculation result
+      if (isNaN(currentBAC) || !isFinite(currentBAC) || currentBAC < 0) {
+        console.error('Invalid BAC calculation result:', currentBAC);
+        dispatch({ type: 'SET_FIELD', field: 'bac', value: 0 });
+        return;
+      }
+
+      // Sanity check for unrealistically high BAC values
+      // BAC > 0.5% is potentially fatal, BAC > 0.4% is extremely dangerous
+      if (currentBAC > 0.5) {
+        console.error('Unrealistically high BAC calculated:', currentBAC);
+        console.error('Drinks:', state.drinks);
+        console.error('Weight:', state.weight, 'Gender:', state.gender);
+      }
+
       dispatch({ type: 'SET_FIELD', field: 'bac', value: currentBAC });
 
       // Track if user has been impaired (at or above legal limit)
@@ -667,6 +683,28 @@ Questions? Contact: support@drinkbot3000.com
 
         const pureAlcoholOz = ozValue * (abvValue / 100);
         standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
+
+        // Log calculation for debugging
+        console.log(`Custom drink calculation: ${ozValue}oz @ ${abvValue}% = ${pureAlcoholOz.toFixed(2)}oz pure alcohol = ${standardDrinks.toFixed(2)} standard drinks`);
+
+        // Validate standardDrinks result is a valid number
+        if (isNaN(standardDrinks) || !isFinite(standardDrinks)) {
+          console.error('Invalid standardDrinks calculation result:', { ozValue, abvValue, pureAlcoholOz, standardDrinks });
+          showRobotMessage('Error calculating drink strength. Please check your inputs.');
+          return;
+        }
+
+        // Sanity check: warn if extremely high standard drinks value
+        if (standardDrinks > 10) {
+          showRobotMessage(`⚠️ WARNING: This drink equals ${standardDrinks.toFixed(1)} standard drinks! That's extremely strong. Are you sure your oz and ABV% values are correct?`);
+          return;
+        }
+
+        // Warn for unusually strong drinks (>5 standard drinks)
+        if (standardDrinks > 5) {
+          showRobotMessage(`⚠️ CAUTION: This drink equals ${standardDrinks.toFixed(1)} standard drinks. That's very strong! Adding to your tracker...`);
+        }
+
         drinkType = `${name} (${ozValue}oz @ ${abvValue}%)`;
       }
 
@@ -684,8 +722,14 @@ Questions? Contact: support@drinkbot3000.com
 
       dispatch({ type: 'ADD_DRINK', drink: newDrink });
 
-      const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
-      showRobotMessage(comment);
+      // Provide feedback about standardDrinks for custom drinks
+      if (oz !== null && abv !== null) {
+        const comment = `*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drink${standardDrinks !== 1 ? 's' : ''}! Added to your log. 🤖`;
+        showRobotMessage(comment);
+      } else {
+        const comment = robotComments[Math.floor(Math.random() * robotComments.length)];
+        showRobotMessage(comment);
+      }
     } catch (error) {
       console.error('Error adding drink:', error);
       showRobotMessage('Error adding drink. Please check your inputs and try again.');
@@ -752,6 +796,27 @@ Questions? Contact: support@drinkbot3000.com
       const pureAlcoholOz = ozValue * (abvValue / 100);
       const standardDrinks = pureAlcoholOz / CONSTANTS.STANDARD_DRINK_OZ;
 
+      // Log calculation for debugging
+      console.log(`Custom drink calculation: ${ozValue}oz @ ${abvValue}% = ${pureAlcoholOz.toFixed(2)}oz pure alcohol = ${standardDrinks.toFixed(2)} standard drinks`);
+
+      // Validate standardDrinks result is a valid number
+      if (isNaN(standardDrinks) || !isFinite(standardDrinks)) {
+        console.error('Invalid standardDrinks calculation result:', { ozValue, abvValue, pureAlcoholOz, standardDrinks });
+        showRobotMessage('Error calculating drink strength. Please check your inputs.');
+        return;
+      }
+
+      // Sanity check: warn if extremely high standard drinks value
+      if (standardDrinks > 10) {
+        showRobotMessage(`⚠️ WARNING: This drink equals ${standardDrinks.toFixed(1)} standard drinks! That's extremely strong. Are you sure your oz and ABV% values are correct?`);
+        return;
+      }
+
+      // Warn for unusually strong drinks (>5 standard drinks)
+      if (standardDrinks > 5) {
+        showRobotMessage(`⚠️ CAUTION: This drink equals ${standardDrinks.toFixed(1)} standard drinks. That's very strong! Adding to your tracker...`);
+      }
+
       const newDrink = {
         id: Date.now(),
         timestamp: Date.now(),
@@ -766,7 +831,7 @@ Questions? Contact: support@drinkbot3000.com
 
       dispatch({ type: 'ADD_DRINK', drink: newDrink });
 
-      showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drinks! 🤖`);
+      showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drink${standardDrinks !== 1 ? 's' : ''}! Added to your log. 🤖`);
     } catch (error) {
       console.error('Error adding custom drink:', error);
       showRobotMessage('Failed to add custom drink. Please try again.');
@@ -816,6 +881,23 @@ Questions? Contact: support@drinkbot3000.com
       const metabolized = CONSTANTS.METABOLISM_RATE * hours;
 
       const result = Math.max(0, initialBAC - metabolized);
+
+      // Validate calculation result
+      if (isNaN(result) || !isFinite(result) || result < 0) {
+        console.error('Invalid BAC calculation result:', result);
+        showRobotMessage('Error in BAC calculation. Please check your inputs.');
+        return;
+      }
+
+      // Log calculation for debugging
+      console.log(`Quick BAC calculation: ${numDrinks} drinks over ${hours} hours for ${weightValue}lbs ${state.gender} = ${result.toFixed(3)}% BAC`);
+
+      // Warn if unrealistically high BAC
+      if (result > 0.5) {
+        console.warn('Unrealistically high BAC calculated:', result);
+        showRobotMessage(`⚠️ WARNING: This calculation shows ${result.toFixed(3)}% BAC, which is extremely dangerous/potentially fatal. Please verify your inputs are correct.`);
+      }
+
       dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
     } catch (error) {
       console.error('Error calculating quick BAC:', error);
