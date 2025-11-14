@@ -8,6 +8,10 @@ import ConfirmationModal from './components/modals/ConfirmationModal';
 import ReceiptModal from './components/modals/ReceiptModal';
 import RefundPolicyModal from './components/modals/RefundPolicyModal';
 import SettingsModal from './components/modals/SettingsModal';
+import BACDisplay from './components/tracker/BACDisplay';
+import TimeInfo from './components/tracker/TimeInfo';
+import DrinkButtons from './components/tracker/DrinkButtons';
+import DrinkHistory from './components/tracker/DrinkHistory';
 
 // Constants
 const CONSTANTS = {
@@ -2044,17 +2048,7 @@ Questions? Contact: support@drinkbot3000.com
           {state.activeTab === 'tracker' ? (
             <>
               {/* BAC Display */}
-              <div className={`rounded-2xl shadow-xl p-8 mb-6 ${status.bgColor}`}>
-                <div className="text-center">
-                  <div className="text-6xl font-bold text-white mb-2">
-                    {state.bac.toFixed(3)}%
-                  </div>
-                  <div className="text-xl text-white font-medium mb-4">{status.label}</div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p className="text-white text-sm">{status.message}</p>
-                  </div>
-                </div>
-              </div>
+              <BACDisplay bac={state.bac} status={status} />
 
               {/* Impairment History Warning */}
               {state.hasBeenImpaired && state.bac > 0 && (
@@ -2087,220 +2081,35 @@ Questions? Contact: support@drinkbot3000.com
               )}
 
               {/* Time Info */}
-              {state.drinks.length > 0 && (
-                <div className="bg-white rounded-lg p-4 mb-6 shadow">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <Clock className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                      <div className="text-2xl font-bold text-gray-800">{calculateElapsedTime()}</div>
-                      <div className="text-xs text-gray-500">Time Elapsed</div>
-                    </div>
-                    <div>
-                      <Coffee className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                      <div className="text-2xl font-bold text-gray-800">{calculateSoberTime()}</div>
-                      <div className="text-xs text-gray-500">Until Sober</div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <TimeInfo
+                elapsedTime={calculateElapsedTime()}
+                soberTime={calculateSoberTime()}
+                show={state.drinks.length > 0}
+              />
 
               {/* Add Drink Buttons */}
-              <div className="bg-white rounded-lg p-6 mb-6 shadow">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Drink</h3>
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <button
-                    onClick={() => addDrink('beer', 12, 5)}
-                    className="bg-amber-100 hover:bg-amber-200 text-amber-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🍺 Beer<br />
-                    <span className="text-xs">12 oz, 5% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => addDrink('wine', 5, 12)}
-                    className="bg-purple-100 hover:bg-purple-200 text-purple-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🍷 Wine<br />
-                    <span className="text-xs">5 oz, 12% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => addDrink('shot', 1.5, 40)}
-                    className="bg-red-100 hover:bg-red-200 text-red-900 p-4 rounded-lg font-medium transition"
-                  >
-                    🥃 Shot<br />
-                    <span className="text-xs">1.5 oz, 40% ABV</span>
-                  </button>
-                  <button
-                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: true })}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 p-4 rounded-lg font-medium transition"
-                  >
-                    ➕ Custom<br />
-                    <span className="text-xs">Custom drink</span>
-                  </button>
-                </div>
-
-                {/* Saved Custom Drinks */}
-                {state.savedCustomDrinks.length > 0 && (
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Custom Drinks</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {state.savedCustomDrinks.map((drink) => (
-                        <div key={drink.id} className="relative">
-                          <button
-                            onClick={() => handleAddSavedCustomDrink(drink)}
-                            className="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-900 p-3 rounded-lg font-medium transition text-left"
-                          >
-                            {drink.name}<br />
-                            <span className="text-xs">{drink.oz} oz, {drink.abv}% ABV</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCustomDrink(drink.id)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition text-xs"
-                            title="Delete"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Custom Drink Input */}
-                {state.showCustomDrink && (
-                  <div className="border-t pt-4 space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Drink Name</label>
-                      <input
-                        type="text"
-                        value={state.customDrinkName}
-                        onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="e.g., My IPA, Margarita"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Volume (oz)</label>
-                      <input
-                        type="number"
-                        value={state.customDrinkOz}
-                        onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="e.g., 12"
-                        step="0.1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">ABV %</label>
-                      <input
-                        type="number"
-                        value={state.customDrinkABV}
-                        onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="e.g., 5"
-                        step="0.1"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          if (state.customDrinkOz && state.customDrinkABV) {
-                            // Sanitize name before adding (XSS protection)
-                            const drinkName = state.customDrinkName ? sanitizeText(state.customDrinkName) : 'Custom Drink';
-                            addDrink(drinkName, parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
-                            dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
-                            dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
-                            dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
-                          }
-                        }}
-                        className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
-                        disabled={!state.customDrinkOz || !state.customDrinkABV}
-                      >
-                        Add Once
-                      </button>
-                      <button
-                        onClick={handleSaveCustomDrink}
-                        className="flex-1 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition"
-                        disabled={!state.customDrinkName || !state.customDrinkOz || !state.customDrinkABV}
-                        title="Save as reusable preset"
-                      >
-                        Save Preset
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => {
-                        dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
-                        dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
-                        dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
-                        dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
-                      }}
-                      className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
+              <DrinkButtons
+                addDrink={addDrink}
+                savedCustomDrinks={state.savedCustomDrinks}
+                showCustomDrink={state.showCustomDrink}
+                customDrinkName={state.customDrinkName}
+                customDrinkOz={state.customDrinkOz}
+                customDrinkABV={state.customDrinkABV}
+                onFieldChange={(field, value) => dispatch({ type: 'SET_FIELD', field, value })}
+                onAddSavedCustomDrink={handleAddSavedCustomDrink}
+                onDeleteCustomDrink={handleDeleteCustomDrink}
+                onSaveCustomDrink={handleSaveCustomDrink}
+              />
 
               {/* Drink History */}
-              {state.drinks.length > 0 && (
-                <div className="bg-white rounded-lg p-6 mb-6 shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Drinks ({state.drinks.length})
-                    </h3>
-                    <button
-                      onClick={() => dispatch({ type: 'SET_FIELD', field: 'showDrinkHistory', value: !state.showDrinkHistory })}
-                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                    >
-                      {state.showDrinkHistory ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-
-                  {state.showDrinkHistory && (
-                    <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
-                      {state.drinks.map((drink, index) => (
-                        <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-800">
-                              {drink.type === 'beer' && '🍺 Beer'}
-                              {drink.type === 'wine' && '🍷 Wine'}
-                              {drink.type === 'shot' && '🥃 Shot'}
-                              {drink.type === 'custom' && '🍹 Custom'}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {drink.oz}oz, {drink.abv}% ABV • {new Date(drink.time).toLocaleTimeString()}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeDrink(drink.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={undoDrink}
-                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition"
-                      disabled={state.drinks.length === 0}
-                    >
-                      <RefreshCw className="w-4 h-4 inline mr-1" />
-                      Undo Last
-                    </button>
-                    <button
-                      onClick={clearDrinks}
-                      className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-medium hover:bg-red-200 transition"
-                    >
-                      <Trash2 className="w-4 h-4 inline mr-1" />
-                      Clear All
-                    </button>
-                  </div>
-                </div>
-              )}
+              <DrinkHistory
+                drinks={state.drinks}
+                showHistory={state.showDrinkHistory}
+                onToggleHistory={() => dispatch({ type: 'SET_FIELD', field: 'showDrinkHistory', value: !state.showDrinkHistory })}
+                onRemoveDrink={removeDrink}
+                onUndoLast={undoDrink}
+                onClearAll={clearDrinks}
+              />
 
               {/* Support Section */}
               <div className="bg-white rounded-lg p-6 shadow">
