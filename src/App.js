@@ -89,7 +89,7 @@ const initialState = {
   // Impairment tracking
   hasBeenImpaired: false,
   // Metabolism settings
-  useSlowMetabolism: false,
+  useSlowMetabolism: true,
 };
 
 // Reducer
