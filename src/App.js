@@ -11,6 +11,9 @@ const CONSTANTS = {
   // Using 10 mg/100mL/h (0.010% per hour) - the lower end of the physiological range
   // for fasted subjects, providing safer, more conservative estimates for sobriety time.
   METABOLISM_RATE: 0.010,
+  // Slow metabolism rate (0.005% per hour) - accounting for the margin of error where
+  // modern studies show metabolism can be twice as slow for some individuals
+  SLOW_METABOLISM_RATE: 0.005,
   GRAMS_PER_STANDARD_DRINK: 14,
   LBS_TO_KG: 0.453592,
   MALE_BODY_WATER: 0.68,
@@ -85,6 +88,8 @@ const initialState = {
   settingsEditMode: false,
   // Impairment tracking
   hasBeenImpaired: false,
+  // Metabolism settings
+  useSlowMetabolism: false,
 };
 
 // Reducer
@@ -311,7 +316,8 @@ export default function BACTracker() {
 
         const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
         const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
-        const metabolized = CONSTANTS.METABOLISM_RATE * hours;
+        const metabolismRate = state.useSlowMetabolism ? CONSTANTS.SLOW_METABOLISM_RATE : CONSTANTS.METABOLISM_RATE;
+        const metabolized = metabolismRate * hours;
 
         return Math.max(0, initialBAC - metabolized);
       }
@@ -322,6 +328,7 @@ export default function BACTracker() {
         const weightKg = weightValue * CONSTANTS.LBS_TO_KG;
         const bodyWater = getBodyWaterConstant(state.gender);
         const currentTime = Date.now();
+        const metabolismRate = state.useSlowMetabolism ? CONSTANTS.SLOW_METABOLISM_RATE : CONSTANTS.METABOLISM_RATE;
 
         let adjustedBAC = 0;
 
@@ -337,7 +344,7 @@ export default function BACTracker() {
           const hoursElapsed = (currentTime - drink.timestamp) / (1000 * 60 * 60);
 
           const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
-          const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
+          const metabolized = metabolismRate * hoursElapsed;
           const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
 
           adjustedBAC += currentDrinkBAC;
@@ -975,7 +982,8 @@ Questions? Contact: support@drinkbot3000.com
 
   const getSoberTime = (bac) => {
     if (bac === 0) return '--:--';
-    const minutesToSober = Math.ceil((bac / CONSTANTS.METABOLISM_RATE) * 60);
+    const metabolismRate = state.useSlowMetabolism ? CONSTANTS.SLOW_METABOLISM_RATE : CONSTANTS.METABOLISM_RATE;
+    const minutesToSober = Math.ceil((bac / metabolismRate) * 60);
     const soberTime = new Date(Date.now() + minutesToSober * 60000);
     return soberTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
@@ -2703,6 +2711,34 @@ Questions? Contact: support@drinkbot3000.com
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Metabolism Settings */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2 mb-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-amber-900 text-sm mb-1">Metabolism Variability</h3>
+                      <p className="text-xs text-amber-800 mb-3">
+                        Alcohol metabolism varies significantly between individuals. Studies show metabolism can be up to twice as slow for some people due to genetics, medications, health conditions, and other factors.
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={state.useSlowMetabolism}
+                      onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value: e.target.checked })}
+                      className="mt-1 w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-amber-900 block">Use Slower Metabolism Rate</span>
+                      <span className="text-xs text-amber-800">
+                        Enables more conservative calculations (half speed: 0.005%/hour instead of 0.010%/hour) for safer estimates.
+                      </span>
+                    </div>
+                  </label>
                 </div>
 
                 <div className="space-y-3">
