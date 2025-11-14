@@ -186,11 +186,14 @@ export default function BACTracker() {
     const disclaimerCheck = localStorage.getItem('disclaimerAccepted');
     const safetyCheck = localStorage.getItem('safetyScreensComplete');
     const savedReceipts = localStorage.getItem('bacTrackerReceipts');
-    
+    const geoCheck = localStorage.getItem('geoVerified');
+    const geoCountry = localStorage.getItem('userCountry');
+    const geoConsentCheck = localStorage.getItem('geoConsentGiven');
+
     if (ageCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
     }
-    
+
     if (disclaimerCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     }
@@ -198,7 +201,18 @@ export default function BACTracker() {
     if (safetyCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-    
+
+    // Load geolocation verification state
+    if (geoCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: geoCountry || 'USA' });
+      dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+    }
+
+    if (geoConsentCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
+    }
+
     if (savedReceipts) {
       try {
         const receipts = JSON.parse(savedReceipts);
@@ -207,7 +221,7 @@ export default function BACTracker() {
         console.error('Failed to load receipts:', e);
       }
     }
-    
+
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
@@ -501,6 +515,7 @@ Questions? Contact: support@drinkbot3000.com
 
   const handleGeoConsentAccept = async () => {
     dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
+    localStorage.setItem('geoConsentGiven', 'true');
     dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
     dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: true });
 
@@ -689,7 +704,6 @@ Questions? Contact: support@drinkbot3000.com
 
         // Validate standardDrinks result is a valid number
         if (isNaN(standardDrinks) || !isFinite(standardDrinks)) {
-          console.error('Invalid standardDrinks calculation result:', { ozValue, abvValue, pureAlcoholOz, standardDrinks });
           showRobotMessage('Error calculating drink strength. Please check your inputs.');
           return;
         }
@@ -731,7 +745,6 @@ Questions? Contact: support@drinkbot3000.com
         showRobotMessage(comment);
       }
     } catch (error) {
-      console.error('Error adding drink:', error);
       showRobotMessage('Error adding drink. Please check your inputs and try again.');
     }
   };
@@ -801,7 +814,6 @@ Questions? Contact: support@drinkbot3000.com
 
       // Validate standardDrinks result is a valid number
       if (isNaN(standardDrinks) || !isFinite(standardDrinks)) {
-        console.error('Invalid standardDrinks calculation result:', { ozValue, abvValue, pureAlcoholOz, standardDrinks });
         showRobotMessage('Error calculating drink strength. Please check your inputs.');
         return;
       }
@@ -833,7 +845,6 @@ Questions? Contact: support@drinkbot3000.com
 
       showRobotMessage(`*calculates precisely* That's ${standardDrinks.toFixed(1)} standard drink${standardDrinks !== 1 ? 's' : ''}! Added to your log. 🤖`);
     } catch (error) {
-      console.error('Error adding custom drink:', error);
       showRobotMessage('Failed to add custom drink. Please try again.');
     }
   };
@@ -935,13 +946,13 @@ Questions? Contact: support@drinkbot3000.com
     if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
       label: 'Impaired',
       color: 'text-orange-600',
-      bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
+      bgColor: state.hasBeenImpaired ? 'bg-rainbow-warning' : 'bg-gradient-to-br from-orange-400 to-orange-600',
       message: 'Reduced coordination and judgment. Do not drive or operate machinery.' + impairmentWarning
     };
     return {
       label: 'Intoxicated',
-      color: 'text-red-600',
-      bgColor: 'bg-gradient-to-br from-red-400 to-red-600',
+      color: 'text-white',
+      bgColor: 'bg-rainbow-pulse',
       message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.' + impairmentWarning
     };
   };
@@ -1120,7 +1131,6 @@ Questions? Contact: support@drinkbot3000.com
 
       showRobotMessage(`Custom drink "${name}" saved!`);
     } catch (error) {
-      console.error('Error saving custom drink:', error);
       showRobotMessage('Error saving custom drink. Please try again.');
     }
   };
