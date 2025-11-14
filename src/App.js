@@ -204,9 +204,16 @@ export default function BACTracker() {
 
     // Load geolocation verification state
     if (geoCheck === 'true') {
-      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
-      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: geoCountry || 'USA' });
-      dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+      // Only load cached verification if we have valid country data
+      if (geoCountry) {
+        dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: geoCountry });
+        dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+      } else {
+        // Country data is missing, clear verification to force fresh check
+        localStorage.removeItem('geoVerified');
+        localStorage.removeItem('userCountryCode');
+      }
     }
 
     if (geoConsentCheck === 'true') {

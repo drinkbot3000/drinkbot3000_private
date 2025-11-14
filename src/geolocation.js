@@ -229,7 +229,11 @@ function getCachedVerification() {
   if (!geoVerified) return null;
 
   const countryCode = localStorage.getItem('userCountryCode');
-  const country = localStorage.getItem('userCountry') || 'Unknown';
+  const country = localStorage.getItem('userCountry');
+
+  // If country is missing, return null to force a fresh check
+  // rather than returning a cached result with 'Unknown'
+  if (!country) return null;
 
   return {
     allowed: geoVerified === 'true',
@@ -245,6 +249,12 @@ function getCachedVerification() {
  * @private
  */
 function cacheVerification(allowed, country, countryCode) {
+  // Only cache if we have valid country data
+  if (!country) {
+    console.warn('Attempted to cache geolocation without country data');
+    return;
+  }
+
   localStorage.setItem('geoVerified', allowed.toString());
   localStorage.setItem('userCountry', country);
   if (countryCode) {
