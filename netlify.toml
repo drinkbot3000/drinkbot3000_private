@@ -21,6 +21,11 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+    # Content Security Policy - Restrict resource loading for security
+    # Note: 'unsafe-inline' needed for React inline styles, consider removing in production with styled-components
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://ipapi.co https://ip-api.com https://ipwhois.app https://buy.stripe.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com; upgrade-insecure-requests;"
+    # Strict Transport Security - Force HTTPS
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 
 # HTML files - no cache, always revalidate
 [[headers]]

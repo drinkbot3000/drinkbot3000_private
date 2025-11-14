@@ -2,6 +2,7 @@ import React, { useState, useEffect, useReducer } from 'react';
 import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package, Globe, HelpCircle, Share2 } from 'lucide-react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
+import { validateDrinkName, sanitizeText } from './utils/sanitization';
 
 // Constants
 const CONSTANTS = {
@@ -990,17 +991,15 @@ Questions? Contact: support@drinkbot3000.com
       const abv = parseFloat(state.customDrinkABV);
       const name = state.customDrinkName.trim();
 
-      // Validate inputs
-      if (!name) {
-        showRobotMessage('Please enter a name for your custom drink.');
+      // Validate and sanitize drink name (XSS protection)
+      const nameValidation = validateDrinkName(name);
+      if (!nameValidation.valid) {
+        showRobotMessage(nameValidation.error || 'Please enter a valid drink name.');
         return;
       }
 
-      // Validate name length and characters
-      if (name.length > 50) {
-        showRobotMessage('Drink name is too long. Please use 50 characters or less.');
-        return;
-      }
+      // Use sanitized name
+      const sanitizedName = nameValidation.sanitized;
 
       if (isNaN(oz) || oz <= 0 || oz > 64) {
         showRobotMessage('Please enter a valid drink size (0-64 oz).');
@@ -1011,16 +1010,16 @@ Questions? Contact: support@drinkbot3000.com
         return;
       }
 
-      // Check if name already exists
-      if (state.savedCustomDrinks.some(drink => drink.name.toLowerCase() === name.toLowerCase())) {
+      // Check if name already exists (using sanitized name)
+      if (state.savedCustomDrinks.some(drink => drink.name.toLowerCase() === sanitizedName.toLowerCase())) {
         showRobotMessage('A custom drink with this name already exists. Please choose a different name.');
         return;
       }
 
-      // Add to saved custom drinks
+      // Add to saved custom drinks (using sanitized name for XSS protection)
       const newDrink = {
         id: Date.now(),
-        name,
+        name: sanitizedName,
         oz,
         abv
       };
@@ -1036,7 +1035,8 @@ Questions? Contact: support@drinkbot3000.com
       dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
       dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
 
-      showRobotMessage(`Custom drink "${name}" saved!`);
+      // Use sanitized name in message (already sanitized, safe to display)
+      showRobotMessage(`Custom drink "${sanitizedName}" saved!`);
     } catch (error) {
       console.error('Error saving custom drink:', error);
       showRobotMessage('Error saving custom drink. Please try again.');
@@ -2199,7 +2199,9 @@ Questions? Contact: support@drinkbot3000.com
                       <button
                         onClick={() => {
                           if (state.customDrinkOz && state.customDrinkABV) {
-                            addDrink(state.customDrinkName || 'custom', parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
+                            // Sanitize name before adding (XSS protection)
+                            const drinkName = state.customDrinkName ? sanitizeText(state.customDrinkName) : 'Custom Drink';
+                            addDrink(drinkName, parseFloat(state.customDrinkOz), parseFloat(state.customDrinkABV));
                             dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
                             dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
                             dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
