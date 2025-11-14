@@ -1326,7 +1326,7 @@ Questions? Contact: support@drinkbot3000.com
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-blue-100 rounded-full">
-              <Globe className="w-16 h-16 text-blue-600 animate-pulse" />
+              <Globe className="w-16 h-16 text-blue-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-4">Verifying Location...</h1>
             <p className="text-lg text-gray-700 mb-6">
@@ -2119,7 +2119,7 @@ Questions? Contact: support@drinkbot3000.com
 
               {/* Impairment History Warning */}
               {state.hasBeenImpaired && state.bac > 0 && (
-                <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4 mb-6 animate-pulse">
+                <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4 mb-6">
                   <div className="flex items-start">
                     <AlertTriangle className="w-6 h-6 text-red-600 mr-3 flex-shrink-0" />
                     <div>
@@ -2132,7 +2132,7 @@ Questions? Contact: support@drinkbot3000.com
 
               {/* Robot Message */}
               {state.robotMessage && (
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border-2 border-purple-200 animate-pulse">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border-2 border-purple-200">
                   <p className="text-purple-900 font-medium text-center">{state.robotMessage}</p>
                 </div>
               )}
