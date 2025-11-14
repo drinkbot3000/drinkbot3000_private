@@ -85,6 +85,9 @@ const initialState = {
   settingsEditMode: false,
   // Impairment tracking
   hasBeenImpaired: false,
+  // Stale data detection
+  showStaleDataModal: false,
+  staleDataAge: 0,
 };
 
 // Reducer
@@ -225,6 +228,31 @@ export default function BACTracker() {
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
+
+        // Check for stale drink data (older than 24 hours)
+        const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (data.drinks && data.drinks.length > 0) {
+          const currentTime = Date.now();
+          const oldestDrinkTime = Math.min(...data.drinks.map(d => d.timestamp));
+          const ageInHours = (currentTime - oldestDrinkTime) / (1000 * 60 * 60);
+
+          // If drinks are older than 24 hours, show modal instead of auto-loading
+          if (currentTime - oldestDrinkTime > STALE_THRESHOLD_MS) {
+            dispatch({
+              type: 'SET_MULTIPLE',
+              values: {
+                showStaleDataModal: true,
+                staleDataAge: Math.floor(ageInHours),
+                showSplash: false
+              }
+            });
+            // Store the data temporarily so we can restore it if user chooses to keep it
+            sessionStorage.setItem('staleBacData', saved);
+            return;
+          }
+        }
+
         dispatch({ type: 'SET_MULTIPLE', values: { ...data, showSplash: false } });
       } catch (e) {
         console.error('Failed to load saved data:', e);
@@ -2739,6 +2767,71 @@ Questions? Contact: support@drinkbot3000.com
                     <strong>Made with:</strong> Responsibility & Care 🤖
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stale Data Warning Modal */}
+        {state.showStaleDataModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+              <div className="text-center mb-6">
+                <Clock className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Old Session Detected</h3>
+                <p className="text-gray-600 mb-4">
+                  Your previous tracking session is <span className="font-semibold text-amber-600">{state.staleDataAge} hours old</span>.
+                </p>
+                <p className="text-sm text-gray-500 mb-2">
+                  Would you like to start fresh or continue with the old data?
+                </p>
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-4 text-left">
+                  <p className="text-xs text-blue-800">
+                    <strong>Note:</strong> The BAC calculation accounts for time passed, but old drinks may be confusing to see in your list.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    // Clear old data and start fresh
+                    localStorage.removeItem('bacTrackerData');
+                    sessionStorage.removeItem('staleBacData');
+                    dispatch({
+                      type: 'SET_MULTIPLE',
+                      values: {
+                        showStaleDataModal: false,
+                        setupComplete: false,
+                        drinks: [],
+                        startTime: null,
+                        bac: 0,
+                        hasBeenImpaired: false,
+                      }
+                    });
+                  }}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+                >
+                  Start Fresh Session
+                </button>
+                <button
+                  onClick={() => {
+                    // Restore the old data
+                    const staleBacData = sessionStorage.getItem('staleBacData');
+                    if (staleBacData) {
+                      try {
+                        const data = JSON.parse(staleBacData);
+                        dispatch({ type: 'SET_MULTIPLE', values: { ...data, showStaleDataModal: false } });
+                        sessionStorage.removeItem('staleBacData');
+                      } catch (e) {
+                        console.error('Failed to restore stale data:', e);
+                        dispatch({ type: 'SET_FIELD', field: 'showStaleDataModal', value: false });
+                      }
+                    }
+                  }}
+                  className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                >
+                  Keep Old Data
+                </button>
               </div>
             </div>
           </div>
