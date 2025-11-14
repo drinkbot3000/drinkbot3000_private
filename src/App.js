@@ -946,14 +946,20 @@ Questions? Contact: support@drinkbot3000.com
     if (currentBAC < CONSTANTS.LEGAL_LIMIT) return {
       label: 'Impaired',
       color: 'text-orange-600',
-      bgColor: state.hasBeenImpaired ? 'bg-rainbow-warning' : 'bg-gradient-to-br from-orange-400 to-orange-600',
+      bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
       message: 'Reduced coordination and judgment. Do not drive or operate machinery.' + impairmentWarning
     };
-    return {
+    if (currentBAC < 0.20) return {
       label: 'Intoxicated',
       color: 'text-white',
-      bgColor: 'bg-rainbow-pulse',
+      bgColor: 'bg-gradient-to-br from-red-600 to-red-800',
       message: 'Severe impairment. Do NOT drive. Seek safe transportation and stay hydrated.' + impairmentWarning
+    };
+    return {
+      label: 'Seek Medical Help',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-red-800 to-red-950',
+      message: '🚨 DANGEROUS BAC LEVEL - Seek immediate medical attention. Risk of alcohol poisoning, loss of consciousness, and respiratory depression.' + impairmentWarning
     };
   };
 
