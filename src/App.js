@@ -186,11 +186,17 @@ export default function BACTracker() {
     const disclaimerCheck = localStorage.getItem('disclaimerAccepted');
     const safetyCheck = localStorage.getItem('safetyScreensComplete');
     const savedReceipts = localStorage.getItem('bacTrackerReceipts');
-    
+
+    // Load geolocation verification state
+    const geoCheck = localStorage.getItem('geoVerified');
+    const geoCountry = localStorage.getItem('userCountry');
+    const geoCountryCode = localStorage.getItem('userCountryCode');
+    const geoConsent = localStorage.getItem('geoConsentGiven');
+
     if (ageCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
     }
-    
+
     if (disclaimerCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
     }
@@ -198,7 +204,19 @@ export default function BACTracker() {
     if (safetyCheck === 'true') {
       dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
-    
+
+    // Restore geolocation state if already verified
+    if (geoCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+      if (geoCountry) {
+        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: geoCountry });
+      }
+    }
+
+    if (geoConsent === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
+    }
+
     if (savedReceipts) {
       try {
         const receipts = JSON.parse(savedReceipts);
@@ -207,7 +225,7 @@ export default function BACTracker() {
         console.error('Failed to load receipts:', e);
       }
     }
-    
+
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
