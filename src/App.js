@@ -918,7 +918,52 @@ Questions? Contact: support@drinkbot3000.com
         showRobotMessage(`⚠️ WARNING: This calculation shows ${result.toFixed(3)}% BAC, which is extremely dangerous/potentially fatal. Please verify your inputs are correct.`);
       }
 
-      dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
+      // Add drinks retroactively to the drink log
+      const now = Date.now();
+      const hoursInMs = hours * 60 * 60 * 1000;
+      const startTime = now - hoursInMs;
+
+      // Create individual drink entries, evenly spaced over the time period
+      const retroactiveDrinks = [];
+      const wholeDrinks = Math.floor(numDrinks);
+      const fractionalDrink = numDrinks - wholeDrinks;
+
+      for (let i = 0; i < wholeDrinks; i++) {
+        const drinkTimestamp = startTime + (hoursInMs * i / Math.max(1, wholeDrinks - 1 + (fractionalDrink > 0 ? 1 : 0)));
+        retroactiveDrinks.push({
+          id: drinkTimestamp + i, // Ensure unique IDs
+          timestamp: drinkTimestamp,
+          standardDrinks: 1,
+          type: 'beer', // Default to beer for retroactive drinks
+          oz: null,
+          abv: null,
+        });
+      }
+
+      // Add fractional drink if present
+      if (fractionalDrink > 0) {
+        const drinkTimestamp = startTime + (hoursInMs * wholeDrinks / Math.max(1, wholeDrinks));
+        retroactiveDrinks.push({
+          id: drinkTimestamp + wholeDrinks,
+          timestamp: drinkTimestamp,
+          standardDrinks: fractionalDrink,
+          type: 'custom',
+          oz: null,
+          abv: null,
+        });
+      }
+
+      // Add all retroactive drinks to state and update related fields
+      dispatch({
+        type: 'SET_MULTIPLE',
+        values: {
+          drinks: retroactiveDrinks,
+          calcBAC: result,
+          startTime: startTime,
+          mode: 'live', // Switch to live mode for real-time BAC tracking
+          activeTab: 'tracker' // Switch to tracker tab to show the drinks
+        }
+      });
     } catch (error) {
       console.error('Error calculating quick BAC:', error);
       showRobotMessage('Failed to calculate BAC. Please check your inputs and try again.');
