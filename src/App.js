@@ -7,6 +7,7 @@ import HelpModal from './components/modals/HelpModal';
 import ConfirmationModal from './components/modals/ConfirmationModal';
 import ReceiptModal from './components/modals/ReceiptModal';
 import RefundPolicyModal from './components/modals/RefundPolicyModal';
+import SettingsModal from './components/modals/SettingsModal';
 
 // Constants
 const CONSTANTS = {
@@ -2421,151 +2422,14 @@ Questions? Contact: support@drinkbot3000.com
         />
 
         {/* Settings Modal */}
-        {state.showSettings && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Settings</h2>
-                <button
-                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false })}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-800">Your Profile</h3>
-                    {!state.settingsEditMode && (
-                      <button
-                        onClick={() => dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: true })}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </div>
-
-                  {!state.settingsEditMode ? (
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Gender:</strong> {state.gender === 'male' ? 'Male' : state.gender === 'female' ? 'Female' : 'Not set'}</p>
-                      <p><strong>Weight:</strong> {state.weight ? `${state.weight} lbs` : 'Not set'}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Gender
-                        </label>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: 'male' })}
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
-                              state.settingsEditGender === 'male'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            Male
-                          </button>
-                          <button
-                            onClick={() => dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: 'female' })}
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
-                              state.settingsEditGender === 'female'
-                                ? 'bg-pink-600 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            Female
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Weight (lbs)
-                        </label>
-                        <input
-                          type="number"
-                          value={state.settingsEditWeight}
-                          onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Enter weight (50-500)"
-                          min="50"
-                          max="500"
-                        />
-                        {state.weightError && (
-                          <p className="text-sm text-red-600 mt-1">{state.weightError}</p>
-                        )}
-                      </div>
-
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <p className="text-xs text-amber-900">
-                          <strong>Warning:</strong> Changing your profile will reset your current BAC tracking and drink history.
-                        </p>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => {
-                            dispatch({ type: 'SET_FIELD', field: 'settingsEditMode', value: false });
-                            dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
-                          }}
-                          className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSaveSettings}
-                          className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                        >
-                          Save Changes
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <a
-                    href="/privacy.html"
-                    target="_blank"
-                    className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
-                  >
-                    <FileText className="w-4 h-4 inline mr-2" />
-                    Privacy Policy
-                  </a>
-
-                  <a
-                    href="/terms.html"
-                    target="_blank"
-                    className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
-                  >
-                    <FileText className="w-4 h-4 inline mr-2" />
-                    Terms of Service
-                  </a>
-
-                  <button
-                    onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true })}
-                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition"
-                  >
-                    <DollarSign className="w-4 h-4 inline mr-2" />
-                    Refund Policy
-                  </button>
-                </div>
-
-                <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                  <p className="text-xs text-indigo-900">
-                    <strong>Version:</strong> 1.0.0<br />
-                    <strong>Made with:</strong> Responsibility & Care 🤖
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <SettingsModal
+          isOpen={state.showSettings}
+          onClose={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false })}
+          currentGender={state.gender}
+          currentWeight={state.weight}
+          onSaveSettings={handleSaveSettings}
+          onShowRefundPolicy={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true })}
+        />
 
         {/* Confirmation Modal */}
         <ConfirmationModal
