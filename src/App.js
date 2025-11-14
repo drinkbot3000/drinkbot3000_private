@@ -1884,46 +1884,6 @@ Questions? Contact: support@drinkbot3000.com
     }
   }
 
-  // Main Splash Screen (original drunk driving statistic)
-  if (state.showSplash && state.safetyScreensComplete) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 p-6 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-red-100 rounded-full">
-              <AlertCircle className="w-16 h-16 text-red-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">Every 42 Minutes</h1>
-            <p className="text-xl text-gray-700 mb-6">
-              Someone dies from drunk driving in the USA
-            </p>
-            <div className="bg-red-50 rounded-lg p-4 mb-6 border-2 border-red-200">
-              <p className="text-gray-700 font-medium mb-3">
-                DrinkBot3000 helps you track BAC estimates and make responsible decisions.
-              </p>
-              <p className="text-sm text-red-700 font-semibold">
-                ⚠️ NEVER drive after drinking, even below the legal limit. Impairment begins at ANY BAC level.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => dispatch({ type: 'SET_FIELD', field: 'showSplash', value: false })}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
-          >
-            Continue to App
-          </button>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-600 italic">
-              Estimates only ─¢ Not medical advice ─¢ Drink responsibly ─¢ Never drink and drive
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Setup screen and rest of the app continues...
   // (For brevity, keeping the rest of the app the same as before)
   
