@@ -39,6 +39,47 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// TODO: PWA Install Prompt Handler removed - notification system has been disabled
-// Previously handled beforeinstallprompt event and exposed window.showInstallPrompt() function
-// If PWA install prompting is needed in future, implement here
+// PWA Install Prompt Handler
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+
+  // Dispatch custom event that can be caught in React components
+  window.dispatchEvent(new CustomEvent('pwa-install-available', { detail: e }));
+
+  console.log('💾 PWA install prompt available');
+});
+
+// Track PWA installation
+window.addEventListener('appinstalled', () => {
+  console.log('✅ PWA was installed successfully');
+  deferredPrompt = null;
+});
+
+// Expose install function globally for components to use
+window.showInstallPrompt = async () => {
+  if (!deferredPrompt) {
+    console.log('❌ Install prompt not available');
+    return false;
+  }
+
+  // Show the install prompt
+  deferredPrompt.prompt();
+
+  // Wait for the user to respond to the prompt
+  const { outcome } = await deferredPrompt.userChoice;
+
+  if (outcome === 'accepted') {
+    console.log('✅ User accepted the install prompt');
+  } else {
+    console.log('❌ User dismissed the install prompt');
+  }
+
+  // Clear the deferred prompt
+  deferredPrompt = null;
+  return outcome === 'accepted';
+};

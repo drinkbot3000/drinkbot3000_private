@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, Trash2, Clock, X, Heart, Coffee, DollarSign, ShieldAlert, Download, AlertTriangle, FileText, RefreshCw, CheckCircle, Pill, Bed, Car, Phone, Package, Globe, HelpCircle, Share2 } from 'lucide-react';
-// TODO: PWAInstallPrompt import removed - notification system has been disabled
+import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
 
 // Constants
@@ -53,7 +53,7 @@ const initialState = {
   customDrinkName: '',
   showCustomDrink: false,
   savedCustomDrinks: [],
-  // TODO: robotMessage state removed - notification system has been disabled
+  robotMessage: '',
   showSplash: true,
   showConfirmModal: false,
   confirmModalMessage: '',
@@ -423,12 +423,11 @@ export default function BACTracker() {
     parseUrlParameters();
   }, []); // Empty dependency array - run once on mount
 
-  // TODO: showRobotMessage function disabled - notification system has been removed
-  // Previously displayed in-app notification messages to users
-  // All calls to this function throughout the code now do nothing
   const showRobotMessage = (message) => {
-    // Notification system disabled - no-op function
-    console.log('[Notification System Disabled]:', message);
+    dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: message });
+    setTimeout(() => {
+      dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: '' });
+    }, CONSTANTS.ROBOT_MESSAGE_DURATION);
   };
 
   // Generate receipt
@@ -2163,8 +2162,12 @@ Questions? Contact: support@drinkbot3000.com
                 </div>
               )}
 
-              {/* TODO: Robot Message display removed - notification system has been disabled */}
-              {/* Previously displayed in-app notification messages in a purple gradient box */}
+              {/* Robot Message */}
+              {state.robotMessage && (
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border-2 border-purple-200 animate-pulse">
+                  <p className="text-purple-900 font-medium text-center">{state.robotMessage}</p>
+                </div>
+              )}
 
               {/* Joke Display */}
               {state.showJoke && state.currentJoke && (
@@ -2871,7 +2874,7 @@ Questions? Contact: support@drinkbot3000.com
         )}
       </div>
 
-      {/* TODO: PWAInstallPrompt component removed - notification system has been disabled */}
+      <PWAInstallPrompt />
     </>
   );
 }
