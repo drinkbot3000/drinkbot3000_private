@@ -214,30 +214,11 @@ async function syncData() {
   // Placeholder for future background sync functionality
 }
 
-// Push notification support for future features
-self.addEventListener('push', (event) => {
-  const options = {
-    body: event.data ? event.data.text() : 'New update available',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [200, 100, 200],
-    tag: 'drinkbot-notification',
-    requireInteraction: false
-  };
+// TODO: Push notification support removed - notification system has been disabled
+// If push notifications are needed in the future, implement the 'push' event listener here
 
-  event.waitUntil(
-    self.registration.showNotification('DrinkBot3000', options)
-  );
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-
-  event.waitUntil(
-    clients.openWindow('/')
-  );
-});
+// TODO: Notification click handler removed - notification system has been disabled
+// If notification click handling is needed in the future, implement the 'notificationclick' event listener here
 
 // Message handler for skip waiting
 self.addEventListener('message', (event) => {

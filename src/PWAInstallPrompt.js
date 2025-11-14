@@ -14,10 +14,10 @@ const PWAInstallPrompt = () => {
 
     // Listen for install prompt availability
     const handleInstallAvailable = () => {
-      // Wait a bit before showing the prompt (better UX)
+      // Show prompt sooner for better UX (reduced from 5 seconds to 1 second)
       setTimeout(() => {
         setShowPrompt(true);
-      }, 5000); // Show after 5 seconds
+      }, 1000); // Show after 1 second
     };
 
     window.addEventListener('pwa-install-available', handleInstallAvailable);
