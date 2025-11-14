@@ -3,6 +3,10 @@ import { AlertCircle, Beer, User, Scale, Smile, Calculator, Activity, Settings, 
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { checkGeographicRestriction } from './geolocation';
 import { validateDrinkName, sanitizeText } from './utils/sanitization';
+import HelpModal from './components/modals/HelpModal';
+import ConfirmationModal from './components/modals/ConfirmationModal';
+import ReceiptModal from './components/modals/ReceiptModal';
+import RefundPolicyModal from './components/modals/RefundPolicyModal';
 
 // Constants
 const CONSTANTS = {
@@ -2411,93 +2415,10 @@ Questions? Contact: support@drinkbot3000.com
         </div>
 
         {/* Help Modal */}
-        {state.showHelp && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">How to Use DrinkBot3000</h2>
-                <button
-                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showHelp', value: false })}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                  <h3 className="font-semibold text-indigo-900 mb-2 flex items-center">
-                    <Activity className="w-4 h-4 mr-2" />
-                    Tracker Tab
-                  </h3>
-                  <ul className="text-sm text-indigo-800 space-y-2">
-                    <li><strong>1.</strong> Log each drink as you consume it using the drink buttons</li>
-                    <li><strong>2.</strong> Your BAC (Blood Alcohol Content) is estimated in real-time</li>
-                    <li><strong>3.</strong> The color-coded display shows your current state:
-                      <ul className="ml-4 mt-1 space-y-1">
-                        <li>• <strong>Green:</strong> Sober</li>
-                        <li>• <strong>Yellow:</strong> Buzzed (caution)</li>
-                        <li>• <strong>Orange:</strong> Impaired (do not drive)</li>
-                        <li>• <strong>Red:</strong> Dangerously intoxicated</li>
-                      </ul>
-                    </li>
-                    <li><strong>4.</strong> View elapsed time and estimated time until sober</li>
-                  </ul>
-                </div>
-
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <h3 className="font-semibold text-purple-900 mb-2 flex items-center">
-                    <Calculator className="w-4 h-4 mr-2" />
-                    Calculator Tab
-                  </h3>
-                  <p className="text-sm text-purple-800 mb-2">
-                    Plan ahead or check what your BAC might be:
-                  </p>
-                  <ul className="text-sm text-purple-800 space-y-1">
-                    <li>• Enter number of drinks and time period</li>
-                    <li>• Get estimated BAC without logging drinks</li>
-                    <li>• Useful for planning your night</li>
-                  </ul>
-                </div>
-
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <h3 className="font-semibold text-green-900 mb-2">Common Drink Types</h3>
-                  <ul className="text-sm text-green-800 space-y-1">
-                    <li><strong>Beer (12oz):</strong> ~5% ABV standard</li>
-                    <li><strong>Wine (5oz):</strong> ~12% ABV</li>
-                    <li><strong>Shot (1.5oz):</strong> ~40% ABV (vodka, whiskey, etc.)</li>
-                    <li><strong>Cocktail:</strong> Typically 1-2 standard drinks</li>
-                    <li><strong>Custom:</strong> Enter your own oz + ABV%</li>
-                  </ul>
-                </div>
-
-                <div className="bg-amber-50 rounded-lg p-4 border-2 border-amber-300">
-                  <h3 className="font-semibold text-amber-900 mb-2 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Important Reminders
-                  </h3>
-                  <ul className="text-xs text-amber-900 space-y-1">
-                    <li>• BAC estimates are approximations only</li>
-                    <li>• Never drive if you've been drinking</li>
-                    <li>• Everyone metabolizes alcohol differently</li>
-                    <li>• When in doubt, wait it out or call a ride</li>
-                    <li>• This app does not replace medical advice</li>
-                  </ul>
-                </div>
-
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <h3 className="font-semibold text-blue-900 mb-2">Tips for Best Results</h3>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Log drinks immediately when consumed</li>
-                    <li>• Be honest about drink sizes and strength</li>
-                    <li>• Check your profile in Settings (gender & weight affect BAC)</li>
-                    <li>• Use the Calculator to plan ahead</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <HelpModal
+          isOpen={state.showHelp}
+          onClose={() => dispatch({ type: 'SET_FIELD', field: 'showHelp', value: false })}
+        />
 
         {/* Settings Modal */}
         {state.showSettings && (
@@ -2647,135 +2568,25 @@ Questions? Contact: support@drinkbot3000.com
         )}
 
         {/* Confirmation Modal */}
-        {state.showConfirmModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
-              <div className="text-center mb-6">
-                <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Are you sure?</h3>
-                <p className="text-gray-600">{state.confirmModalMessage}</p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    if (state.confirmModalAction) {
-                      state.confirmModalAction();
-                    }
-                    dispatch({ type: 'HIDE_CONFIRM' });
-                  }}
-                  className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition"
-                >
-                  Yes, Continue
-                </button>
-                <button
-                  onClick={() => dispatch({ type: 'HIDE_CONFIRM' })}
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmationModal
+          isOpen={state.showConfirmModal}
+          onClose={() => dispatch({ type: 'HIDE_CONFIRM' })}
+          onConfirm={state.confirmModalAction}
+          message={state.confirmModalMessage}
+        />
 
         {/* Receipt Modal */}
-        {state.showReceipt && state.currentReceipt && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
-              <div className="text-center mb-6">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Payment Successful!</h3>
-                <p className="text-gray-600">Thank you for your support!</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h4 className="font-semibold text-gray-800 mb-4 text-center">Receipt</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-semibold">${state.currentReceipt.amount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Date:</span>
-                    <span className="font-semibold">
-                      {new Date(state.currentReceipt.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Receipt #:</span>
-                    <span className="font-mono text-xs">{state.currentReceipt.id.slice(0, 8)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
-                <p className="text-xs text-blue-900">
-                  <strong>Refund Policy:</strong> You can request a refund within {CONSTANTS.REFUND_WINDOW_DAYS} days. See Refund Policy for details.
-                </p>
-              </div>
-
-              <button
-                onClick={() => dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: false })}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+        <ReceiptModal
+          isOpen={state.showReceipt && !!state.currentReceipt}
+          onClose={() => dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: false })}
+          receipt={state.currentReceipt}
+        />
 
         {/* Refund Policy Modal */}
-        {state.showRefundPolicy && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full my-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Refund Policy</h2>
-                <button
-                  onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: false })}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="prose prose-sm max-w-none">
-                <p className="text-gray-600 mb-4">
-                  We want you to be completely satisfied with DrinkBot3000. If you're not happy with your tip/donation, we offer a simple refund process.
-                </p>
-
-                <h3 className="font-semibold text-gray-800 mt-4 mb-2">Refund Window</h3>
-                <p className="text-gray-600 mb-4">
-                  You can request a full refund within <strong>{CONSTANTS.REFUND_WINDOW_DAYS} days</strong> of your payment, no questions asked.
-                </p>
-
-                <h3 className="font-semibold text-gray-800 mt-4 mb-2">How to Request a Refund</h3>
-                <ol className="list-decimal list-inside text-gray-600 mb-4 space-y-2">
-                  <li>Email us at <strong>drinkbot3000@gmail.com</strong></li>
-                  <li>Include your receipt number or payment details</li>
-                  <li>We'll process your refund within 5-7 business days</li>
-                </ol>
-
-                <h3 className="font-semibold text-gray-800 mt-4 mb-2">Refund Method</h3>
-                <p className="text-gray-600 mb-4">
-                  Refunds will be issued to the original payment method used for the transaction.
-                </p>
-
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200 mt-6">
-                  <p className="text-sm text-green-900">
-                    ✓ Simple process • ✓ Full refunds • ✓ {CONSTANTS.REFUND_WINDOW_DAYS}-day window • ✓ No questions asked
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: false })}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition mt-6"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+        <RefundPolicyModal
+          isOpen={state.showRefundPolicy}
+          onClose={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: false })}
+        />
       </div>
 
       <PWAInstallPrompt />
