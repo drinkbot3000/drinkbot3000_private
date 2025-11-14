@@ -953,6 +953,40 @@ Questions? Contact: support@drinkbot3000.com
         });
       }
 
+      // Calculate peak BAC to determine if user was ever impaired
+      // We need to check if at any point during the drinking session, BAC exceeded legal limit
+      let peakBAC = 0;
+
+      // Check BAC at multiple time points throughout the session
+      const checkPoints = 20; // Check 20 points throughout the session
+      for (let i = 0; i <= checkPoints; i++) {
+        const checkTime = startTime + (hoursInMs * i / checkPoints);
+        let bacAtCheckTime = 0;
+
+        // Calculate BAC from all drinks that had been consumed by this checkpoint
+        retroactiveDrinks.forEach(drink => {
+          if (drink.timestamp <= checkTime) {
+            const hoursElapsed = (checkTime - drink.timestamp) / (1000 * 60 * 60);
+            const standardDrinks = drink.standardDrinks || 1;
+            const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+            const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+            const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
+            const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
+            bacAtCheckTime += currentDrinkBAC;
+          }
+        });
+
+        peakBAC = Math.max(peakBAC, bacAtCheckTime);
+      }
+
+      // Determine if user was ever impaired
+      const wasImpaired = peakBAC >= CONSTANTS.LEGAL_LIMIT;
+
+      // Log peak BAC for debugging
+      if (wasImpaired) {
+        console.log(`Peak BAC during session: ${peakBAC.toFixed(3)}% (exceeded legal limit of ${CONSTANTS.LEGAL_LIMIT}%)`);
+      }
+
       // Add all retroactive drinks to state and update related fields
       dispatch({
         type: 'SET_MULTIPLE',
@@ -961,9 +995,15 @@ Questions? Contact: support@drinkbot3000.com
           calcBAC: result,
           startTime: startTime,
           mode: 'live', // Switch to live mode for real-time BAC tracking
-          activeTab: 'tracker' // Switch to tracker tab to show the drinks
+          activeTab: 'tracker', // Switch to tracker tab to show the drinks
+          hasBeenImpaired: wasImpaired // Set impairment flag if peak BAC exceeded legal limit
         }
       });
+
+      // Display warning if user was impaired during the session
+      if (wasImpaired) {
+        showRobotMessage(`⚠️ IMPAIRMENT DETECTED: Your peak BAC during this session was ${peakBAC.toFixed(3)}%, which exceeded the legal limit. You should not drive until fully recovered.`);
+      }
     } catch (error) {
       console.error('Error calculating quick BAC:', error);
       showRobotMessage('Failed to calculate BAC. Please check your inputs and try again.');
