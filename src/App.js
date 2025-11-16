@@ -230,7 +230,13 @@ export default function BACTracker() {
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
-        dispatch({ type: 'SET_MULTIPLE', values: { ...data, showSplash: false } });
+        // Ensure useSlowMetabolism defaults to true for existing users who don't have it saved
+        const loadedData = {
+          ...data,
+          showSplash: false,
+          useSlowMetabolism: data.useSlowMetabolism !== undefined ? data.useSlowMetabolism : true
+        };
+        dispatch({ type: 'SET_MULTIPLE', values: loadedData });
       } catch (e) {
         console.error('Failed to load saved data:', e);
       }
@@ -258,6 +264,7 @@ export default function BACTracker() {
         estimateHours: state.estimateHours,
         savedCustomDrinks: state.savedCustomDrinks,
         hasBeenImpaired: state.hasBeenImpaired,
+        useSlowMetabolism: state.useSlowMetabolism,
       };
       localStorage.setItem('bacTrackerData', JSON.stringify(dataToSave));
     }
@@ -272,6 +279,7 @@ export default function BACTracker() {
     state.estimateHours,
     state.savedCustomDrinks,
     state.hasBeenImpaired,
+    state.useSlowMetabolism,
   ]);
 
   // Helper functions
