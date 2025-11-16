@@ -89,7 +89,7 @@ const initialState = {
   // Impairment tracking
   hasBeenImpaired: false,
   // Metabolism settings
-  useSlowMetabolism: false,
+  useSlowMetabolism: true,
 };
 
 // Reducer
@@ -230,7 +230,13 @@ export default function BACTracker() {
     if (saved && ageCheck === 'true') {
       try {
         const data = JSON.parse(saved);
-        dispatch({ type: 'SET_MULTIPLE', values: { ...data, showSplash: false } });
+        // Ensure useSlowMetabolism defaults to true for existing users who don't have it saved
+        const loadedData = {
+          ...data,
+          showSplash: false,
+          useSlowMetabolism: data.useSlowMetabolism !== undefined ? data.useSlowMetabolism : true
+        };
+        dispatch({ type: 'SET_MULTIPLE', values: loadedData });
       } catch (e) {
         console.error('Failed to load saved data:', e);
       }
@@ -258,6 +264,7 @@ export default function BACTracker() {
         estimateHours: state.estimateHours,
         savedCustomDrinks: state.savedCustomDrinks,
         hasBeenImpaired: state.hasBeenImpaired,
+        useSlowMetabolism: state.useSlowMetabolism,
       };
       localStorage.setItem('bacTrackerData', JSON.stringify(dataToSave));
     }
@@ -272,6 +279,7 @@ export default function BACTracker() {
     state.estimateHours,
     state.savedCustomDrinks,
     state.hasBeenImpaired,
+    state.useSlowMetabolism,
   ]);
 
   // Helper functions
@@ -918,7 +926,92 @@ Questions? Contact: support@drinkbot3000.com
         showRobotMessage(`⚠️ WARNING: This calculation shows ${result.toFixed(3)}% BAC, which is extremely dangerous/potentially fatal. Please verify your inputs are correct.`);
       }
 
-      dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
+      // Add drinks retroactively to the drink log
+      const now = Date.now();
+      const hoursInMs = hours * 60 * 60 * 1000;
+      const startTime = now - hoursInMs;
+
+      // Create individual drink entries, evenly spaced over the time period
+      const retroactiveDrinks = [];
+      const wholeDrinks = Math.floor(numDrinks);
+      const fractionalDrink = numDrinks - wholeDrinks;
+
+      for (let i = 0; i < wholeDrinks; i++) {
+        const drinkTimestamp = startTime + (hoursInMs * i / Math.max(1, wholeDrinks - 1 + (fractionalDrink > 0 ? 1 : 0)));
+        retroactiveDrinks.push({
+          id: drinkTimestamp + i, // Ensure unique IDs
+          timestamp: drinkTimestamp,
+          standardDrinks: 1,
+          type: 'beer', // Default to beer for retroactive drinks
+          oz: null,
+          abv: null,
+        });
+      }
+
+      // Add fractional drink if present
+      if (fractionalDrink > 0) {
+        const drinkTimestamp = startTime + (hoursInMs * wholeDrinks / Math.max(1, wholeDrinks));
+        retroactiveDrinks.push({
+          id: drinkTimestamp + wholeDrinks,
+          timestamp: drinkTimestamp,
+          standardDrinks: fractionalDrink,
+          type: 'custom',
+          oz: null,
+          abv: null,
+        });
+      }
+
+      // Calculate peak BAC to determine if user was ever impaired
+      // We need to check if at any point during the drinking session, BAC exceeded legal limit
+      let peakBAC = 0;
+
+      // Check BAC at multiple time points throughout the session
+      const checkPoints = 20; // Check 20 points throughout the session
+      for (let i = 0; i <= checkPoints; i++) {
+        const checkTime = startTime + (hoursInMs * i / checkPoints);
+        let bacAtCheckTime = 0;
+
+        // Calculate BAC from all drinks that had been consumed by this checkpoint
+        retroactiveDrinks.forEach(drink => {
+          if (drink.timestamp <= checkTime) {
+            const hoursElapsed = (checkTime - drink.timestamp) / (1000 * 60 * 60);
+            const standardDrinks = drink.standardDrinks || 1;
+            const alcoholGrams = standardDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
+            const drinkBAC = (alcoholGrams / (weightKg * bodyWater * 1000)) * 100;
+            const metabolized = CONSTANTS.METABOLISM_RATE * hoursElapsed;
+            const currentDrinkBAC = Math.max(0, drinkBAC - metabolized);
+            bacAtCheckTime += currentDrinkBAC;
+          }
+        });
+
+        peakBAC = Math.max(peakBAC, bacAtCheckTime);
+      }
+
+      // Determine if user was ever impaired
+      const wasImpaired = peakBAC >= CONSTANTS.LEGAL_LIMIT;
+
+      // Log peak BAC for debugging
+      if (wasImpaired) {
+        console.log(`Peak BAC during session: ${peakBAC.toFixed(3)}% (exceeded legal limit of ${CONSTANTS.LEGAL_LIMIT}%)`);
+      }
+
+      // Add all retroactive drinks to state and update related fields
+      dispatch({
+        type: 'SET_MULTIPLE',
+        values: {
+          drinks: retroactiveDrinks,
+          calcBAC: result,
+          startTime: startTime,
+          mode: 'live', // Switch to live mode for real-time BAC tracking
+          activeTab: 'tracker', // Switch to tracker tab to show the drinks
+          hasBeenImpaired: wasImpaired // Set impairment flag if peak BAC exceeded legal limit
+        }
+      });
+
+      // Display warning if user was impaired during the session
+      if (wasImpaired) {
+        showRobotMessage(`⚠️ IMPAIRMENT DETECTED: Your peak BAC during this session was ${peakBAC.toFixed(3)}%, which exceeded the legal limit. You should not drive until fully recovered.`);
+      }
     } catch (error) {
       console.error('Error calculating quick BAC:', error);
       showRobotMessage('Failed to calculate BAC. Please check your inputs and try again.');
