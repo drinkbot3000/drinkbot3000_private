@@ -2394,66 +2394,67 @@ Questions? Contact: support@drinkbot3000.com
               </div>
 
               {/* Drink History */}
-              {state.drinks.length > 0 && (
-                <div className="bg-white rounded-lg p-6 mb-6 shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Drinks ({state.drinks.length})
-                    </h3>
-                    <button
-                      onClick={() => dispatch({ type: 'SET_FIELD', field: 'showDrinkHistory', value: !state.showDrinkHistory })}
-                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                    >
-                      {state.showDrinkHistory ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-
-                  {state.showDrinkHistory && (
-                    <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
-                      {state.drinks.map((drink, index) => (
-                        <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-800">
-                              {drink.type === 'beer' && '🍺 Beer'}
-                              {drink.type === 'wine' && '🍷 Wine'}
-                              {drink.type === 'shot' && '🥃 Shot'}
-                              {drink.type === 'custom' && '🍹 Custom'}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {drink.oz && drink.abv ? `${drink.oz}oz, ${drink.abv}% ABV • ` : ''}{new Date(drink.timestamp).toLocaleTimeString()}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => deleteDrink(drink.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+              <div className="bg-white rounded-lg p-6 mb-6 shadow">
+                {state.drinks.length > 0 && (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Drinks ({state.drinks.length})
+                      </h3>
+                      <button
+                        onClick={() => dispatch({ type: 'SET_FIELD', field: 'showDrinkHistory', value: !state.showDrinkHistory })}
+                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        {state.showDrinkHistory ? 'Hide' : 'Show'}
+                      </button>
                     </div>
-                  )}
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={undoDrink}
-                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-                      disabled={state.drinks.length === 0}
-                    >
-                      <RefreshCw className="w-4 h-4 inline mr-1" />
-                      Undo Last
-                    </button>
-                    <button
-                      onClick={clearDrinks}
-                      className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-medium hover:bg-red-200 transition disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-                      disabled={state.drinks.length === 0}
-                    >
-                      <Trash2 className="w-4 h-4 inline mr-1" />
-                      Clear All
-                    </button>
-                  </div>
+                    {state.showDrinkHistory && (
+                      <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+                        {state.drinks.map((drink, index) => (
+                          <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-800">
+                                {drink.type === 'beer' && '🍺 Beer'}
+                                {drink.type === 'wine' && '🍷 Wine'}
+                                {drink.type === 'shot' && '🥃 Shot'}
+                                {drink.type === 'custom' && '🍹 Custom'}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {drink.oz && drink.abv ? `${drink.oz}oz, ${drink.abv}% ABV • ` : ''}{new Date(drink.timestamp).toLocaleTimeString()}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => deleteDrink(drink.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={undoDrink}
+                    className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    disabled={state.drinks.length === 0}
+                  >
+                    <RefreshCw className="w-4 h-4 inline mr-1" />
+                    Undo Last
+                  </button>
+                  <button
+                    onClick={clearDrinks}
+                    className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-medium hover:bg-red-200 transition"
+                  >
+                    <Trash2 className="w-4 h-4 inline mr-1" />
+                    Clear All
+                  </button>
                 </div>
-              )}
+              </div>
 
               {/* Support Section */}
               <div className="bg-white rounded-lg p-6 shadow">
