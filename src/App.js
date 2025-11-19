@@ -106,7 +106,7 @@ function appReducer(state, action) {
     case 'UNDO_DRINK':
       return { ...state, drinks: state.drinks.slice(0, -1) };
     case 'CLEAR_DRINKS':
-      return { ...state, drinks: [], bac: 0, startTime: Date.now() };
+      return { ...state, drinks: [], bac: 0, startTime: null, hasBeenImpaired: false, estimateDrinks: '', estimateHours: '', mode: '', setupComplete: false };
     case 'RESET_APP':
       return { ...initialState, showSplash: false, ageVerified: true, disclaimerAccepted: true, safetyScreensComplete: true };
     case 'SHOW_CONFIRM':
