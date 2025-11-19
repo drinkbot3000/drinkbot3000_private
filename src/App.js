@@ -2437,7 +2437,7 @@ Questions? Contact: support@drinkbot3000.com
                   <div className="flex gap-2">
                     <button
                       onClick={undoDrink}
-                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition"
+                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-medium hover:bg-orange-200 transition disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                       disabled={state.drinks.length === 0}
                     >
                       <RefreshCw className="w-4 h-4 inline mr-1" />
@@ -2445,7 +2445,8 @@ Questions? Contact: support@drinkbot3000.com
                     </button>
                     <button
                       onClick={clearDrinks}
-                      className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-medium hover:bg-red-200 transition"
+                      className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-medium hover:bg-red-200 transition disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                      disabled={state.drinks.length === 0}
                     >
                       <Trash2 className="w-4 h-4 inline mr-1" />
                       Clear All
