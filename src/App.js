@@ -1664,7 +1664,7 @@ Questions? Contact: support@drinkbot3000.com
             >
               I Understand and Accept
             </button>
-            
+
             <button
               onClick={() => {
                 dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
@@ -1674,6 +1674,12 @@ Questions? Contact: support@drinkbot3000.com
             >
               I Do Not Accept
             </button>
+          </div>
+
+          <div className="mt-4 text-center">
+            <a href="/terms.html" target="_blank" className="text-xs text-indigo-600 hover:underline">
+              Read our Terms of Service
+            </a>
           </div>
         </div>
       </div>
