@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Production
+build/
+dist/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Generated files
+coverage/
+*.min.js
+*.min.css
+
+# Config files that need specific formatting
+package-lock.json
+yarn.lock
