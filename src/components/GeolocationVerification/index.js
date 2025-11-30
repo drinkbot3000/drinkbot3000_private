@@ -1,0 +1,1 @@
+export { GeolocationConsent } from './GeolocationConsent';
