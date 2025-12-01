@@ -31,7 +31,7 @@ import {
 } from './components/Modals';
 
 // Services
-import { checkGeographicRestriction } from './geolocation';
+import { checkGeographicRestriction } from './services/geolocation.service';
 import {
   calculateBAC,
   calculateEstimateBAC,

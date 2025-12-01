@@ -21,6 +21,7 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off', // Not needed in React 18
     'react/prop-types': 'warn', // Warn on missing prop types
+    'react/no-unescaped-entities': 'off', // Allow quotes and apostrophes in JSX
     'no-unused-vars': 'warn',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'react-hooks/rules-of-hooks': 'error',
