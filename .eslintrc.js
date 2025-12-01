@@ -6,9 +6,9 @@ module.exports = {
     jest: true,
   },
   extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
+    'react-app',
+    'react-app/jest',
+    'prettier',
   ],
   parserOptions: {
     ecmaFeatures: {
@@ -17,19 +17,11 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react', 'react-hooks'],
   rules: {
-    'react/react-in-jsx-scope': 'off', // Not needed in React 18
-    'react/prop-types': 'warn', // Warn on missing prop types
-    'react/no-unescaped-entities': 'off', // Allow quotes and apostrophes in JSX
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'warn',
+    'react/no-unescaped-entities': 'off',
     'no-unused-vars': 'warn',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
   },
 };
