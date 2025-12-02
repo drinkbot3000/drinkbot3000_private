@@ -32,7 +32,7 @@ This codebase has undergone a **complete architectural transformation** from a m
 | **Testable Code** | ~5% | ~95% | **+1,800%** |
 | **Code Duplication** | High | None | **Eliminated** |
 
-📖 **[Read the Complete Refactoring Report →](REFACTORING_FINAL_REPORT.md)**
+📖 **[Read the Complete Refactoring Report →](docs/archive/REFACTORING_FINAL_REPORT.md)**
 
 ---
 
@@ -114,22 +114,33 @@ drinkbot3000/
 │   ├── refund.html          # Refund policy
 │   ├── manifest.json        # PWA manifest
 │   └── robots.txt           # SEO
+├── docs/                    # Documentation
+│   ├── deployment/         # Deployment guides
+│   │   ├── START_HERE.md   # Choose your deployment path
+│   │   ├── QUICK_START.md  # 5-minute deployment
+│   │   ├── DEPLOYMENT.md   # Complete guide
+│   │   └── ...             # More deployment docs
+│   └── archive/            # Historical documentation
+│       ├── REFACTORING_FINAL_REPORT.md  # Complete refactoring report
+│       └── REFACTORING_PROGRESS.md      # Phase tracking
 ├── .eslintrc.js             # ESLint configuration
 ├── .prettierrc              # Prettier configuration
 ├── .env.example             # Environment variables template
 ├── netlify.toml             # Netlify deployment config
 ├── package.json             # Dependencies
-├── REFACTORING_FINAL_REPORT.md      # Complete refactoring docs
-├── REFACTORING_PROGRESS.md          # Detailed roadmap
-├── REFACTORING_SUMMARY.md           # Executive summary
+├── CONTRIBUTING.md          # Contribution guidelines
+├── PROJECT_STRUCTURE.md     # Architecture documentation
 └── README.md                # This file
 ```
 
 **Total:** 51+ files, ~5,200 lines of organized, maintainable code
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Pre/post deployment verification checklist
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Simple drag-and-drop deployment guide
-- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Full codebase documentation
-- **[START_HERE.md](START_HERE.md)** - Getting started guide
+
+### 📚 Documentation
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Complete architecture guide
+- **[docs/deployment/](docs/deployment/)** - All deployment guides
+- **[docs/archive/](docs/archive/)** - Historical refactoring documentation
 
 ## 📦 What's Included
 
@@ -257,7 +268,7 @@ npm run build
    - Publish directory: `build`
 4. Deploy!
 
-**[See Complete Deployment Guide →](NETLIFY_SETUP.md)**
+**[See Complete Deployment Guide →](docs/deployment/NETLIFY_SETUP.md)**
 
 ### Option 2: Vercel
 
@@ -278,25 +289,28 @@ Upload the `build/` folder to any static host:
 
 ## 📚 Documentation
 
-### Main Documentation
+### For Developers
 
-- **[REFACTORING_FINAL_REPORT.md](REFACTORING_FINAL_REPORT.md)** - 📖 **1,800+ line comprehensive report**
-  - Complete refactoring journey
-  - Architecture diagrams
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - 📖 **How to contribute** - Development setup, coding standards, PR process
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - 🏗️ **Architecture guide** - Complete codebase structure and patterns
+- **[docs/README.md](docs/README.md)** - 📁 **Documentation index** - Navigate all documentation
+
+### For Deployment
+
+- **[docs/deployment/START_HERE.md](docs/deployment/START_HERE.md)** - 🚀 **Choose your deployment path**
+- **[docs/deployment/QUICK_START.md](docs/deployment/QUICK_START.md)** - ⚡ **Deploy in 5 minutes**
+- **[docs/deployment/NETLIFY_SETUP.md](docs/deployment/NETLIFY_SETUP.md)** - 🌐 **Complete Netlify guide**
+- **[docs/deployment/DEPLOYMENT_CHECKLIST.md](docs/deployment/DEPLOYMENT_CHECKLIST.md)** - ✅ **Pre/post deployment checklist**
+- **[docs/deployment/TROUBLESHOOTING.md](docs/deployment/TROUBLESHOOTING.md)** - 🔧 **Common issues and solutions**
+
+### Historical Documentation
+
+- **[docs/archive/REFACTORING_FINAL_REPORT.md](docs/archive/REFACTORING_FINAL_REPORT.md)** - 📖 **Complete refactoring report** (55KB)
+  - Complete transformation journey
+  - Architecture diagrams and metrics
   - Best practices explained
-  - Testing strategies
-  - Future recommendations
-
-- **[REFACTORING_PROGRESS.md](REFACTORING_PROGRESS.md)** - Detailed phase-by-phase roadmap
-- **[REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md)** - Executive summary with metrics
-
-### Deployment Guides
-
-- **[NETLIFY_SETUP.md](NETLIFY_SETUP.md)** - Complete GitHub + Netlify integration
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Pre/post deployment verification
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Simple drag-and-drop guide
-- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Full codebase documentation
-- **[START_HERE.md](START_HERE.md)** - Getting started guide
+  - Lessons learned and future recommendations
+- **[docs/archive/REFACTORING_PROGRESS.md](docs/archive/REFACTORING_PROGRESS.md)** - Phase-by-phase tracking
 
 ---
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
+import { getItem, setItem, STORAGE_KEYS } from './services/storage.service';
 
 const PWAInstallPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -48,14 +49,14 @@ const PWAInstallPrompt = () => {
   const handleDismiss = () => {
     setShowPrompt(false);
     // Store dismissal in localStorage to not annoy the user
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    setItem(STORAGE_KEYS.PWA_INSTALL_DISMISSED, Date.now());
   };
 
   // Check if user dismissed recently (within 7 days)
   useEffect(() => {
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
+    const dismissed = getItem(STORAGE_KEYS.PWA_INSTALL_DISMISSED);
     if (dismissed) {
-      const dismissedTime = parseInt(dismissed, 10);
+      const dismissedTime = typeof dismissed === 'number' ? dismissed : parseInt(dismissed, 10);
       const daysSinceDismissal = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
 
       if (daysSinceDismissal < 7) {
