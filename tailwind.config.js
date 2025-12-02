@@ -35,6 +35,11 @@ module.exports = {
       // Custom colors matching your brand
       colors: {
         brand: {
+          primary: '#4f46e5', // Indigo-600 - main brand color
+          primaryDark: '#4338ca', // Indigo-700
+          primaryLight: '#eef2ff', // Indigo-50
+          secondary: '#9333ea', // Purple-600
+          secondaryDark: '#7e22ce', // Purple-700
           indigo: {
             50: '#eef2ff',
             600: '#4f46e5',
@@ -45,6 +50,11 @@ module.exports = {
             700: '#7e22ce',
           },
         },
+      },
+      // Consistent spacing scale
+      spacing: {
+        'card': '1.5rem', // 24px - standard card padding
+        'card-lg': '2rem', // 32px - large card padding
       },
     },
   },

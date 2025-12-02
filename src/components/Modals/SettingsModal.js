@@ -6,6 +6,7 @@
 import React from 'react';
 import { FileText, DollarSign, AlertTriangle } from 'lucide-react';
 import { Modal, Button } from '../common';
+import { COLORS, RADIUS, SPACING } from '../../styles/designTokens';
 
 /**
  * SettingsModal Component
@@ -55,7 +56,7 @@ export function SettingsModal({
             {!editMode && (
               <button
                 onClick={onEditModeToggle}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className={`text-sm ${COLORS.primary.text} ${COLORS.primary.textHover} font-medium`}
               >
                 Edit
               </button>
@@ -76,12 +77,12 @@ export function SettingsModal({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                <div className="flex gap-3">
+                <div className={`flex ${SPACING.gap.medium}`}>
                   <button
                     onClick={() => onGenderChange('male')}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+                    className={`flex-1 py-2 px-4 ${RADIUS.medium} font-medium transition ${
                       editGender === 'male'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
@@ -89,9 +90,9 @@ export function SettingsModal({
                   </button>
                   <button
                     onClick={() => onGenderChange('female')}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+                    className={`flex-1 py-2 px-4 ${RADIUS.medium} font-medium transition ${
                       editGender === 'female'
-                        ? 'bg-pink-600 text-white'
+                        ? 'bg-purple-600 text-white hover:bg-purple-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
@@ -108,7 +109,7 @@ export function SettingsModal({
                   type="number"
                   value={editWeight}
                   onChange={(e) => onWeightChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border border-gray-300 ${RADIUS.medium} focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
                   placeholder="Enter weight (50-500)"
                   min="50"
                   max="500"
@@ -172,33 +173,40 @@ export function SettingsModal({
 
         {/* Legal Links */}
         <div className="space-y-3">
-          <a
+          <Button
+            as="a"
             href="/privacy.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
+            variant="outline"
+            fullWidth
+            className="text-center"
           >
             <FileText className="w-4 h-4 inline mr-2" />
             Privacy Policy
-          </a>
+          </Button>
 
-          <a
+          <Button
+            as="a"
             href="/terms.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition text-center"
+            variant="outline"
+            fullWidth
+            className="text-center"
           >
             <FileText className="w-4 h-4 inline mr-2" />
             Terms of Service
-          </a>
+          </Button>
 
-          <button
+          <Button
             onClick={onShowRefundPolicy}
-            className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition"
+            variant="outline"
+            fullWidth
           >
             <DollarSign className="w-4 h-4 inline mr-2" />
             Refund Policy
-          </button>
+          </Button>
         </div>
 
         {/* Version Info */}
