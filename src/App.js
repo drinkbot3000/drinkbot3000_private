@@ -133,6 +133,8 @@ function appReducer(state, action) {
         hasBeenImpaired: false,
         estimateDrinks: '',
         estimateHours: '',
+        mode: '',
+        setupComplete: false,
       };
     case 'RESET_APP':
       return {
