@@ -32,6 +32,7 @@ const buttonSizes = {
  * @param {Function} props.onClick - Click handler
  * @param {string} props.className - Additional classes
  * @param {string} props.type - Button type (default: 'button')
+ * @param {string|React.Component} props.as - Element or component to render as (default: 'button')
  */
 export function Button({
   variant = 'primary',
@@ -42,6 +43,7 @@ export function Button({
   onClick,
   className = '',
   type = 'button',
+  as: Component = 'button',
   ...props
 }) {
   const variantClass = buttonVariants[variant] || buttonVariants.primary;
@@ -49,23 +51,27 @@ export function Button({
   const widthClass = fullWidth ? 'w-full' : '';
   const disabledClass = disabled ? 'opacity-50 cursor-not-allowed' : '';
 
+  const buttonClasses = `
+    ${variantClass}
+    ${sizeClass}
+    ${widthClass}
+    ${disabledClass}
+    ${className}
+    rounded-lg font-semibold transition-colors
+    flex items-center justify-center gap-2
+  `.trim();
+
+  // For button elements, include type and disabled props
+  const buttonProps = Component === 'button' ? { type, disabled } : {};
+
   return (
-    <button
-      type={type}
+    <Component
       onClick={onClick}
-      disabled={disabled}
-      className={`
-        ${variantClass}
-        ${sizeClass}
-        ${widthClass}
-        ${disabledClass}
-        ${className}
-        rounded-lg font-semibold transition-colors
-        flex items-center justify-center gap-2
-      `.trim()}
+      className={buttonClasses}
+      {...buttonProps}
       {...props}
     >
       {children}
-    </button>
+    </Component>
   );
 }
