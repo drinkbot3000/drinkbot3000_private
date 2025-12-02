@@ -3,7 +3,25 @@
  * Centralized configuration values
  */
 
-export const CONSTANTS = {
+interface Constants {
+  METABOLISM_RATE: number;
+  SLOW_METABOLISM_RATE: number;
+  GRAMS_PER_STANDARD_DRINK: number;
+  LBS_TO_KG: number;
+  MALE_BODY_WATER: number;
+  FEMALE_BODY_WATER: number;
+  STANDARD_DRINK_OZ: number;
+  LEGAL_LIMIT: number;
+  MIN_WEIGHT: number;
+  MAX_WEIGHT: number;
+  ROBOT_MESSAGE_DURATION: number;
+  JOKE_DURATION: number;
+  MIN_TIP_AMOUNT: number;
+  LEGAL_DRINKING_AGE: number;
+  REFUND_WINDOW_DAYS: number;
+}
+
+export const CONSTANTS: Constants = {
   // Conservative BAC elimination rate based on Jones, A.W. (2010)
   // "Evidence-based survey of the elimination rates of ethanol from blood with applications in forensic casework"
   // Forensic Science International, 200(1-3), 1-20.
@@ -31,13 +49,18 @@ export const CONSTANTS = {
 };
 
 // Environment-based configuration
-export const CONFIG = {
+interface Config {
+  STRIPE_PAYMENT_LINK: string;
+  SUPPORT_EMAIL: string;
+}
+
+export const CONFIG: Config = {
   STRIPE_PAYMENT_LINK: process.env.REACT_APP_STRIPE_PAYMENT_LINK || 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01',
   SUPPORT_EMAIL: process.env.REACT_APP_SUPPORT_EMAIL || 'drinkbot3000@gmail.com',
 };
 
 // Jokes (family-friendly only)
-export const JOKES = [
+export const JOKES: readonly string[] = [
   "Why don't scientists trust atoms? Because they make up everything!",
   "What do you call a bear with no teeth? A gummy bear!",
   "Why did the scarecrow win an award? He was outstanding in his field!",
@@ -60,7 +83,7 @@ export const JOKES = [
   "What do you call a cow during an earthquake? A milkshake!",
 ];
 
-export const ROBOT_GREETINGS = [
+export const ROBOT_GREETINGS: readonly string[] = [
   "Greetings! I am DrinkBot3000, your safety companion! 🤖",
   "Beep boop! Ready to help you stay safe, dear friend! 🎩",
   "*mechanical bow* Your safety assistant reporting for duty! 🤖",
@@ -68,7 +91,7 @@ export const ROBOT_GREETINGS = [
   "*whirrs politely* I shall help you stay safe this evening! 🎩",
 ];
 
-export const ROBOT_COMMENTS = [
+export const ROBOT_COMMENTS: readonly string[] = [
   "*calculates thoughtfully* Remember to stay hydrated! 🤖",
   "Beep boop! Please pace yourself, valued user! 🎩",
   "*adjusts monocle* Safety first, always! 🧙",

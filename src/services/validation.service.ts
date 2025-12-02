@@ -5,13 +5,16 @@
 
 import { CONSTANTS } from '../constants';
 
+export interface ValidationResult {
+  isValid: boolean;
+  error: string;
+}
+
 /**
  * Validate weight input
- * @param {string|number} weight - Weight value to validate
- * @returns {string} Error message or empty string if valid
  */
-export const validateWeight = (weight) => {
-  const w = parseFloat(weight);
+export const validateWeight = (weight: string | number): string => {
+  const w = parseFloat(weight as string);
 
   if (isNaN(w)) {
     return 'Please enter a valid number';
@@ -30,11 +33,9 @@ export const validateWeight = (weight) => {
 
 /**
  * Validate tip amount
- * @param {string|number} amount - Tip amount to validate
- * @returns {string} Error message or empty string if valid
  */
-export const validateTipAmount = (amount) => {
-  const tipValue = parseFloat(amount);
+export const validateTipAmount = (amount: string | number): string => {
+  const tipValue = parseFloat(amount as string);
 
   if (isNaN(tipValue)) {
     return 'Please enter a valid amount';
@@ -53,13 +54,16 @@ export const validateTipAmount = (amount) => {
 
 /**
  * Validate custom drink input
- * @param {Object} params
- * @param {string} params.oz - Fluid ounces
- * @param {string} params.abv - Alcohol by volume percentage
- * @param {string} params.name - Drink name
- * @returns {Object} Validation result with isValid and error message
  */
-export const validateCustomDrink = ({ oz, abv, name }) => {
+export const validateCustomDrink = ({
+  oz,
+  abv,
+  name,
+}: {
+  oz: string;
+  abv: string;
+  name: string;
+}): ValidationResult => {
   if (!name || name.trim() === '') {
     return {
       isValid: false,
@@ -105,12 +109,14 @@ export const validateCustomDrink = ({ oz, abv, name }) => {
 
 /**
  * Validate calculator input
- * @param {Object} params
- * @param {string} params.drinks - Number of drinks
- * @param {string} params.hours - Number of hours
- * @returns {Object} Validation result
  */
-export const validateCalculatorInput = ({ drinks, hours }) => {
+export const validateCalculatorInput = ({
+  drinks,
+  hours,
+}: {
+  drinks: string;
+  hours: string;
+}): ValidationResult => {
   const drinksValue = parseFloat(drinks);
   const hoursValue = parseFloat(hours);
 
@@ -150,9 +156,7 @@ export const validateCalculatorInput = ({ drinks, hours }) => {
 
 /**
  * Validate age (for age verification)
- * @param {number} age - Age to validate
- * @returns {boolean} True if age is valid and meets minimum
  */
-export const validateAge = (age) => {
+export const validateAge = (age: number): boolean => {
   return !isNaN(age) && age >= CONSTANTS.LEGAL_DRINKING_AGE;
 };
