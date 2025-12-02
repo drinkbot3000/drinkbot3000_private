@@ -721,17 +721,40 @@ function BACTrackerContent() {
               onToggleCustomDrink={() =>
                 setField('showCustomDrink', !state.showCustomDrink)
               }
-              onCustomDrinkNameChange={(value) =>
-                setField('customDrinkName', value)
-              }
-              onCustomDrinkOzChange={(value) =>
-                setField('customDrinkOz', value)
-              }
-              onCustomDrinkABVChange={(value) =>
-                setField('customDrinkABV', value)
-              }
+              onCustomDrinkChange={(field, value) => {
+                if (field === 'name') {
+                  setField('customDrinkName', value);
+                } else if (field === 'oz') {
+                  setField('customDrinkOz', value);
+                } else if (field === 'abv') {
+                  setField('customDrinkABV', value);
+                }
+              }}
+              onAddCustomDrink={() => {
+                const { customDrinkName, customDrinkOz, customDrinkABV } = state;
+                if (!customDrinkOz || !customDrinkABV) {
+                  showRobotMessage('Please fill in volume and ABV for custom drink.');
+                  return;
+                }
+                const name = customDrinkName || 'Custom Drink';
+                addDrink(name, parseFloat(customDrinkOz), parseFloat(customDrinkABV));
+                setMultiple({
+                  customDrinkName: '',
+                  customDrinkOz: '',
+                  customDrinkABV: '5',
+                  showCustomDrink: false,
+                });
+              }}
               onSaveCustomDrink={handleSaveCustomDrink}
               onDeleteCustomDrink={handleDeleteCustomDrink}
+              onCancelCustomDrink={() => {
+                setMultiple({
+                  customDrinkName: '',
+                  customDrinkOz: '',
+                  customDrinkABV: '5',
+                  showCustomDrink: false,
+                });
+              }}
               onAddDrink={addDrink}
             />
             <DrinkHistoryList
