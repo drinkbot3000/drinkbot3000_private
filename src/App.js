@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useReducer, useCallback } from 'react';
 import PWAInstallPrompt from './PWAInstallPrompt';
+import { PWAProvider } from './contexts/PWAContext';
 
 // Components
 import { AgeVerification } from './components/AgeVerification';
@@ -631,7 +632,11 @@ export default function BACTracker() {
 
   // Render flow screens
   if (!state.ageVerified) {
-    return <AgeVerification onVerify={handleAgeVerification} />;
+    return (
+      <PWAProvider>
+        <AgeVerification onVerify={handleAgeVerification} />
+      </PWAProvider>
+    );
   }
 
   if (state.showGeoConsent || state.geoVerifying || state.geoBlocked) {
@@ -644,63 +649,73 @@ export default function BACTracker() {
       : 'consent';
 
     return (
-      <GeolocationConsent
-        state={geoState}
-        country={state.geoCountry}
-        error={state.geoError}
-        onAccept={handleGeoConsentAccept}
-        onDecline={handleGeoConsentDecline}
-        onBypass={handleGeoBypass}
-        onRetry={handleGeoRetry}
-        onGoBack={handleGeoGoBack}
-      />
+      <PWAProvider>
+        <GeolocationConsent
+          state={geoState}
+          country={state.geoCountry}
+          error={state.geoError}
+          onAccept={handleGeoConsentAccept}
+          onDecline={handleGeoConsentDecline}
+          onBypass={handleGeoBypass}
+          onRetry={handleGeoRetry}
+          onGoBack={handleGeoGoBack}
+        />
+      </PWAProvider>
     );
   }
 
   if (state.showDisclaimerModal) {
-    return <Disclaimer onAccept={handleDisclaimerAccept} />;
+    return (
+      <PWAProvider>
+        <Disclaimer onAccept={handleDisclaimerAccept} />
+      </PWAProvider>
+    );
   }
 
   if (!state.safetyScreensComplete) {
     return (
-      <SafetyScreens
-        currentScreen={state.currentSafetyScreen}
-        onNext={handleSafetyScreenNext}
-        onDecline={handleSafetyScreenDecline}
-      />
+      <PWAProvider>
+        <SafetyScreens
+          currentScreen={state.currentSafetyScreen}
+          onNext={handleSafetyScreenNext}
+          onDecline={handleSafetyScreenDecline}
+        />
+      </PWAProvider>
     );
   }
 
   if (!state.setupComplete) {
     return (
-      <Setup
-        gender={state.gender}
-        weight={state.weight}
-        mode={state.mode}
-        estimateDrinks={state.estimateDrinks}
-        estimateHours={state.estimateHours}
-        weightError={state.weightError}
-        useSlowMetabolism={state.useSlowMetabolism}
-        onGenderChange={(gender) => dispatch({ type: 'SET_FIELD', field: 'gender', value: gender })}
-        onWeightChange={(weight) => dispatch({ type: 'SET_FIELD', field: 'weight', value: weight })}
-        onModeSelect={handleModeSelect}
-        onEstimateDrinksChange={(value) =>
-          dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value })
-        }
-        onEstimateHoursChange={(value) =>
-          dispatch({ type: 'SET_FIELD', field: 'estimateHours', value })
-        }
-        onMetabolismChange={(value) =>
-          dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value })
-        }
-        onComplete={handleSetup}
-      />
+      <PWAProvider>
+        <Setup
+          gender={state.gender}
+          weight={state.weight}
+          mode={state.mode}
+          estimateDrinks={state.estimateDrinks}
+          estimateHours={state.estimateHours}
+          weightError={state.weightError}
+          useSlowMetabolism={state.useSlowMetabolism}
+          onGenderChange={(gender) => dispatch({ type: 'SET_FIELD', field: 'gender', value: gender })}
+          onWeightChange={(weight) => dispatch({ type: 'SET_FIELD', field: 'weight', value: weight })}
+          onModeSelect={handleModeSelect}
+          onEstimateDrinksChange={(value) =>
+            dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value })
+          }
+          onEstimateHoursChange={(value) =>
+            dispatch({ type: 'SET_FIELD', field: 'estimateHours', value })
+          }
+          onMetabolismChange={(value) =>
+            dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value })
+          }
+          onComplete={handleSetup}
+        />
+      </PWAProvider>
     );
   }
 
   // Main app interface
   return (
-    <>
+    <PWAProvider>
       <MainLayout
         activeTab={state.activeTab}
         onTabChange={(tab) => dispatch({ type: 'SET_FIELD', field: 'activeTab', value: tab })}
@@ -829,6 +844,6 @@ export default function BACTracker() {
       />
 
       <PWAInstallPrompt />
-    </>
+    </PWAProvider>
   );
 }

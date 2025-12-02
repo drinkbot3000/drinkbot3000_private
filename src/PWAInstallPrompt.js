@@ -1,47 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
+import { usePWA } from './contexts/PWAContext';
 
 const PWAInstallPrompt = () => {
+  const { isInstallable, isInstalled, showInstallPrompt } = usePWA();
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
+    // Don't show if already installed
+    if (isInstalled) {
+      setShowPrompt(false);
       return;
     }
 
-    // Listen for install prompt availability
-    const handleInstallAvailable = () => {
+    // Show prompt after a delay when installable
+    if (isInstallable) {
       // Show prompt sooner for better UX (reduced from 5 seconds to 1 second)
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setShowPrompt(true);
       }, 1000); // Show after 1 second
-    };
 
-    window.addEventListener('pwa-install-available', handleInstallAvailable);
-
-    // Listen for app installation
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setShowPrompt(false);
-    };
-
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('pwa-install-available', handleInstallAvailable);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [isInstallable, isInstalled]);
 
   const handleInstallClick = async () => {
-    if (window.showInstallPrompt) {
-      const accepted = await window.showInstallPrompt();
-      if (accepted) {
-        setShowPrompt(false);
-      }
+    const accepted = await showInstallPrompt();
+    if (accepted) {
+      setShowPrompt(false);
     }
   };
 
@@ -64,7 +50,8 @@ const PWAInstallPrompt = () => {
     }
   }, []);
 
-  if (!showPrompt || isInstalled) {
+  // Don't show if not installable, already installed, or user dismissed
+  if (!showPrompt || isInstalled || !isInstallable) {
     return null;
   }
 
