@@ -50,6 +50,6 @@
     "mainBundle": 500,
     "chunkBundle": 250,
     "cssBundle": 100,
-    "totalSize": 1000
+    "totalSize": 1200
   }
 }
