@@ -191,7 +191,7 @@ function appReducer(state, action) {
  * Main App Content (uses TrackerContext)
  */
 function BACTrackerContent() {
-  const { state, setField, setMultiple, addDrink: addDrinkAction, removeDrink, clearDrinks: clearDrinksAction, addReceipt, addCustomDrink: addCustomDrinkAction, deleteCustomDrink: deleteCustomDrinkAction, showConfirm, hideConfirm } = useTracker();
+  const { state, setField, setMultiple, addDrink: addDrinkAction, removeDrink, undoDrink, clearDrinks: clearDrinksAction, addReceipt, addCustomDrink: addCustomDrinkAction, deleteCustomDrink: deleteCustomDrinkAction, showConfirm, hideConfirm } = useTracker();
 
   // Robot message display
   const showRobotMessage = useCallback(
@@ -779,7 +779,8 @@ function BACTrackerContent() {
                 setField('showDrinkHistory', !state.showDrinkHistory)
               }
               onDeleteDrink={deleteDrink}
-              onClearDrinks={clearDrinks}
+              onUndoLast={undoDrink}
+              onClearAll={clearDrinks}
             />
             <SupportSection
               customTipAmount={state.customTipAmount}
