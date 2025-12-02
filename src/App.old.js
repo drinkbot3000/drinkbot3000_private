@@ -1,16 +1,10 @@
 /**
  * DrinkBot3000 - Main Application Component
  * Blood Alcohol Content (BAC) tracking application
- *
- * REFACTORED: Now uses TrackerContext for centralized state management
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useReducer, useCallback } from 'react';
 import PWAInstallPrompt from './PWAInstallPrompt';
-import { PWAProvider } from './contexts/PWAContext';
-
-// State Management
-import { TrackerProvider, useTracker } from './state/TrackerContext';
 
 // Components
 import { AgeVerification } from './components/AgeVerification';
@@ -39,6 +33,7 @@ import {
 // Services
 import { checkGeographicRestriction } from './services/geolocation.service';
 import {
+  calculateBAC,
   calculateEstimateBAC,
   getBACStatus as getBACStatusService,
   calculateSoberTime,
@@ -51,9 +46,10 @@ import {
   removeItem,
   STORAGE_KEYS,
 } from './services/storage.service';
-import { generateReceipt } from './services/receipt.service';
+import { generateReceipt, downloadReceipt } from './services/receipt.service';
 
 // Hooks
+import { useRobotMessage } from './hooks/useRobotMessage';
 import { useBACCalculation } from './hooks/useBACCalculation';
 
 // Constants
@@ -137,8 +133,6 @@ function appReducer(state, action) {
         hasBeenImpaired: false,
         estimateDrinks: '',
         estimateHours: '',
-        mode: '',
-        setupComplete: false,
       };
     case 'RESET_APP':
       return {
@@ -189,21 +183,16 @@ function appReducer(state, action) {
 
 export default function BACTracker() {
   const [state, dispatch] = useReducer(appReducer, initialState);
-/**
- * Main App Content (uses TrackerContext)
- */
-function BACTrackerContent() {
-  const { state, setField, setMultiple, addDrink: addDrinkAction, removeDrink, clearDrinks: clearDrinksAction, addReceipt, addCustomDrink: addCustomDrinkAction, deleteCustomDrink: deleteCustomDrinkAction, showConfirm, hideConfirm } = useTracker();
 
-  // Robot message display
+  // Robot message hook
   const showRobotMessage = useCallback(
     (message) => {
-      setField('robotMessage', message);
+      dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: message });
       setTimeout(() => {
-        setField('robotMessage', '');
+        dispatch({ type: 'SET_FIELD', field: 'robotMessage', value: '' });
       }, CONSTANTS.ROBOT_MESSAGE_DURATION);
     },
-    [setField]
+    []
   );
 
   // Load saved data on mount
@@ -217,36 +206,46 @@ function BACTrackerContent() {
     const geoCountry = getItem(STORAGE_KEYS.USER_COUNTRY);
     const geoConsentCheck = getItem(STORAGE_KEYS.GEO_CONSENT_GIVEN);
 
-    const updates = {};
-
-    if (ageCheck === 'true') updates.ageVerified = true;
-    if (disclaimerCheck === 'true') updates.disclaimerAccepted = true;
-    if (safetyCheck === 'true') updates.safetyScreensComplete = true;
-    if (geoCheck === 'true') updates.geoVerified = true;
-    if (geoCountry) updates.geoCountry = geoCountry;
-    if (geoConsentCheck === 'true') updates.geoConsentGiven = true;
-    if (savedReceipts) updates.receipts = savedReceipts;
-
+    if (ageCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
+    }
+    if (disclaimerCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
+    }
+    if (safetyCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
+    }
+    if (geoCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+    }
+    if (geoCountry) {
+      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: geoCountry });
+    }
+    if (geoConsentCheck === 'true') {
+      dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
+    }
+    if (savedReceipts) {
+      dispatch({ type: 'SET_FIELD', field: 'receipts', value: savedReceipts });
+    }
     if (saved) {
-      Object.assign(updates, {
-        setupComplete: saved.setupComplete || false,
-        gender: saved.gender || '',
-        weight: saved.weight || '',
-        drinks: saved.drinks || [],
-        startTime: saved.startTime || null,
-        mode: saved.mode || '',
-        estimateDrinks: saved.estimateDrinks || '',
-        estimateHours: saved.estimateHours || '',
-        savedCustomDrinks: saved.savedCustomDrinks || [],
-        hasBeenImpaired: saved.hasBeenImpaired || false,
-        useSlowMetabolism: saved.useSlowMetabolism !== undefined ? saved.useSlowMetabolism : true,
+      dispatch({
+        type: 'SET_MULTIPLE',
+        values: {
+          setupComplete: saved.setupComplete || false,
+          gender: saved.gender || '',
+          weight: saved.weight || '',
+          drinks: saved.drinks || [],
+          startTime: saved.startTime || null,
+          mode: saved.mode || '',
+          estimateDrinks: saved.estimateDrinks || '',
+          estimateHours: saved.estimateHours || '',
+          savedCustomDrinks: saved.savedCustomDrinks || [],
+          hasBeenImpaired: saved.hasBeenImpaired || false,
+          useSlowMetabolism: saved.useSlowMetabolism !== undefined ? saved.useSlowMetabolism : true,
+        },
       });
     }
-
-    if (Object.keys(updates).length > 0) {
-      setMultiple(updates);
-    }
-  }, [setMultiple]);
+  }, []);
 
   // Save receipts
   useEffect(() => {
@@ -288,13 +287,7 @@ function BACTrackerContent() {
   ]);
 
   // BAC calculation effect using custom hook
-  useBACCalculation({ dispatch: (action) => {
-    if (action.type === 'SET_FIELD') {
-      setField(action.field, action.value);
-    } else if (action.type === 'SET_MULTIPLE') {
-      setMultiple(action.values);
-    }
-  }, state });
+  useBACCalculation({ dispatch, state });
 
   // URL parameter parsing
   useEffect(() => {
@@ -303,114 +296,111 @@ function BACTrackerContent() {
     const hours = urlParams.get('hours');
     const tab = urlParams.get('tab');
 
-    const updates = {};
-
     if (drinks && hours) {
       const drinksNum = parseFloat(drinks);
       const hoursNum = parseFloat(hours);
       if (!isNaN(drinksNum) && !isNaN(hoursNum) && drinksNum > 0 && hoursNum > 0) {
-        updates.calcDrinks = drinks;
-        updates.calcHours = hours;
-        updates.activeTab = 'calculator';
+        dispatch({ type: 'SET_FIELD', field: 'calcDrinks', value: drinks });
+        dispatch({ type: 'SET_FIELD', field: 'calcHours', value: hours });
+        dispatch({ type: 'SET_FIELD', field: 'activeTab', value: 'calculator' });
       }
     }
     if (tab === 'calculator' || tab === 'tracker') {
-      updates.activeTab = tab;
+      dispatch({ type: 'SET_FIELD', field: 'activeTab', value: tab });
     }
-
-    if (Object.keys(updates).length > 0) {
-      setMultiple(updates);
-    }
-  }, [setMultiple]);
+  }, []);
 
   // Event Handlers
   const handleAgeVerification = (isOfAge) => {
     if (isOfAge) {
       setItem(STORAGE_KEYS.AGE_VERIFIED, 'true');
-      setMultiple({ ageVerified: true, showGeoConsent: true });
+      dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: true });
     } else {
       alert('You must be of legal drinking age to use this app.');
     }
   };
 
   const handleGeoConsentAccept = async () => {
+    dispatch({ type: 'SET_FIELD', field: 'geoConsentGiven', value: true });
     setItem(STORAGE_KEYS.GEO_CONSENT_GIVEN, 'true');
-    setMultiple({ geoConsentGiven: true, showGeoConsent: false, geoVerifying: true });
+    dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: true });
 
     try {
       const result = await checkGeographicRestriction();
-      const updates = { geoVerifying: false };
+      dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: false });
 
       if (result.allowed) {
-        Object.assign(updates, {
-          geoVerified: true,
-          geoCountry: result.country,
-          geoBlocked: false,
-          geoTechnicalError: false,
-          showDisclaimerModal: true,
-        });
+        dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+        dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
+        dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+        dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
+        dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
       } else {
-        Object.assign(updates, {
-          geoBlocked: true,
-          geoCountry: result.country,
-          geoTechnicalError: result.technicalError || false,
-        });
+        if (result.technicalError) {
+          dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: true });
+          dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+          dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
+        } else {
+          dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+          dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: result.country });
+          dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: false });
+        }
       }
-
       if (result.error) {
-        updates.geoError = result.error;
+        dispatch({ type: 'SET_FIELD', field: 'geoError', value: result.error });
       }
-
-      setMultiple(updates);
     } catch (error) {
       console.error('Geographic verification failed:', error);
-      setMultiple({
-        geoVerifying: false,
-        geoError: error.message,
-        geoBlocked: true,
-        geoTechnicalError: true,
-        geoCountry: 'Unknown',
-      });
+      dispatch({ type: 'SET_FIELD', field: 'geoVerifying', value: false });
+      dispatch({ type: 'SET_FIELD', field: 'geoError', value: error.message });
+      dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'geoTechnicalError', value: true });
+      dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'Unknown' });
     }
   };
 
   const handleGeoConsentDecline = () => {
+    dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: false });
     removeItem(STORAGE_KEYS.AGE_VERIFIED);
-    setMultiple({ ageVerified: false, showGeoConsent: false });
   };
 
   const handleGeoBypass = () => {
+    dispatch({ type: 'SET_FIELD', field: 'geoVerified', value: true });
+    dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'geoCountry', value: 'USA (Manual Override)' });
     setItem(STORAGE_KEYS.GEO_VERIFIED, 'true');
     setItem(STORAGE_KEYS.USER_COUNTRY, 'USA (Manual Override)');
-    setMultiple({
-      geoVerified: true,
-      geoBlocked: false,
-      geoCountry: 'USA (Manual Override)',
-      showDisclaimerModal: true,
-    });
+    dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: true });
   };
 
   const handleGeoRetry = () => {
-    setMultiple({ geoBlocked: false, showGeoConsent: true });
+    dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'showGeoConsent', value: true });
   };
 
   const handleGeoGoBack = () => {
+    dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'geoBlocked', value: false });
     removeItem(STORAGE_KEYS.AGE_VERIFIED);
     removeItem(STORAGE_KEYS.GEO_CONSENT_GIVEN);
-    setMultiple({ ageVerified: false, geoBlocked: false });
   };
 
   const handleDisclaimerAccept = () => {
     setItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED, 'true');
-    setMultiple({ disclaimerAccepted: true, showDisclaimerModal: false, currentSafetyScreen: 0 });
+    dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: true });
+    dispatch({ type: 'SET_FIELD', field: 'showDisclaimerModal', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'currentSafetyScreen', value: 0 });
   };
 
   const handleSafetyScreenNext = () => {
     if (state.currentSafetyScreen < 3) {
-      setField('currentSafetyScreen', state.currentSafetyScreen + 1);
+      dispatch({ type: 'NEXT_SAFETY_SCREEN' });
     } else {
       setItem(STORAGE_KEYS.SAFETY_SCREENS_COMPLETE, 'true');
-      setField('safetyScreensComplete', true);
+      dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: true });
     }
   };
 
@@ -418,12 +408,10 @@ function BACTrackerContent() {
     removeItem(STORAGE_KEYS.AGE_VERIFIED);
     removeItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED);
     removeItem(STORAGE_KEYS.SAFETY_SCREENS_COMPLETE);
-    setMultiple({
-      ageVerified: false,
-      disclaimerAccepted: false,
-      safetyScreensComplete: false,
-      currentSafetyScreen: 0,
-    });
+    dispatch({ type: 'SET_FIELD', field: 'ageVerified', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'disclaimerAccepted', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'safetyScreensComplete', value: false });
+    dispatch({ type: 'SET_FIELD', field: 'currentSafetyScreen', value: 0 });
   };
 
   const handleSetup = () => {
@@ -437,7 +425,7 @@ function BACTrackerContent() {
     }
     const error = validateWeight(state.weight);
     if (error) {
-      setField('weightError', error);
+      dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
       showRobotMessage(error);
       return;
     }
@@ -457,19 +445,17 @@ function BACTrackerContent() {
         return;
       }
     }
-
-    const updates = { weightError: '', setupComplete: true };
+    dispatch({ type: 'SET_FIELD', field: 'weightError', value: '' });
+    dispatch({ type: 'SET_FIELD', field: 'setupComplete', value: true });
     if (state.mode === 'live') {
-      updates.startTime = Date.now();
+      dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
     }
-    setMultiple(updates);
-
     const greeting = ROBOT_GREETINGS[Math.floor(Math.random() * ROBOT_GREETINGS.length)];
     showRobotMessage(greeting);
   };
 
   const handleModeSelect = (selectedMode) => {
-    setField('mode', selectedMode);
+    dispatch({ type: 'SET_FIELD', field: 'mode', value: selectedMode });
   };
 
   const addDrink = (name = 'Standard Drink', oz = null, abv = null) => {
@@ -493,10 +479,10 @@ function BACTrackerContent() {
     };
 
     if (state.mode === 'live' && !state.startTime) {
-      setField('startTime', Date.now());
+      dispatch({ type: 'SET_FIELD', field: 'startTime', value: Date.now() });
     }
 
-    addDrinkAction(name, oz, abv);
+    dispatch({ type: 'ADD_DRINK', drink: newDrink });
 
     const comment = ROBOT_COMMENTS[Math.floor(Math.random() * ROBOT_COMMENTS.length)];
     showRobotMessage(comment);
@@ -504,7 +490,7 @@ function BACTrackerContent() {
 
   const clearDrinks = () => {
     if (state.drinks.length > 0) {
-      clearDrinksAction();
+      dispatch({ type: 'CLEAR_DRINKS' });
       showRobotMessage('*whirrs loudly* All drinks cleared from memory! Starting fresh! 🤖');
     } else {
       showRobotMessage('No drinks to clear!');
@@ -512,15 +498,16 @@ function BACTrackerContent() {
   };
 
   const deleteDrink = (id) => {
-    removeDrink(id);
+    dispatch({ type: 'REMOVE_DRINK', id });
     showRobotMessage('*whirrs* Drink removed from records! 🤖');
   };
 
   const tellJoke = () => {
     const randomJoke = JOKES[Math.floor(Math.random() * JOKES.length)];
-    setMultiple({ currentJoke: randomJoke, showJoke: true });
+    dispatch({ type: 'SET_FIELD', field: 'currentJoke', value: randomJoke });
+    dispatch({ type: 'SET_FIELD', field: 'showJoke', value: true });
     setTimeout(() => {
-      setField('showJoke', false);
+      dispatch({ type: 'SET_FIELD', field: 'showJoke', value: false });
     }, CONSTANTS.JOKE_DURATION);
   };
 
@@ -543,14 +530,14 @@ function BACTrackerContent() {
       return;
     }
 
-    setField('calcBAC', result);
+    dispatch({ type: 'SET_FIELD', field: 'calcBAC', value: result });
   };
 
   const handlePaymentSuccess = () => {
     const amount = parseFloat(state.customTipAmount) || 5;
     const receipt = generateReceipt(amount);
-    addReceipt(receipt);
-    setField('showReceipt', true);
+    dispatch({ type: 'ADD_RECEIPT', receipt });
+    dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: true });
     showRobotMessage('*beeps gratefully* Thank you for your support! 🤖💚');
   };
 
@@ -568,60 +555,68 @@ function BACTrackerContent() {
       abv: parseFloat(customDrinkABV),
     };
 
-    addCustomDrinkAction(drink);
-    setMultiple({
-      customDrinkName: '',
-      customDrinkOz: '',
-      customDrinkABV: '5',
-      showCustomDrink: false,
-    });
+    dispatch({ type: 'ADD_CUSTOM_DRINK', drink });
+    dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value: '' });
+    dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value: '' });
+    dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value: '5' });
+    dispatch({ type: 'SET_FIELD', field: 'showCustomDrink', value: false });
     showRobotMessage('*beep boop* Custom drink saved! 🤖');
   };
 
   const handleDeleteCustomDrink = (id) => {
-    deleteCustomDrinkAction(id);
+    dispatch({ type: 'DELETE_CUSTOM_DRINK', id });
     showRobotMessage('Custom drink deleted! 🤖');
   };
 
   // Settings handlers
   const handleSettingsEditToggle = () => {
-    setMultiple({
-      settingsEditMode: !state.settingsEditMode,
-      settingsEditGender: state.gender,
-      settingsEditWeight: state.weight,
+    dispatch({
+      type: 'SET_MULTIPLE',
+      values: {
+        settingsEditMode: !state.settingsEditMode,
+        settingsEditGender: state.gender,
+        settingsEditWeight: state.weight,
+      },
     });
   };
 
   const handleSettingsSave = () => {
     const error = validateWeight(state.settingsEditWeight);
     if (error) {
-      setField('weightError', error);
+      dispatch({ type: 'SET_FIELD', field: 'weightError', value: error });
       return;
     }
 
-    showConfirm(
-      'Changing your profile will reset your current BAC tracking. Continue?',
-      () => {
-        setMultiple({
-          gender: state.settingsEditGender,
-          weight: state.settingsEditWeight,
-          drinks: [],
-          bac: 0,
-          startTime: null,
-          hasBeenImpaired: false,
-          settingsEditMode: false,
-          weightError: '',
+    dispatch({
+      type: 'SHOW_CONFIRM',
+      message: 'Changing your profile will reset your current BAC tracking. Continue?',
+      action: () => {
+        dispatch({
+          type: 'SET_MULTIPLE',
+          values: {
+            gender: state.settingsEditGender,
+            weight: state.settingsEditWeight,
+            drinks: [],
+            bac: 0,
+            startTime: null,
+            hasBeenImpaired: false,
+            settingsEditMode: false,
+            weightError: '',
+          },
         });
-        hideConfirm();
+        dispatch({ type: 'HIDE_CONFIRM' });
         showRobotMessage('Profile updated! Tracker has been reset. 🤖');
-      }
-    );
+      },
+    });
   };
 
   const handleSettingsCancel = () => {
-    setMultiple({
-      settingsEditMode: false,
-      weightError: '',
+    dispatch({
+      type: 'SET_MULTIPLE',
+      values: {
+        settingsEditMode: false,
+        weightError: '',
+      },
     });
   };
 
@@ -636,11 +631,7 @@ function BACTrackerContent() {
 
   // Render flow screens
   if (!state.ageVerified) {
-    return (
-      <PWAProvider>
-        <AgeVerification onVerify={handleAgeVerification} />
-      </PWAProvider>
-    );
+    return <AgeVerification onVerify={handleAgeVerification} />;
   }
 
   if (state.showGeoConsent || state.geoVerifying || state.geoBlocked) {
@@ -653,67 +644,35 @@ function BACTrackerContent() {
       : 'consent';
 
     return (
-      <PWAProvider>
-        <GeolocationConsent
-          state={geoState}
-          country={state.geoCountry}
-          error={state.geoError}
-          onAccept={handleGeoConsentAccept}
-          onDecline={handleGeoConsentDecline}
-          onBypass={handleGeoBypass}
-          onRetry={handleGeoRetry}
-          onGoBack={handleGeoGoBack}
-        />
-      </PWAProvider>
+      <GeolocationConsent
+        state={geoState}
+        country={state.geoCountry}
+        error={state.geoError}
+        onAccept={handleGeoConsentAccept}
+        onDecline={handleGeoConsentDecline}
+        onBypass={handleGeoBypass}
+        onRetry={handleGeoRetry}
+        onGoBack={handleGeoGoBack}
+      />
     );
   }
 
   if (state.showDisclaimerModal) {
-    return (
-      <PWAProvider>
-        <Disclaimer onAccept={handleDisclaimerAccept} />
-      </PWAProvider>
-    );
+    return <Disclaimer onAccept={handleDisclaimerAccept} />;
   }
 
   if (!state.safetyScreensComplete) {
     return (
-      <PWAProvider>
-        <SafetyScreens
-          currentScreen={state.currentSafetyScreen}
-          onNext={handleSafetyScreenNext}
-          onDecline={handleSafetyScreenDecline}
-        />
-      </PWAProvider>
+      <SafetyScreens
+        currentScreen={state.currentSafetyScreen}
+        onNext={handleSafetyScreenNext}
+        onDecline={handleSafetyScreenDecline}
+      />
     );
   }
 
   if (!state.setupComplete) {
     return (
-      <PWAProvider>
-        <Setup
-          gender={state.gender}
-          weight={state.weight}
-          mode={state.mode}
-          estimateDrinks={state.estimateDrinks}
-          estimateHours={state.estimateHours}
-          weightError={state.weightError}
-          useSlowMetabolism={state.useSlowMetabolism}
-          onGenderChange={(gender) => dispatch({ type: 'SET_FIELD', field: 'gender', value: gender })}
-          onWeightChange={(weight) => dispatch({ type: 'SET_FIELD', field: 'weight', value: weight })}
-          onModeSelect={handleModeSelect}
-          onEstimateDrinksChange={(value) =>
-            dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value })
-          }
-          onEstimateHoursChange={(value) =>
-            dispatch({ type: 'SET_FIELD', field: 'estimateHours', value })
-          }
-          onMetabolismChange={(value) =>
-            dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value })
-          }
-          onComplete={handleSetup}
-        />
-      </PWAProvider>
       <Setup
         gender={state.gender}
         weight={state.weight}
@@ -722,12 +681,18 @@ function BACTrackerContent() {
         estimateHours={state.estimateHours}
         weightError={state.weightError}
         useSlowMetabolism={state.useSlowMetabolism}
-        onGenderChange={(gender) => setField('gender', gender)}
-        onWeightChange={(weight) => setField('weight', weight)}
+        onGenderChange={(gender) => dispatch({ type: 'SET_FIELD', field: 'gender', value: gender })}
+        onWeightChange={(weight) => dispatch({ type: 'SET_FIELD', field: 'weight', value: weight })}
         onModeSelect={handleModeSelect}
-        onEstimateDrinksChange={(value) => setField('estimateDrinks', value)}
-        onEstimateHoursChange={(value) => setField('estimateHours', value)}
-        onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
+        onEstimateDrinksChange={(value) =>
+          dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value })
+        }
+        onEstimateHoursChange={(value) =>
+          dispatch({ type: 'SET_FIELD', field: 'estimateHours', value })
+        }
+        onMetabolismChange={(value) =>
+          dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value })
+        }
         onComplete={handleSetup}
       />
     );
@@ -735,12 +700,12 @@ function BACTrackerContent() {
 
   // Main app interface
   return (
-    <PWAProvider>
+    <>
       <MainLayout
         activeTab={state.activeTab}
-        onTabChange={(tab) => setField('activeTab', tab)}
-        onSettingsClick={() => setField('showSettings', true)}
-        onHelpClick={() => setField('showHelp', true)}
+        onTabChange={(tab) => dispatch({ type: 'SET_FIELD', field: 'activeTab', value: tab })}
+        onSettingsClick={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: true })}
+        onHelpClick={() => dispatch({ type: 'SET_FIELD', field: 'showHelp', value: true })}
       >
         {state.activeTab === 'tracker' ? (
           <>
@@ -758,16 +723,20 @@ function BACTrackerContent() {
               customDrinkABV={state.customDrinkABV}
               savedCustomDrinks={state.savedCustomDrinks}
               onToggleCustomDrink={() =>
-                setField('showCustomDrink', !state.showCustomDrink)
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'showCustomDrink',
+                  value: !state.showCustomDrink,
+                })
               }
               onCustomDrinkNameChange={(value) =>
-                setField('customDrinkName', value)
+                dispatch({ type: 'SET_FIELD', field: 'customDrinkName', value })
               }
               onCustomDrinkOzChange={(value) =>
-                setField('customDrinkOz', value)
+                dispatch({ type: 'SET_FIELD', field: 'customDrinkOz', value })
               }
               onCustomDrinkABVChange={(value) =>
-                setField('customDrinkABV', value)
+                dispatch({ type: 'SET_FIELD', field: 'customDrinkABV', value })
               }
               onSaveCustomDrink={handleSaveCustomDrink}
               onDeleteCustomDrink={handleDeleteCustomDrink}
@@ -777,7 +746,11 @@ function BACTrackerContent() {
               drinks={state.drinks}
               showHistory={state.showDrinkHistory}
               onToggleHistory={() =>
-                setField('showDrinkHistory', !state.showDrinkHistory)
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'showDrinkHistory',
+                  value: !state.showDrinkHistory,
+                })
               }
               onDeleteDrink={deleteDrink}
               onClearDrinks={clearDrinks}
@@ -785,7 +758,7 @@ function BACTrackerContent() {
             <SupportSection
               customTipAmount={state.customTipAmount}
               onCustomTipChange={(value) =>
-                setField('customTipAmount', value)
+                dispatch({ type: 'SET_FIELD', field: 'customTipAmount', value })
               }
               onPaymentSuccess={handlePaymentSuccess}
               onTellJoke={tellJoke}
@@ -797,8 +770,8 @@ function BACTrackerContent() {
             hours={state.calcHours}
             calculatedBAC={state.calcBAC}
             gender={state.gender}
-            onDrinksChange={(value) => setField('calcDrinks', value)}
-            onHoursChange={(value) => setField('calcHours', value)}
+            onDrinksChange={(value) => dispatch({ type: 'SET_FIELD', field: 'calcDrinks', value })}
+            onHoursChange={(value) => dispatch({ type: 'SET_FIELD', field: 'calcHours', value })}
             onCalculate={calculateQuickBAC}
           />
         )}
@@ -807,11 +780,11 @@ function BACTrackerContent() {
       {/* Modals */}
       <HelpModal
         isOpen={state.showHelp}
-        onClose={() => setField('showHelp', false)}
+        onClose={() => dispatch({ type: 'SET_FIELD', field: 'showHelp', value: false })}
       />
       <SettingsModal
         isOpen={state.showSettings}
-        onClose={() => setField('showSettings', false)}
+        onClose={() => dispatch({ type: 'SET_FIELD', field: 'showSettings', value: false })}
         gender={state.gender}
         weight={state.weight}
         editMode={state.settingsEditMode}
@@ -821,27 +794,27 @@ function BACTrackerContent() {
         useSlowMetabolism={state.useSlowMetabolism}
         onEditModeToggle={handleSettingsEditToggle}
         onGenderChange={(gender) =>
-          setField('settingsEditGender', gender)
+          dispatch({ type: 'SET_FIELD', field: 'settingsEditGender', value: gender })
         }
         onWeightChange={(weight) =>
-          setField('settingsEditWeight', weight)
+          dispatch({ type: 'SET_FIELD', field: 'settingsEditWeight', value: weight })
         }
         onMetabolismChange={(value) =>
-          setField('useSlowMetabolism', value)
+          dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value })
         }
         onSaveSettings={handleSettingsSave}
         onCancelEdit={handleSettingsCancel}
         onShowRefundPolicy={() =>
-          setField('showRefundPolicy', true)
+          dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: true })
         }
       />
       <RefundPolicyModal
         isOpen={state.showRefundPolicy}
-        onClose={() => setField('showRefundPolicy', false)}
+        onClose={() => dispatch({ type: 'SET_FIELD', field: 'showRefundPolicy', value: false })}
       />
       <ReceiptModal
         isOpen={state.showReceipt}
-        onClose={() => setField('showReceipt', false)}
+        onClose={() => dispatch({ type: 'SET_FIELD', field: 'showReceipt', value: false })}
         receipt={state.currentReceipt}
       />
       <ConfirmModal
@@ -852,21 +825,10 @@ function BACTrackerContent() {
             state.confirmModalAction();
           }
         }}
-        onCancel={() => hideConfirm()}
+        onCancel={() => dispatch({ type: 'HIDE_CONFIRM' })}
       />
 
       <PWAInstallPrompt />
-    </PWAProvider>
-  );
-}
-
-/**
- * Main App Component with Context Provider
- */
-export default function BACTracker() {
-  return (
-    <TrackerProvider>
-      <BACTrackerContent />
-    </TrackerProvider>
+    </>
   );
 }
