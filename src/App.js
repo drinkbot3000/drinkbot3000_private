@@ -697,37 +697,15 @@ function BACTrackerContent() {
           estimateHours={state.estimateHours}
           weightError={state.weightError}
           useSlowMetabolism={state.useSlowMetabolism}
-          onGenderChange={(gender) => dispatch({ type: 'SET_FIELD', field: 'gender', value: gender })}
-          onWeightChange={(weight) => dispatch({ type: 'SET_FIELD', field: 'weight', value: weight })}
+          onGenderChange={(gender) => setField('gender', gender)}
+          onWeightChange={(weight) => setField('weight', weight)}
           onModeSelect={handleModeSelect}
-          onEstimateDrinksChange={(value) =>
-            dispatch({ type: 'SET_FIELD', field: 'estimateDrinks', value })
-          }
-          onEstimateHoursChange={(value) =>
-            dispatch({ type: 'SET_FIELD', field: 'estimateHours', value })
-          }
-          onMetabolismChange={(value) =>
-            dispatch({ type: 'SET_FIELD', field: 'useSlowMetabolism', value })
-          }
+          onEstimateDrinksChange={(value) => setField('estimateDrinks', value)}
+          onEstimateHoursChange={(value) => setField('estimateHours', value)}
+          onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
           onComplete={handleSetup}
         />
       </PWAProvider>
-      <Setup
-        gender={state.gender}
-        weight={state.weight}
-        mode={state.mode}
-        estimateDrinks={state.estimateDrinks}
-        estimateHours={state.estimateHours}
-        weightError={state.weightError}
-        useSlowMetabolism={state.useSlowMetabolism}
-        onGenderChange={(gender) => setField('gender', gender)}
-        onWeightChange={(weight) => setField('weight', weight)}
-        onModeSelect={handleModeSelect}
-        onEstimateDrinksChange={(value) => setField('estimateDrinks', value)}
-        onEstimateHoursChange={(value) => setField('estimateHours', value)}
-        onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
-        onComplete={handleSetup}
-      />
     );
   }
 
