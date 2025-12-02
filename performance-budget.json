@@ -1,0 +1,55 @@
+{
+  "budgets": [
+    {
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 500
+        },
+        {
+          "resourceType": "total",
+          "budget": 1000
+        },
+        {
+          "resourceType": "stylesheet",
+          "budget": 100
+        },
+        {
+          "resourceType": "image",
+          "budget": 300
+        },
+        {
+          "resourceType": "font",
+          "budget": 150
+        }
+      ],
+      "resourceCounts": [
+        {
+          "resourceType": "script",
+          "budget": 10
+        },
+        {
+          "resourceType": "stylesheet",
+          "budget": 5
+        },
+        {
+          "resourceType": "image",
+          "budget": 20
+        }
+      ]
+    }
+  ],
+  "thresholds": {
+    "FCP": 1800,
+    "LCP": 2500,
+    "TBT": 300,
+    "CLS": 0.1,
+    "SI": 3400
+  },
+  "limits": {
+    "mainBundle": 500,
+    "chunkBundle": 250,
+    "cssBundle": 100,
+    "totalSize": 1200
+  }
+}

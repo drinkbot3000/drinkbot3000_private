@@ -1,0 +1,195 @@
+name: Performance Budget Check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  performance-budget:
+    name: Check Performance Budget
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read .nvmrc
+        id: nvmrc
+        run: echo "node_version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.nvmrc.outputs.node_version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Check performance budget
+        run: |
+          #!/bin/bash
+          set -e
+
+          echo "🎯 Performance Budget Check"
+          echo "============================"
+
+          # Load budget configuration
+          MAIN_BUNDLE_LIMIT=$(node -p "require('./performance-budget.json').limits.mainBundle")
+          CHUNK_BUNDLE_LIMIT=$(node -p "require('./performance-budget.json').limits.chunkBundle")
+          CSS_BUNDLE_LIMIT=$(node -p "require('./performance-budget.json').limits.cssBundle")
+          TOTAL_SIZE_LIMIT=$(node -p "require('./performance-budget.json').limits.totalSize")
+
+          echo "Budget Limits:"
+          echo "  Main Bundle: ${MAIN_BUNDLE_LIMIT}KB"
+          echo "  Chunk Bundle: ${CHUNK_BUNDLE_LIMIT}KB"
+          echo "  CSS Bundle: ${CSS_BUNDLE_LIMIT}KB"
+          echo "  Total Size: ${TOTAL_SIZE_LIMIT}KB"
+          echo ""
+
+          FAILED=0
+
+          # Check main JS bundle
+          if [ -d "build/static/js" ]; then
+            MAIN_BUNDLE=$(find build/static/js -name "main.*.js" -type f -exec du -k {} \; | cut -f1 | head -1)
+            if [ ! -z "$MAIN_BUNDLE" ]; then
+              echo "Main JS Bundle: ${MAIN_BUNDLE}KB / ${MAIN_BUNDLE_LIMIT}KB"
+              if [ "$MAIN_BUNDLE" -gt "$MAIN_BUNDLE_LIMIT" ]; then
+                echo "  ❌ FAILED: Exceeds budget by $((MAIN_BUNDLE - MAIN_BUNDLE_LIMIT))KB"
+                FAILED=1
+              else
+                echo "  ✅ PASSED"
+              fi
+            fi
+          fi
+
+          # Check chunk bundles
+          if [ -d "build/static/js" ]; then
+            echo ""
+            echo "Chunk Bundles:"
+            for file in build/static/js/*.chunk.js; do
+              if [ -f "$file" ]; then
+                SIZE=$(du -k "$file" | cut -f1)
+                FILENAME=$(basename "$file")
+                echo "  $FILENAME: ${SIZE}KB / ${CHUNK_BUNDLE_LIMIT}KB"
+                if [ "$SIZE" -gt "$CHUNK_BUNDLE_LIMIT" ]; then
+                  echo "    ❌ FAILED: Exceeds budget by $((SIZE - CHUNK_BUNDLE_LIMIT))KB"
+                  FAILED=1
+                else
+                  echo "    ✅ PASSED"
+                fi
+              fi
+            done
+          fi
+
+          # Check CSS bundle
+          if [ -d "build/static/css" ]; then
+            echo ""
+            echo "CSS Bundles:"
+            for file in build/static/css/*.css; do
+              if [ -f "$file" ]; then
+                SIZE=$(du -k "$file" | cut -f1)
+                FILENAME=$(basename "$file")
+                echo "  $FILENAME: ${SIZE}KB / ${CSS_BUNDLE_LIMIT}KB"
+                if [ "$SIZE" -gt "$CSS_BUNDLE_LIMIT" ]; then
+                  echo "    ❌ FAILED: Exceeds budget by $((SIZE - CSS_BUNDLE_LIMIT))KB"
+                  FAILED=1
+                else
+                  echo "    ✅ PASSED"
+                fi
+              fi
+            done
+          fi
+
+          # Check total build size
+          TOTAL_SIZE=$(du -sk build | cut -f1)
+          echo ""
+          echo "Total Build Size: ${TOTAL_SIZE}KB / ${TOTAL_SIZE_LIMIT}KB"
+          if [ "$TOTAL_SIZE" -gt "$TOTAL_SIZE_LIMIT" ]; then
+            echo "  ❌ FAILED: Exceeds budget by $((TOTAL_SIZE - TOTAL_SIZE_LIMIT))KB"
+            FAILED=1
+          else
+            echo "  ✅ PASSED"
+          fi
+
+          echo ""
+          if [ "$FAILED" -eq "1" ]; then
+            echo "❌ Performance budget check FAILED"
+            echo "Please optimize your bundles to meet the performance budget."
+            exit 1
+          else
+            echo "✅ All performance budgets PASSED"
+          fi
+
+      - name: Generate performance report
+        if: always()
+        run: |
+          cat > performance-report.md << EOF
+          # Performance Budget Report
+
+          Generated: $(date)
+
+          ## Budget Configuration
+
+          | Resource Type | Budget |
+          |--------------|--------|
+          | Main Bundle | $(node -p "require('./performance-budget.json').limits.mainBundle")KB |
+          | Chunk Bundle | $(node -p "require('./performance-budget.json').limits.chunkBundle")KB |
+          | CSS Bundle | $(node -p "require('./performance-budget.json').limits.cssBundle")KB |
+          | Total Size | $(node -p "require('./performance-budget.json').limits.totalSize")KB |
+
+          ## Actual Sizes
+
+          ### JavaScript Bundles
+          \`\`\`
+          $(find build/static/js -name "*.js" -type f -exec du -h {} \; | sort -rh)
+          \`\`\`
+
+          ### CSS Bundles
+          \`\`\`
+          $(find build/static/css -name "*.css" -type f -exec du -h {} \; 2>/dev/null | sort -rh || echo "No CSS files found")
+          \`\`\`
+
+          ### Total Build Size
+          \`\`\`
+          $(du -sh build)
+          \`\`\`
+
+          ## Recommendations
+
+          - Keep main bundle under $(node -p "require('./performance-budget.json').limits.mainBundle")KB
+          - Use code splitting for large features
+          - Lazy load non-critical components
+          - Optimize images and assets
+          - Remove unused dependencies
+          EOF
+
+      - name: Upload performance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance-report.md
+          retention-days: 30
+
+      - name: Comment PR with performance report
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            if (fs.existsSync('performance-report.md')) {
+              const report = fs.readFileSync('performance-report.md', 'utf8');
+
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            }

@@ -2,6 +2,14 @@ name: CI
 
 on:
   push:
+    branches: [main, 'claude/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  nvmrc-validation:
+    name: Validate Node Version
+    runs-on: ubuntu-latest
     branches: [ main ]
   workflow_dispatch:
 
@@ -14,6 +22,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Read .nvmrc
+        id: nvmrc
+        run: echo "node_version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.nvmrc.outputs.node_version }}
+
+      - name: Verify Node version matches .nvmrc
+        run: |
+          EXPECTED_VERSION=$(cat .nvmrc)
+          ACTUAL_VERSION=$(node --version | sed 's/v//' | cut -d'.' -f1)
+          if [ "$EXPECTED_VERSION" != "$ACTUAL_VERSION" ]; then
+            echo "❌ Node version mismatch!"
+            echo "Expected: $EXPECTED_VERSION"
+            echo "Actual: $ACTUAL_VERSION"
+            exit 1
+          fi
+          echo "✅ Node version matches .nvmrc: $EXPECTED_VERSION"
+
+  build-and-test:
+    name: Build and Test
+    needs: nvmrc-validation
+    runs-on: ubuntu-latest
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -57,6 +90,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Read .nvmrc
+        id: nvmrc
+        run: echo "node_version=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.nvmrc.outputs.node_version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --watchAll=false --coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: build/
+          retention-days: 7
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
