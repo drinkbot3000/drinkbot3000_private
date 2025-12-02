@@ -2,6 +2,8 @@
 // Restricts access to USA only for legal and compliance simplicity
 // Privacy: IP address is NOT stored, check is one-time only
 
+import { getItem, setItem, removeItem, STORAGE_KEYS } from './storage.service';
+
 /**
  * Allowed country codes (USA only)
  * Using allowlist approach for maximum clarity and security
@@ -225,14 +227,14 @@ async function fetchGeolocation(endpoint) {
  * @private
  */
 function getCachedVerification() {
-  const geoVerified = localStorage.getItem('geoVerified');
+  const geoVerified = getItem(STORAGE_KEYS.GEO_VERIFIED);
   if (!geoVerified) return null;
 
-  const countryCode = localStorage.getItem('userCountryCode');
-  const country = localStorage.getItem('userCountry') || 'Unknown';
+  const countryCode = getItem(STORAGE_KEYS.GEO_COUNTRY_CODE);
+  const country = getItem(STORAGE_KEYS.GEO_COUNTRY) || 'Unknown';
 
   return {
-    allowed: geoVerified === 'true',
+    allowed: geoVerified === true || geoVerified === 'true',
     country,
     countryCode: countryCode || undefined,
     error: null,
@@ -245,10 +247,10 @@ function getCachedVerification() {
  * @private
  */
 function cacheVerification(allowed, country, countryCode) {
-  localStorage.setItem('geoVerified', allowed.toString());
-  localStorage.setItem('userCountry', country);
+  setItem(STORAGE_KEYS.GEO_VERIFIED, allowed);
+  setItem(STORAGE_KEYS.GEO_COUNTRY, country);
   if (countryCode) {
-    localStorage.setItem('userCountryCode', countryCode);
+    setItem(STORAGE_KEYS.GEO_COUNTRY_CODE, countryCode);
   }
 }
 
@@ -299,9 +301,9 @@ function clearRateLimit() {
  * Reset geographic verification (for testing/debugging only)
  */
 export function resetGeographicVerification() {
-  localStorage.removeItem('geoVerified');
-  localStorage.removeItem('userCountry');
-  localStorage.removeItem('userCountryCode');
+  removeItem(STORAGE_KEYS.GEO_VERIFIED);
+  removeItem(STORAGE_KEYS.GEO_COUNTRY);
+  removeItem(STORAGE_KEYS.GEO_COUNTRY_CODE);
   clearRateLimit();
   sessionStorage.removeItem('geoErrorLogged');
 }
@@ -310,12 +312,12 @@ export function resetGeographicVerification() {
  * Get stored country if already verified
  */
 export function getStoredCountry() {
-  const verified = localStorage.getItem('geoVerified');
-  const country = localStorage.getItem('userCountry');
+  const verified = getItem(STORAGE_KEYS.GEO_VERIFIED);
+  const country = getItem(STORAGE_KEYS.GEO_COUNTRY);
 
   if (verified && country) {
     return {
-      verified: verified === 'true',
+      verified: verified === true || verified === 'true',
       country: country
     };
   }
