@@ -186,8 +186,6 @@ function appReducer(state, action) {
   }
 }
 
-export default function BACTracker() {
-  const [state, dispatch] = useReducer(appReducer, initialState);
 /**
  * Main App Content (uses TrackerContext)
  */
