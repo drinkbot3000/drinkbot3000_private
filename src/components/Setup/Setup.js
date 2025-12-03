@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { User, Scale } from 'lucide-react';
 import { Button } from '../common';
 
@@ -17,14 +18,7 @@ import { Button } from '../common';
  * @param {Function} props.onWeightChange - Handler for weight change
  * @param {Function} props.onSubmit - Handler for form submission
  */
-export function Setup({
-  gender,
-  weight,
-  weightError,
-  onGenderChange,
-  onWeightChange,
-  onSubmit,
-}) {
+export function Setup({ gender, weight, weightError, onGenderChange, onWeightChange, onSubmit }) {
   const isFormValid = gender && weight && !weightError;
 
   return (
@@ -83,13 +77,7 @@ export function Setup({
             {weightError && <p className="text-red-600 text-sm mt-1">{weightError}</p>}
           </div>
 
-          <Button
-            variant="primary"
-            size="md"
-            fullWidth
-            onClick={onSubmit}
-            disabled={!isFormValid}
-          >
+          <Button variant="primary" size="md" fullWidth onClick={onSubmit} disabled={!isFormValid}>
             Start Tracking
           </Button>
         </div>
@@ -97,3 +85,12 @@ export function Setup({
     </div>
   );
 }
+
+Setup.propTypes = {
+  gender: PropTypes.string,
+  weight: PropTypes.string,
+  weightError: PropTypes.string,
+  onGenderChange: PropTypes.func.isRequired,
+  onWeightChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};

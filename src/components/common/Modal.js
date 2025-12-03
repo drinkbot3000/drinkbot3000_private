@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { X } from 'lucide-react';
 
 /**
@@ -48,3 +49,12 @@ export function Modal({
     </div>
   );
 }
+
+Modal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  maxWidth: PropTypes.string,
+  showCloseButton: PropTypes.bool,
+};

@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { ShieldAlert } from 'lucide-react';
 import { CONSTANTS } from '../../constants';
 
@@ -47,11 +48,15 @@ export function AgeVerification({ onVerify }) {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            By clicking "I am {CONSTANTS.LEGAL_DRINKING_AGE} or Older", you confirm that you are of legal drinking age
-            in your jurisdiction.
+            By clicking "I am {CONSTANTS.LEGAL_DRINKING_AGE} or Older", you confirm that you are of
+            legal drinking age in your jurisdiction.
           </p>
         </div>
       </div>
     </div>
   );
 }
+
+AgeVerification.propTypes = {
+  onVerify: PropTypes.func.isRequired,
+};
