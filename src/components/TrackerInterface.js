@@ -3,7 +3,7 @@
  * Main tracker interface after onboarding is complete
  */
 
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import PWAInstallPrompt from '../PWAInstallPrompt';
 import { PWAProvider } from '../contexts/PWAContext';
 import { MainLayout } from './MainLayout';
@@ -16,7 +16,18 @@ import {
   SupportSection,
   MessageDisplay,
 } from './Tracker';
-import { HelpModal, SettingsModal, RefundPolicyModal, ReceiptModal } from './Modals';
+
+// Lazy load modal components (only shown when triggered)
+const HelpModal = lazy(() => import('./Modals').then((module) => ({ default: module.HelpModal })));
+const SettingsModal = lazy(() =>
+  import('./Modals').then((module) => ({ default: module.SettingsModal }))
+);
+const RefundPolicyModal = lazy(() =>
+  import('./Modals').then((module) => ({ default: module.RefundPolicyModal }))
+);
+const ReceiptModal = lazy(() =>
+  import('./Modals').then((module) => ({ default: module.ReceiptModal }))
+);
 
 /**
  * Main tracker interface
@@ -94,35 +105,51 @@ export const TrackerInterface = ({
         />
       </MainLayout>
 
-      {/* Modals */}
-      <HelpModal isOpen={state.showHelp} onClose={() => setField('showHelp', false)} />
-      <SettingsModal
-        isOpen={state.showSettings}
-        onClose={() => setField('showSettings', false)}
-        gender={state.gender}
-        weight={state.weight}
-        editMode={state.settingsEditMode}
-        editGender={state.settingsEditGender}
-        editWeight={state.settingsEditWeight}
-        weightError={state.weightError}
-        useSlowMetabolism={state.useSlowMetabolism}
-        onEditModeToggle={settingsHandlers.handleSettingsEditToggle}
-        onGenderChange={(gender) => setField('settingsEditGender', gender)}
-        onWeightChange={(weight) => setField('settingsEditWeight', weight)}
-        onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
-        onSaveSettings={settingsHandlers.handleSettingsSave}
-        onCancelEdit={settingsHandlers.handleSettingsCancel}
-        onShowRefundPolicy={() => setField('showRefundPolicy', true)}
-      />
-      <RefundPolicyModal
-        isOpen={state.showRefundPolicy}
-        onClose={() => setField('showRefundPolicy', false)}
-      />
-      <ReceiptModal
-        isOpen={state.showReceipt}
-        onClose={() => setField('showReceipt', false)}
-        receipt={state.currentReceipt}
-      />
+      {/* Modals - Lazy loaded */}
+      <Suspense fallback={null}>
+        {state.showHelp && (
+          <HelpModal isOpen={state.showHelp} onClose={() => setField('showHelp', false)} />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        {state.showSettings && (
+          <SettingsModal
+            isOpen={state.showSettings}
+            onClose={() => setField('showSettings', false)}
+            gender={state.gender}
+            weight={state.weight}
+            editMode={state.settingsEditMode}
+            editGender={state.settingsEditGender}
+            editWeight={state.settingsEditWeight}
+            weightError={state.weightError}
+            useSlowMetabolism={state.useSlowMetabolism}
+            onEditModeToggle={settingsHandlers.handleSettingsEditToggle}
+            onGenderChange={(gender) => setField('settingsEditGender', gender)}
+            onWeightChange={(weight) => setField('settingsEditWeight', weight)}
+            onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
+            onSaveSettings={settingsHandlers.handleSettingsSave}
+            onCancelEdit={settingsHandlers.handleSettingsCancel}
+            onShowRefundPolicy={() => setField('showRefundPolicy', true)}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        {state.showRefundPolicy && (
+          <RefundPolicyModal
+            isOpen={state.showRefundPolicy}
+            onClose={() => setField('showRefundPolicy', false)}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        {state.showReceipt && (
+          <ReceiptModal
+            isOpen={state.showReceipt}
+            onClose={() => setField('showReceipt', false)}
+            receipt={state.currentReceipt}
+          />
+        )}
+      </Suspense>
       <ConfirmModal
         isOpen={state.showConfirmModal}
         message={state.confirmModalMessage}

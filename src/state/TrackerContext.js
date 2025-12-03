@@ -8,7 +8,6 @@ import PropTypes from 'prop-types';
 import { trackerReducer, initialState } from './trackerReducer';
 import { calculateStandardDrinks } from '../services/bacCalculation.service';
 import { generateReceipt } from '../services/receipt.service';
-import { JOKES, ROBOT_GREETINGS, ROBOT_COMMENTS } from '../constants';
 
 const TrackerContext = createContext(undefined);
 
@@ -83,21 +82,6 @@ export function TrackerProvider({ children }) {
     return receipt;
   }, []);
 
-  // Get random joke
-  const getRandomJoke = useCallback(() => {
-    return JOKES[Math.floor(Math.random() * JOKES.length)];
-  }, []);
-
-  // Get random robot greeting
-  const getRandomRobotGreeting = useCallback(() => {
-    return ROBOT_GREETINGS[Math.floor(Math.random() * ROBOT_GREETINGS.length)];
-  }, []);
-
-  // Get random robot comment
-  const getRandomRobotComment = useCallback(() => {
-    return ROBOT_COMMENTS[Math.floor(Math.random() * ROBOT_COMMENTS.length)];
-  }, []);
-
   // Update field helper
   const setField = useCallback((field, value) => {
     dispatch({ type: 'SET_FIELD', field, value });
@@ -136,10 +120,6 @@ export function TrackerProvider({ children }) {
       setMultiple,
       addCustomDrink,
       deleteCustomDrink,
-      // Helpers
-      getRandomJoke,
-      getRandomRobotGreeting,
-      getRandomRobotComment,
     }),
     [
       state,
@@ -155,9 +135,6 @@ export function TrackerProvider({ children }) {
       setMultiple,
       addCustomDrink,
       deleteCustomDrink,
-      getRandomJoke,
-      getRandomRobotGreeting,
-      getRandomRobotComment,
     ]
   );
 

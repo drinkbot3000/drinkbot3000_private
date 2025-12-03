@@ -5,7 +5,6 @@
 
 import { useCallback } from 'react';
 import { setItem, removeItem, STORAGE_KEYS } from '../services/storage.service';
-import { checkGeographicRestriction } from '../services/geolocation.service';
 
 /**
  * Hook for managing onboarding flow
@@ -31,6 +30,8 @@ export const useOnboarding = (setField, setMultiple) => {
     setMultiple({ geoConsentGiven: true, showGeoConsent: false, geoVerifying: true });
 
     try {
+      // Lazy-load geolocation service (only used during onboarding)
+      const { checkGeographicRestriction } = await import('../services/geolocation.service');
       const result = await checkGeographicRestriction();
       const updates = { geoVerifying: false };
 

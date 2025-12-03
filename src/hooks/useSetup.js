@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { validateWeight } from '../services/validation.service';
 import { generateReceipt } from '../services/receipt.service';
-import { ROBOT_GREETINGS, JOKES, EMOJIS, CONSTANTS } from '../constants';
+import { CONSTANTS, EMOJIS } from '../constants';
 
 /**
  * Hook for managing setup and miscellaneous operations
@@ -18,7 +18,7 @@ import { ROBOT_GREETINGS, JOKES, EMOJIS, CONSTANTS } from '../constants';
  * @returns {Object} Setup handler functions
  */
 export const useSetup = (state, setField, setMultiple, addReceipt, showRobotMessage) => {
-  const handleSetup = useCallback(() => {
+  const handleSetup = useCallback(async () => {
     if (!state.gender) {
       showRobotMessage('Please select your gender to continue.');
       return;
@@ -40,11 +40,15 @@ export const useSetup = (state, setField, setMultiple, addReceipt, showRobotMess
       startTime: Date.now(),
     });
 
+    // Lazy-load greetings
+    const { ROBOT_GREETINGS } = await import('../constants/messages');
     const greeting = ROBOT_GREETINGS[Math.floor(Math.random() * ROBOT_GREETINGS.length)];
     showRobotMessage(greeting);
   }, [state.gender, state.weight, setField, setMultiple, showRobotMessage]);
 
-  const tellJoke = useCallback(() => {
+  const tellJoke = useCallback(async () => {
+    // Lazy-load jokes
+    const { JOKES } = await import('../constants/messages');
     const randomJoke = JOKES[Math.floor(Math.random() * JOKES.length)];
     setMultiple({ currentJoke: randomJoke, showJoke: true });
     setTimeout(() => {

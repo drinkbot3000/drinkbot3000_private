@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from 'react';
-import { ROBOT_COMMENTS, EMOJIS } from '../constants';
+import { EMOJIS } from '../constants';
 
 /**
  * Hook for managing drink operations
@@ -26,7 +26,7 @@ export const useDrinkManagement = (state, actions, showRobotMessage) => {
   } = actions;
 
   const addDrink = useCallback(
-    (name = 'Standard Drink', oz = null, abv = null) => {
+    async (name = 'Standard Drink', oz = null, abv = null) => {
       if (!state.setupComplete || !state.gender || !state.weight) {
         showRobotMessage('Please complete setup first before adding drinks.');
         return;
@@ -38,6 +38,8 @@ export const useDrinkManagement = (state, actions, showRobotMessage) => {
 
       addDrinkAction(name, oz, abv);
 
+      // Lazy-load robot comments
+      const { ROBOT_COMMENTS } = await import('../constants/messages');
       const comment = ROBOT_COMMENTS[Math.floor(Math.random() * ROBOT_COMMENTS.length)];
       showRobotMessage(comment);
     },
