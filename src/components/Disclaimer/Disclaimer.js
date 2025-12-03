@@ -94,18 +94,18 @@ export function Disclaimer({ onAccept, onDecline }) {
                 IF YOU DO NOT AGREE TO THESE TERMS, DO NOT USE THIS APP.
               </p>
             </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-300 text-center">
-              <a
-                href="/terms.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 hover:text-indigo-800 font-medium underline"
-              >
-                Read Full Terms of Service
-              </a>
-            </div>
           </div>
+        </div>
+
+        <div className="my-4 py-3 text-center border-y border-gray-200">
+          <a
+            href="/terms.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 hover:text-indigo-800 font-medium underline text-sm"
+          >
+            📜 Read Full Terms of Service
+          </a>
         </div>
 
         <div className="space-y-3">
