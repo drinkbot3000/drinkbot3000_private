@@ -52,6 +52,7 @@ export const initialState = {
   showDisclaimerModal: false,
   showRefundPolicy: false,
   showReceipt: false,
+  showAgeRestrictionModal: false,
 
   // Receipts
   currentReceipt: null,
