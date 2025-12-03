@@ -3,7 +3,7 @@
  * Manages BAC calculation and updates
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { calculateBAC, isValidBAC } from '../services/bacCalculation.service';
 import { CONSTANTS } from '../constants';
 
@@ -15,6 +15,14 @@ import { CONSTANTS } from '../constants';
  * @returns {void}
  */
 export const useBACCalculation = ({ dispatch, state }) => {
+  // Use ref to track hasBeenImpaired without causing effect re-runs
+  const hasBeenImpairedRef = useRef(state.hasBeenImpaired);
+
+  useEffect(() => {
+    // Update ref when state changes
+    hasBeenImpairedRef.current = state.hasBeenImpaired;
+  }, [state.hasBeenImpaired]);
+
   useEffect(() => {
     if (!state.setupComplete) return;
 
@@ -44,12 +52,12 @@ export const useBACCalculation = ({ dispatch, state }) => {
       dispatch({ type: 'SET_FIELD', field: 'bac', value: currentBAC });
 
       // Track if user has been impaired (at or above legal limit)
-      if (currentBAC >= CONSTANTS.LEGAL_LIMIT && !state.hasBeenImpaired) {
+      if (currentBAC >= CONSTANTS.LEGAL_LIMIT && !hasBeenImpairedRef.current) {
         dispatch({ type: 'SET_FIELD', field: 'hasBeenImpaired', value: true });
       }
 
       // Reset impairment flag only when completely sober
-      if (currentBAC === 0 && state.hasBeenImpaired) {
+      if (currentBAC === 0 && hasBeenImpairedRef.current) {
         dispatch({ type: 'SET_FIELD', field: 'hasBeenImpaired', value: false });
       }
     }, 1000);
@@ -61,7 +69,6 @@ export const useBACCalculation = ({ dispatch, state }) => {
     state.gender,
     state.weight,
     state.startTime,
-    state.hasBeenImpaired,
     state.useSlowMetabolism,
     dispatch,
   ]);
