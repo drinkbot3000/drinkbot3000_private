@@ -5,7 +5,7 @@
  * REFACTORED: Now uses TrackerContext for centralized state management
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { PWAProvider } from './contexts/PWAContext';
 
@@ -39,8 +39,6 @@ import {
 import { checkGeographicRestriction } from './services/geolocation.service';
 import {
   calculateEstimateBAC,
-  calculateSoberTime,
-  calculateStandardDrinks,
 } from './services/bacCalculation.service';
 import { validateWeight } from './services/validation.service';
 import {
@@ -56,134 +54,6 @@ import { useBACCalculation } from './hooks/useBACCalculation';
 
 // Constants
 import { CONSTANTS, JOKES, ROBOT_GREETINGS, ROBOT_COMMENTS } from './constants';
-
-// Initial state
-const initialState = {
-  ageVerified: false,
-  setupComplete: false,
-  gender: '',
-  weight: '',
-  bac: 0,
-  drinks: [],
-  startTime: null,
-  currentJoke: '',
-  showJoke: false,
-  mode: '',
-  estimateDrinks: '',
-  estimateHours: '',
-  activeTab: 'tracker',
-  calcDrinks: '',
-  calcHours: '',
-  calcBAC: null,
-  showSettings: false,
-  showHelp: false,
-  customDrinkOz: '',
-  customDrinkABV: '5',
-  customDrinkName: '',
-  showCustomDrink: false,
-  savedCustomDrinks: [],
-  robotMessage: '',
-  showConfirmModal: false,
-  confirmModalMessage: '',
-  confirmModalAction: null,
-  showDrinkHistory: false,
-  weightError: '',
-  customTipAmount: '',
-  showDisclaimerModal: false,
-  disclaimerAccepted: false,
-  tipError: '',
-  showRefundPolicy: false,
-  showReceipt: false,
-  currentReceipt: null,
-  receipts: [],
-  currentSafetyScreen: 0,
-  safetyScreensComplete: false,
-  showGeoConsent: false,
-  geoConsentGiven: false,
-  geoVerified: false,
-  geoBlocked: false,
-  geoCountry: '',
-  geoError: null,
-  geoVerifying: false,
-  geoTechnicalError: false,
-  settingsEditGender: '',
-  settingsEditWeight: '',
-  settingsEditMode: false,
-  hasBeenImpaired: false,
-  useSlowMetabolism: true,
-};
-
-// Reducer
-function appReducer(state, action) {
-  switch (action.type) {
-    case 'SET_FIELD':
-      return { ...state, [action.field]: action.value };
-    case 'SET_MULTIPLE':
-      return { ...state, ...action.values };
-    case 'ADD_DRINK':
-      return { ...state, drinks: [...state.drinks, action.drink] };
-    case 'REMOVE_DRINK':
-      return { ...state, drinks: state.drinks.filter((d) => d.id !== action.id) };
-    case 'UNDO_DRINK':
-      return { ...state, drinks: state.drinks.slice(0, -1) };
-    case 'CLEAR_DRINKS':
-      return {
-        ...state,
-        drinks: [],
-        bac: 0,
-        startTime: null,
-        hasBeenImpaired: false,
-        estimateDrinks: '',
-        estimateHours: '',
-        mode: '',
-        setupComplete: false,
-      };
-    case 'RESET_APP':
-      return {
-        ...initialState,
-        ageVerified: true,
-        disclaimerAccepted: true,
-        safetyScreensComplete: true,
-      };
-    case 'SHOW_CONFIRM':
-      return {
-        ...state,
-        showConfirmModal: true,
-        confirmModalMessage: action.message,
-        confirmModalAction: action.action,
-      };
-    case 'HIDE_CONFIRM':
-      return {
-        ...state,
-        showConfirmModal: false,
-        confirmModalMessage: '',
-        confirmModalAction: null,
-      };
-    case 'ADD_RECEIPT':
-      return {
-        ...state,
-        receipts: [...state.receipts, action.receipt],
-        currentReceipt: action.receipt,
-      };
-    case 'NEXT_SAFETY_SCREEN':
-      return {
-        ...state,
-        currentSafetyScreen: state.currentSafetyScreen + 1,
-      };
-    case 'ADD_CUSTOM_DRINK':
-      return {
-        ...state,
-        savedCustomDrinks: [...state.savedCustomDrinks, action.drink],
-      };
-    case 'DELETE_CUSTOM_DRINK':
-      return {
-        ...state,
-        savedCustomDrinks: state.savedCustomDrinks.filter((d) => d.id !== action.id),
-      };
-    default:
-      return state;
-  }
-}
 
 /**
  * Main App Content (uses TrackerContext)
@@ -444,11 +314,33 @@ function BACTrackerContent() {
       if (!isNaN(result) && isFinite(result) && result >= 0) {
         // Set initial BAC and start time based on estimate
         const hoursAgo = parseFloat(state.estimateHours);
+        const numDrinks = parseFloat(state.estimateDrinks);
+        const estimatedStartTime = Date.now() - (hoursAgo * 60 * 60 * 1000);
+
         updates.bac = result;
-        updates.startTime = Date.now() - (hoursAgo * 60 * 60 * 1000);
+        updates.startTime = estimatedStartTime;
         if (result >= 0.08) {
           updates.hasBeenImpaired = true;
         }
+
+        // Create drink entries distributed over the time period
+        const drinks = [];
+        const timeInterval = hoursAgo > 0 ? (hoursAgo * 60 * 60 * 1000) / numDrinks : 0;
+
+        for (let i = 0; i < numDrinks; i++) {
+          const drinkTimestamp = estimatedStartTime + (i * timeInterval);
+          const drink = {
+            id: drinkTimestamp + i, // Ensure unique IDs
+            name: 'Standard Drink',
+            oz: 12,
+            abv: 5,
+            standardDrinks: 1,
+            timestamp: drinkTimestamp,
+          };
+          drinks.push(drink);
+        }
+
+        updates.drinks = drinks;
       }
     }
     setMultiple(updates);
@@ -466,20 +358,6 @@ function BACTrackerContent() {
       showRobotMessage('Please complete setup first before adding drinks.');
       return;
     }
-
-    const standardDrinks =
-      oz !== null && abv !== null ? calculateStandardDrinks(parseFloat(oz), parseFloat(abv)) : 1;
-
-    const drinkType = oz !== null && abv !== null ? `${name} (${oz}oz @ ${abv}%)` : name;
-
-    const newDrink = {
-      id: Date.now(),
-      timestamp: Date.now(),
-      standardDrinks,
-      type: drinkType,
-      oz,
-      abv,
-    };
 
     if (state.mode === 'live' && !state.startTime) {
       setField('startTime', Date.now());
@@ -592,10 +470,6 @@ function BACTrackerContent() {
     });
   };
 
-  // Calculate sober time
-  const soberTime =
-    state.bac > 0 ? calculateSoberTime(state.bac, state.useSlowMetabolism) : null;
-
   // Render flow screens
   if (!state.ageVerified) {
     return (
@@ -685,7 +559,7 @@ function BACTrackerContent() {
           showJoke={state.showJoke}
         />
         <BACDisplay bac={state.bac} hasBeenImpaired={state.hasBeenImpaired} />
-        <TimeInfo startTime={state.startTime} soberTime={soberTime} />
+        <TimeInfo startTime={state.startTime} bac={state.bac} useSlowMetabolism={state.useSlowMetabolism} />
         <AddDrinkPanel
           showCustomDrink={state.showCustomDrink}
           customDrinkName={state.customDrinkName}
