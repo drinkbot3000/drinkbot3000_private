@@ -17,6 +17,7 @@ import {
   MessageDisplay,
 } from './Tracker';
 import { HelpModal, SettingsModal, RefundPolicyModal, ReceiptModal } from './Modals';
+import FeatureErrorBoundary from './FeatureErrorBoundary';
 
 /**
  * Main tracker interface
@@ -56,73 +57,103 @@ export const TrackerInterface = ({
           bac={state.bac}
           useSlowMetabolism={state.useSlowMetabolism}
         />
-        <AddDrinkPanel
-          showCustomDrink={state.showCustomDrink}
-          customDrinkName={state.customDrinkName}
-          customDrinkOz={state.customDrinkOz}
-          customDrinkABV={state.customDrinkABV}
-          savedCustomDrinks={state.savedCustomDrinks}
-          onToggleCustomDrink={() => setField('showCustomDrink', !state.showCustomDrink)}
-          onCustomDrinkChange={(field, value) => {
-            if (field === 'name') {
-              setField('customDrinkName', value);
-            } else if (field === 'oz') {
-              setField('customDrinkOz', value);
-            } else if (field === 'abv') {
-              setField('customDrinkABV', value);
-            }
-          }}
-          onAddCustomDrink={drinkHandlers.handleAddCustomDrink}
-          onSaveCustomDrink={drinkHandlers.handleSaveCustomDrink}
-          onDeleteCustomDrink={drinkHandlers.handleDeleteCustomDrink}
-          onCancelCustomDrink={drinkHandlers.handleCancelCustomDrink}
-          onAddDrink={drinkHandlers.addDrink}
-        />
-        <DrinkHistoryList
-          drinks={state.drinks}
-          showHistory={state.showDrinkHistory}
-          onToggleHistory={() => setField('showDrinkHistory', !state.showDrinkHistory)}
-          onDeleteDrink={drinkHandlers.deleteDrink}
-          onUndoLast={drinkHandlers.undoDrink}
-          onClearAll={drinkHandlers.clearDrinks}
-        />
-        <SupportSection
-          customTipAmount={state.customTipAmount}
-          onCustomTipChange={(value) => setField('customTipAmount', value)}
-          onPaymentSuccess={miscHandlers.handlePaymentSuccess}
-          onTellJoke={miscHandlers.tellJoke}
-        />
+        <FeatureErrorBoundary
+          featureName="Add Drink"
+          featureDescription="add drinks to your tracker"
+          showSafetyNote={true}
+        >
+          <AddDrinkPanel
+            showCustomDrink={state.showCustomDrink}
+            customDrinkName={state.customDrinkName}
+            customDrinkOz={state.customDrinkOz}
+            customDrinkABV={state.customDrinkABV}
+            savedCustomDrinks={state.savedCustomDrinks}
+            onToggleCustomDrink={() => setField('showCustomDrink', !state.showCustomDrink)}
+            onCustomDrinkChange={(field, value) => {
+              if (field === 'name') {
+                setField('customDrinkName', value);
+              } else if (field === 'oz') {
+                setField('customDrinkOz', value);
+              } else if (field === 'abv') {
+                setField('customDrinkABV', value);
+              }
+            }}
+            onAddCustomDrink={drinkHandlers.handleAddCustomDrink}
+            onSaveCustomDrink={drinkHandlers.handleSaveCustomDrink}
+            onDeleteCustomDrink={drinkHandlers.handleDeleteCustomDrink}
+            onCancelCustomDrink={drinkHandlers.handleCancelCustomDrink}
+            onAddDrink={drinkHandlers.addDrink}
+          />
+        </FeatureErrorBoundary>
+        <FeatureErrorBoundary
+          featureName="Drink History"
+          featureDescription="view and manage your drink history"
+          showSafetyNote={true}
+        >
+          <DrinkHistoryList
+            drinks={state.drinks}
+            showHistory={state.showDrinkHistory}
+            onToggleHistory={() => setField('showDrinkHistory', !state.showDrinkHistory)}
+            onDeleteDrink={drinkHandlers.deleteDrink}
+            onUndoLast={drinkHandlers.undoDrink}
+            onClearAll={drinkHandlers.clearDrinks}
+          />
+        </FeatureErrorBoundary>
+        <FeatureErrorBoundary
+          featureName="Support & Payment"
+          featureDescription="support the app"
+          showSafetyNote={false}
+        >
+          <SupportSection
+            customTipAmount={state.customTipAmount}
+            onCustomTipChange={(value) => setField('customTipAmount', value)}
+            onPaymentSuccess={miscHandlers.handlePaymentSuccess}
+            onTellJoke={miscHandlers.tellJoke}
+          />
+        </FeatureErrorBoundary>
       </MainLayout>
 
       {/* Modals */}
       <HelpModal isOpen={state.showHelp} onClose={() => setField('showHelp', false)} />
-      <SettingsModal
-        isOpen={state.showSettings}
-        onClose={() => setField('showSettings', false)}
-        gender={state.gender}
-        weight={state.weight}
-        editMode={state.settingsEditMode}
-        editGender={state.settingsEditGender}
-        editWeight={state.settingsEditWeight}
-        weightError={state.weightError}
-        useSlowMetabolism={state.useSlowMetabolism}
-        onEditModeToggle={settingsHandlers.handleSettingsEditToggle}
-        onGenderChange={(gender) => setField('settingsEditGender', gender)}
-        onWeightChange={(weight) => setField('settingsEditWeight', weight)}
-        onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
-        onSaveSettings={settingsHandlers.handleSettingsSave}
-        onCancelEdit={settingsHandlers.handleSettingsCancel}
-        onShowRefundPolicy={() => setField('showRefundPolicy', true)}
-      />
+      <FeatureErrorBoundary
+        featureName="Settings"
+        featureDescription="update your profile settings"
+        showSafetyNote={false}
+      >
+        <SettingsModal
+          isOpen={state.showSettings}
+          onClose={() => setField('showSettings', false)}
+          gender={state.gender}
+          weight={state.weight}
+          editMode={state.settingsEditMode}
+          editGender={state.settingsEditGender}
+          editWeight={state.settingsEditWeight}
+          weightError={state.weightError}
+          useSlowMetabolism={state.useSlowMetabolism}
+          onEditModeToggle={settingsHandlers.handleSettingsEditToggle}
+          onGenderChange={(gender) => setField('settingsEditGender', gender)}
+          onWeightChange={(weight) => setField('settingsEditWeight', weight)}
+          onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
+          onSaveSettings={settingsHandlers.handleSettingsSave}
+          onCancelEdit={settingsHandlers.handleSettingsCancel}
+          onShowRefundPolicy={() => setField('showRefundPolicy', true)}
+        />
+      </FeatureErrorBoundary>
       <RefundPolicyModal
         isOpen={state.showRefundPolicy}
         onClose={() => setField('showRefundPolicy', false)}
       />
-      <ReceiptModal
-        isOpen={state.showReceipt}
-        onClose={() => setField('showReceipt', false)}
-        receipt={state.currentReceipt}
-      />
+      <FeatureErrorBoundary
+        featureName="Receipt Display"
+        featureDescription="view your receipt"
+        showSafetyNote={false}
+      >
+        <ReceiptModal
+          isOpen={state.showReceipt}
+          onClose={() => setField('showReceipt', false)}
+          receipt={state.currentReceipt}
+        />
+      </FeatureErrorBoundary>
       <ConfirmModal
         isOpen={state.showConfirmModal}
         message={state.confirmModalMessage}
