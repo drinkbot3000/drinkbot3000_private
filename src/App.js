@@ -459,6 +459,22 @@ function BACTrackerContent() {
     const updates = { weightError: '', setupComplete: true };
     if (state.mode === 'live') {
       updates.startTime = Date.now();
+    } else if (state.mode === 'estimate') {
+      // Calculate BAC for estimate mode and switch to calculator tab
+      const result = calculateEstimateBAC({
+        numDrinks: parseFloat(state.estimateDrinks),
+        hours: parseFloat(state.estimateHours),
+        weight: parseFloat(state.weight),
+        gender: state.gender,
+        useSlowMetabolism: state.useSlowMetabolism,
+      });
+
+      if (!isNaN(result) && isFinite(result) && result >= 0) {
+        updates.calcDrinks = state.estimateDrinks;
+        updates.calcHours = state.estimateHours;
+        updates.calcBAC = result;
+        updates.activeTab = 'calculator';
+      }
     }
     setMultiple(updates);
 
