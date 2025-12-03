@@ -19,7 +19,6 @@ import { GeolocationConsent } from './components/GeolocationVerification';
 import { Disclaimer } from './components/Disclaimer';
 import { Setup } from './components/Setup';
 import { MainLayout } from './components/MainLayout';
-import { Calculator } from './components/Calculator';
 import { ConfirmModal } from './components/common';
 import {
   BACDisplay,
@@ -40,7 +39,6 @@ import {
 import { checkGeographicRestriction } from './services/geolocation.service';
 import {
   calculateEstimateBAC,
-  getBACStatus as getBACStatusService,
   calculateSoberTime,
   calculateStandardDrinks,
 } from './services/bacCalculation.service';
@@ -294,32 +292,6 @@ function BACTrackerContent() {
     }
   }, state });
 
-  // URL parameter parsing
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const drinks = urlParams.get('drinks');
-    const hours = urlParams.get('hours');
-    const tab = urlParams.get('tab');
-
-    const updates = {};
-
-    if (drinks && hours) {
-      const drinksNum = parseFloat(drinks);
-      const hoursNum = parseFloat(hours);
-      if (!isNaN(drinksNum) && !isNaN(hoursNum) && drinksNum > 0 && hoursNum > 0) {
-        updates.calcDrinks = drinks;
-        updates.calcHours = hours;
-        updates.activeTab = 'calculator';
-      }
-    }
-    if (tab === 'calculator' || tab === 'tracker') {
-      updates.activeTab = tab;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      setMultiple(updates);
-    }
-  }, [setMultiple]);
 
   // Event Handlers
   const handleAgeVerification = (isOfAge) => {
@@ -460,7 +432,7 @@ function BACTrackerContent() {
     if (state.mode === 'live') {
       updates.startTime = Date.now();
     } else if (state.mode === 'estimate') {
-      // Calculate BAC for estimate mode and switch to calculator tab
+      // Calculate initial BAC for estimate mode
       const result = calculateEstimateBAC({
         numDrinks: parseFloat(state.estimateDrinks),
         hours: parseFloat(state.estimateHours),
@@ -470,10 +442,13 @@ function BACTrackerContent() {
       });
 
       if (!isNaN(result) && isFinite(result) && result >= 0) {
-        updates.calcDrinks = state.estimateDrinks;
-        updates.calcHours = state.estimateHours;
-        updates.calcBAC = result;
-        updates.activeTab = 'calculator';
+        // Set initial BAC and start time based on estimate
+        const hoursAgo = parseFloat(state.estimateHours);
+        updates.bac = result;
+        updates.startTime = Date.now() - (hoursAgo * 60 * 60 * 1000);
+        if (result >= 0.08) {
+          updates.hasBeenImpaired = true;
+        }
       }
     }
     setMultiple(updates);
@@ -536,28 +511,6 @@ function BACTrackerContent() {
     setTimeout(() => {
       setField('showJoke', false);
     }, CONSTANTS.JOKE_DURATION);
-  };
-
-  const calculateQuickBAC = () => {
-    if (!state.gender || !state.weight || !state.calcDrinks || !state.calcHours) {
-      showRobotMessage('Please fill in all fields to calculate BAC.');
-      return;
-    }
-
-    const result = calculateEstimateBAC({
-      numDrinks: parseFloat(state.calcDrinks),
-      hours: parseFloat(state.calcHours),
-      weight: parseFloat(state.weight),
-      gender: state.gender,
-      useSlowMetabolism: state.useSlowMetabolism,
-    });
-
-    if (isNaN(result) || !isFinite(result) || result < 0) {
-      showRobotMessage('Error in BAC calculation. Please check your inputs.');
-      return;
-    }
-
-    setField('calcBAC', result);
   };
 
   const handlePaymentSuccess = () => {
@@ -639,14 +592,9 @@ function BACTrackerContent() {
     });
   };
 
-  // Get current BAC status
-  const currentBAC =
-    state.activeTab === 'calculator' && state.calcBAC !== null ? state.calcBAC : state.bac;
-  const status = getBACStatusService(currentBAC);
-
   // Calculate sober time
   const soberTime =
-    currentBAC > 0 ? calculateSoberTime(currentBAC, state.useSlowMetabolism) : null;
+    state.bac > 0 ? calculateSoberTime(state.bac, state.useSlowMetabolism) : null;
 
   // Render flow screens
   if (!state.ageVerified) {
@@ -728,95 +676,79 @@ function BACTrackerContent() {
   return (
     <PWAProvider>
       <MainLayout
-        activeTab={state.activeTab}
-        onTabChange={(tab) => setField('activeTab', tab)}
         onSettingsClick={() => setField('showSettings', true)}
         onHelpClick={() => setField('showHelp', true)}
       >
-        {state.activeTab === 'tracker' ? (
-          <>
-            <MessageDisplay
-              robotMessage={state.robotMessage}
-              joke={state.currentJoke}
-              showJoke={state.showJoke}
-            />
-            <BACDisplay bac={currentBAC} hasBeenImpaired={state.hasBeenImpaired} />
-            <TimeInfo startTime={state.startTime} soberTime={soberTime} />
-            <AddDrinkPanel
-              showCustomDrink={state.showCustomDrink}
-              customDrinkName={state.customDrinkName}
-              customDrinkOz={state.customDrinkOz}
-              customDrinkABV={state.customDrinkABV}
-              savedCustomDrinks={state.savedCustomDrinks}
-              onToggleCustomDrink={() =>
-                setField('showCustomDrink', !state.showCustomDrink)
-              }
-              onCustomDrinkChange={(field, value) => {
-                if (field === 'name') {
-                  setField('customDrinkName', value);
-                } else if (field === 'oz') {
-                  setField('customDrinkOz', value);
-                } else if (field === 'abv') {
-                  setField('customDrinkABV', value);
-                }
-              }}
-              onAddCustomDrink={() => {
-                const { customDrinkName, customDrinkOz, customDrinkABV } = state;
-                if (!customDrinkOz || !customDrinkABV) {
-                  showRobotMessage('Please fill in volume and ABV for custom drink.');
-                  return;
-                }
-                const name = customDrinkName || 'Custom Drink';
-                addDrink(name, parseFloat(customDrinkOz), parseFloat(customDrinkABV));
-                setMultiple({
-                  customDrinkName: '',
-                  customDrinkOz: '',
-                  customDrinkABV: '5',
-                  showCustomDrink: false,
-                });
-              }}
-              onSaveCustomDrink={handleSaveCustomDrink}
-              onDeleteCustomDrink={handleDeleteCustomDrink}
-              onCancelCustomDrink={() => {
-                setMultiple({
-                  customDrinkName: '',
-                  customDrinkOz: '',
-                  customDrinkABV: '5',
-                  showCustomDrink: false,
-                });
-              }}
-              onAddDrink={addDrink}
-            />
-            <DrinkHistoryList
-              drinks={state.drinks}
-              showHistory={state.showDrinkHistory}
-              onToggleHistory={() =>
-                setField('showDrinkHistory', !state.showDrinkHistory)
-              }
-              onDeleteDrink={deleteDrink}
-              onUndoLast={undoDrink}
-              onClearAll={clearDrinks}
-            />
-            <SupportSection
-              customTipAmount={state.customTipAmount}
-              onCustomTipChange={(value) =>
-                setField('customTipAmount', value)
-              }
-              onPaymentSuccess={handlePaymentSuccess}
-              onTellJoke={tellJoke}
-            />
-          </>
-        ) : (
-          <Calculator
-            drinks={state.calcDrinks}
-            hours={state.calcHours}
-            calculatedBAC={state.calcBAC}
-            gender={state.gender}
-            onDrinksChange={(value) => setField('calcDrinks', value)}
-            onHoursChange={(value) => setField('calcHours', value)}
-            onCalculate={calculateQuickBAC}
-          />
-        )}
+        <MessageDisplay
+          robotMessage={state.robotMessage}
+          joke={state.currentJoke}
+          showJoke={state.showJoke}
+        />
+        <BACDisplay bac={state.bac} hasBeenImpaired={state.hasBeenImpaired} />
+        <TimeInfo startTime={state.startTime} soberTime={soberTime} />
+        <AddDrinkPanel
+          showCustomDrink={state.showCustomDrink}
+          customDrinkName={state.customDrinkName}
+          customDrinkOz={state.customDrinkOz}
+          customDrinkABV={state.customDrinkABV}
+          savedCustomDrinks={state.savedCustomDrinks}
+          onToggleCustomDrink={() =>
+            setField('showCustomDrink', !state.showCustomDrink)
+          }
+          onCustomDrinkChange={(field, value) => {
+            if (field === 'name') {
+              setField('customDrinkName', value);
+            } else if (field === 'oz') {
+              setField('customDrinkOz', value);
+            } else if (field === 'abv') {
+              setField('customDrinkABV', value);
+            }
+          }}
+          onAddCustomDrink={() => {
+            const { customDrinkName, customDrinkOz, customDrinkABV } = state;
+            if (!customDrinkOz || !customDrinkABV) {
+              showRobotMessage('Please fill in volume and ABV for custom drink.');
+              return;
+            }
+            const name = customDrinkName || 'Custom Drink';
+            addDrink(name, parseFloat(customDrinkOz), parseFloat(customDrinkABV));
+            setMultiple({
+              customDrinkName: '',
+              customDrinkOz: '',
+              customDrinkABV: '5',
+              showCustomDrink: false,
+            });
+          }}
+          onSaveCustomDrink={handleSaveCustomDrink}
+          onDeleteCustomDrink={handleDeleteCustomDrink}
+          onCancelCustomDrink={() => {
+            setMultiple({
+              customDrinkName: '',
+              customDrinkOz: '',
+              customDrinkABV: '5',
+              showCustomDrink: false,
+            });
+          }}
+          onAddDrink={addDrink}
+        />
+        <DrinkHistoryList
+          drinks={state.drinks}
+          showHistory={state.showDrinkHistory}
+          onToggleHistory={() =>
+            setField('showDrinkHistory', !state.showDrinkHistory)
+          }
+          onDeleteDrink={deleteDrink}
+          onUndoLast={undoDrink}
+          onClearAll={clearDrinks}
+        />
+        <SupportSection
+          customTipAmount={state.customTipAmount}
+          onCustomTipChange={(value) =>
+            setField('customTipAmount', value)
+          }
+          onPaymentSuccess={handlePaymentSuccess}
+          onTellJoke={tellJoke}
+        />
       </MainLayout>
 
       {/* Modals */}
