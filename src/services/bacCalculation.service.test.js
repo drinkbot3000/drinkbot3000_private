@@ -4,7 +4,6 @@
 
 import {
   getBodyWaterConstant,
-  calculateEstimateBAC,
   calculateLiveBAC,
   calculateBAC,
   calculateSoberTime,
@@ -54,95 +53,6 @@ describe('BAC Calculation Service', () => {
       expect(calculateStandardDrinks(null, 5)).toBe(0);
       expect(calculateStandardDrinks(12, null)).toBe(0);
       expect(calculateStandardDrinks('invalid', 5)).toBe(0);
-    });
-  });
-
-  describe('calculateEstimateBAC', () => {
-    it('should calculate BAC correctly for male, 4 drinks, 2 hours, 180 lbs', () => {
-      const result = calculateEstimateBAC({
-        numDrinks: 4,
-        hours: 2,
-        weight: 180,
-        gender: 'male',
-        useSlowMetabolism: false,
-      });
-      expect(result).toBeGreaterThan(0);
-      expect(result).toBeLessThan(0.15); // Should be under severe intoxication
-    });
-
-    it('should calculate BAC correctly for female, 2 drinks, 1 hour, 140 lbs', () => {
-      const result = calculateEstimateBAC({
-        numDrinks: 2,
-        hours: 1,
-        weight: 140,
-        gender: 'female',
-        useSlowMetabolism: false,
-      });
-      expect(result).toBeGreaterThan(0);
-      expect(result).toBeLessThan(0.1);
-    });
-
-    it('should return 0 when hours exceed metabolism time', () => {
-      const result = calculateEstimateBAC({
-        numDrinks: 1,
-        hours: 50,
-        weight: 180,
-        gender: 'male',
-        useSlowMetabolism: false,
-      });
-      expect(result).toBe(0);
-    });
-
-    it('should use slow metabolism rate when specified', () => {
-      const normalMetabolism = calculateEstimateBAC({
-        numDrinks: 4,
-        hours: 2,
-        weight: 180,
-        gender: 'male',
-        useSlowMetabolism: false,
-      });
-
-      const slowMetabolism = calculateEstimateBAC({
-        numDrinks: 4,
-        hours: 2,
-        weight: 180,
-        gender: 'male',
-        useSlowMetabolism: true,
-      });
-
-      expect(slowMetabolism).toBeGreaterThan(normalMetabolism);
-    });
-
-    it('should return 0 for invalid inputs', () => {
-      expect(
-        calculateEstimateBAC({
-          numDrinks: -1,
-          hours: 2,
-          weight: 180,
-          gender: 'male',
-          useSlowMetabolism: false,
-        })
-      ).toBe(0);
-
-      expect(
-        calculateEstimateBAC({
-          numDrinks: 4,
-          hours: -1,
-          weight: 180,
-          gender: 'male',
-          useSlowMetabolism: false,
-        })
-      ).toBe(0);
-
-      expect(
-        calculateEstimateBAC({
-          numDrinks: 4,
-          hours: 2,
-          weight: 0,
-          gender: 'male',
-          useSlowMetabolism: false,
-        })
-      ).toBe(0);
     });
   });
 
@@ -234,62 +144,28 @@ describe('BAC Calculation Service', () => {
   });
 
   describe('calculateBAC', () => {
-    it('should use estimate mode when mode is "estimate"', () => {
-      const result = calculateBAC({
-        mode: 'estimate',
-        gender: 'male',
-        weight: 180,
-        drinks: [],
-        startTime: null,
-        estimateDrinks: '4',
-        estimateHours: '2',
-        useSlowMetabolism: false,
-      });
-
-      expect(result).toBeGreaterThan(0);
-    });
-
-    it('should use live mode when mode is "live"', () => {
+    it('should calculate BAC for live tracking with drinks', () => {
       const drinks = [{ id: 1, standardDrinks: 1, timestamp: Date.now() }];
 
       const result = calculateBAC({
-        mode: 'live',
         gender: 'male',
         weight: 180,
         drinks,
         startTime: Date.now(),
-        estimateDrinks: '',
-        estimateHours: '',
         useSlowMetabolism: false,
       });
 
       expect(result).toBeGreaterThan(0);
     });
 
-    it('should return 0 for invalid mode', () => {
-      const result = calculateBAC({
-        mode: 'invalid',
-        gender: 'male',
-        weight: 180,
-        drinks: [],
-        startTime: null,
-        estimateDrinks: '',
-        estimateHours: '',
-        useSlowMetabolism: false,
-      });
-
-      expect(result).toBe(0);
-    });
-
     it('should return 0 when gender is missing', () => {
+      const drinks = [{ id: 1, standardDrinks: 1, timestamp: Date.now() }];
+
       const result = calculateBAC({
-        mode: 'estimate',
         gender: '',
         weight: 180,
-        drinks: [],
-        startTime: null,
-        estimateDrinks: '4',
-        estimateHours: '2',
+        drinks,
+        startTime: Date.now(),
         useSlowMetabolism: false,
       });
 
@@ -297,14 +173,39 @@ describe('BAC Calculation Service', () => {
     });
 
     it('should return 0 when weight is invalid', () => {
+      const drinks = [{ id: 1, standardDrinks: 1, timestamp: Date.now() }];
+
       const result = calculateBAC({
-        mode: 'estimate',
         gender: 'male',
         weight: 'invalid',
-        drinks: [],
+        drinks,
+        startTime: Date.now(),
+        useSlowMetabolism: false,
+      });
+
+      expect(result).toBe(0);
+    });
+
+    it('should return 0 when startTime is missing', () => {
+      const drinks = [{ id: 1, standardDrinks: 1, timestamp: Date.now() }];
+
+      const result = calculateBAC({
+        gender: 'male',
+        weight: 180,
+        drinks,
         startTime: null,
-        estimateDrinks: '4',
-        estimateHours: '2',
+        useSlowMetabolism: false,
+      });
+
+      expect(result).toBe(0);
+    });
+
+    it('should return 0 when drinks array is empty', () => {
+      const result = calculateBAC({
+        gender: 'male',
+        weight: 180,
+        drinks: [],
+        startTime: Date.now(),
         useSlowMetabolism: false,
       });
 

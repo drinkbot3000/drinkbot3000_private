@@ -16,36 +16,7 @@ export const getBodyWaterConstant = (gender) => {
 };
 
 /**
- * Calculate BAC for estimate mode
- * @param {Object} params
- * @param {number} params.numDrinks - Number of standard drinks
- * @param {number} params.hours - Hours elapsed
- * @param {number} params.weight - Weight in pounds
- * @param {string} params.gender - 'male' or 'female'
- * @param {boolean} params.useSlowMetabolism - Use slow metabolism rate
- * @returns {number} BAC percentage
- */
-export const calculateEstimateBAC = ({ numDrinks, hours, weight, gender, useSlowMetabolism }) => {
-  if (!numDrinks || !hours || !weight || !gender) return 0;
-  if (isNaN(numDrinks) || isNaN(hours) || isNaN(weight)) return 0;
-  if (numDrinks < 0 || hours < 0 || weight <= 0) return 0;
-
-  const weightKg = weight * CONSTANTS.LBS_TO_KG;
-  const bodyWater = getBodyWaterConstant(gender);
-
-  const totalAlcoholGrams = numDrinks * CONSTANTS.GRAMS_PER_STANDARD_DRINK;
-  const initialBAC = (totalAlcoholGrams / (weightKg * bodyWater * 1000)) * 100;
-
-  const metabolismRate = useSlowMetabolism
-    ? CONSTANTS.SLOW_METABOLISM_RATE
-    : CONSTANTS.METABOLISM_RATE;
-  const metabolized = metabolismRate * hours;
-
-  return Math.max(0, initialBAC - metabolized);
-};
-
-/**
- * Calculate BAC for live tracking mode
+ * Calculate BAC for live tracking
  * @param {Object} params
  * @param {Array} params.drinks - Array of drink objects
  * @param {number} params.weight - Weight in pounds
@@ -90,24 +61,18 @@ export const calculateLiveBAC = ({ drinks, weight, gender, useSlowMetabolism }) 
 /**
  * Main BAC calculation function
  * @param {Object} params
- * @param {string} params.mode - 'estimate' or 'live'
  * @param {string} params.gender - 'male' or 'female'
  * @param {number} params.weight - Weight in pounds
  * @param {Array} params.drinks - Array of drink objects
- * @param {number|null} params.startTime - Start time for live mode
- * @param {string} params.estimateDrinks - Number of drinks for estimate mode
- * @param {string} params.estimateHours - Hours for estimate mode
+ * @param {number|null} params.startTime - Start time
  * @param {boolean} params.useSlowMetabolism - Use slow metabolism rate
  * @returns {number} BAC percentage
  */
 export const calculateBAC = ({
-  mode,
   gender,
   weight,
   drinks,
   startTime,
-  estimateDrinks,
-  estimateHours,
   useSlowMetabolism,
 }) => {
   try {
@@ -120,33 +85,14 @@ export const calculateBAC = ({
       return 0;
     }
 
-    if (mode === 'estimate') {
-      if (!estimateDrinks || !estimateHours) return 0;
+    if (!startTime || drinks.length === 0) return 0;
 
-      const numDrinks = parseFloat(estimateDrinks);
-      const hours = parseFloat(estimateHours);
-
-      return calculateEstimateBAC({
-        numDrinks,
-        hours,
-        weight: weightValue,
-        gender,
-        useSlowMetabolism,
-      });
-    }
-
-    if (mode === 'live') {
-      if (!startTime || drinks.length === 0) return 0;
-
-      return calculateLiveBAC({
-        drinks,
-        weight: weightValue,
-        gender,
-        useSlowMetabolism,
-      });
-    }
-
-    return 0;
+    return calculateLiveBAC({
+      drinks,
+      weight: weightValue,
+      gender,
+      useSlowMetabolism,
+    });
   } catch (error) {
     console.error('Error calculating BAC:', error);
     return 0;

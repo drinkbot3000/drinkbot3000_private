@@ -37,9 +37,6 @@ import {
 
 // Services
 import { checkGeographicRestriction } from './services/geolocation.service';
-import {
-  calculateEstimateBAC,
-} from './services/bacCalculation.service';
 import { validateWeight } from './services/validation.service';
 import {
   getItem,
@@ -100,9 +97,6 @@ function BACTrackerContent() {
         weight: saved.weight || '',
         drinks: saved.drinks || [],
         startTime: saved.startTime || null,
-        mode: saved.mode || '',
-        estimateDrinks: saved.estimateDrinks || '',
-        estimateHours: saved.estimateHours || '',
         savedCustomDrinks: saved.savedCustomDrinks || [],
         hasBeenImpaired: saved.hasBeenImpaired || false,
         useSlowMetabolism: saved.useSlowMetabolism !== undefined ? saved.useSlowMetabolism : true,
@@ -130,9 +124,6 @@ function BACTrackerContent() {
         weight: state.weight,
         drinks: state.drinks,
         startTime: state.startTime,
-        mode: state.mode,
-        estimateDrinks: state.estimateDrinks,
-        estimateHours: state.estimateHours,
         savedCustomDrinks: state.savedCustomDrinks,
         hasBeenImpaired: state.hasBeenImpaired,
         useSlowMetabolism: state.useSlowMetabolism,
@@ -145,9 +136,6 @@ function BACTrackerContent() {
     state.weight,
     state.drinks,
     state.startTime,
-    state.mode,
-    state.estimateDrinks,
-    state.estimateHours,
     state.savedCustomDrinks,
     state.hasBeenImpaired,
     state.useSlowMetabolism,
@@ -281,76 +269,15 @@ function BACTrackerContent() {
       showRobotMessage(error);
       return;
     }
-    if (!state.mode) {
-      showRobotMessage('Please select a tracking mode.');
-      return;
-    }
-    if (state.mode === 'estimate') {
-      if (!state.estimateDrinks || !state.estimateHours) {
-        showRobotMessage('Please enter number of drinks and time period for estimate mode.');
-        return;
-      }
-      const drinks = parseFloat(state.estimateDrinks);
-      const hours = parseFloat(state.estimateHours);
-      if (isNaN(drinks) || drinks < 0 || isNaN(hours) || hours < 0) {
-        showRobotMessage('Please enter valid numbers for drinks and hours.');
-        return;
-      }
-    }
 
-    const updates = { weightError: '', setupComplete: true };
-    if (state.mode === 'live') {
-      updates.startTime = Date.now();
-    } else if (state.mode === 'estimate') {
-      // Calculate initial BAC for estimate mode
-      const result = calculateEstimateBAC({
-        numDrinks: parseFloat(state.estimateDrinks),
-        hours: parseFloat(state.estimateHours),
-        weight: parseFloat(state.weight),
-        gender: state.gender,
-        useSlowMetabolism: state.useSlowMetabolism,
-      });
-
-      if (!isNaN(result) && isFinite(result) && result >= 0) {
-        // Set initial BAC and start time based on estimate
-        const hoursAgo = parseFloat(state.estimateHours);
-        const numDrinks = parseFloat(state.estimateDrinks);
-        const estimatedStartTime = Date.now() - (hoursAgo * 60 * 60 * 1000);
-
-        updates.bac = result;
-        updates.startTime = estimatedStartTime;
-        if (result >= 0.08) {
-          updates.hasBeenImpaired = true;
-        }
-
-        // Create drink entries distributed over the time period
-        const drinks = [];
-        const timeInterval = hoursAgo > 0 ? (hoursAgo * 60 * 60 * 1000) / numDrinks : 0;
-
-        for (let i = 0; i < numDrinks; i++) {
-          const drinkTimestamp = estimatedStartTime + (i * timeInterval);
-          const drink = {
-            id: drinkTimestamp + i, // Ensure unique IDs
-            name: 'Standard Drink',
-            oz: 12,
-            abv: 5,
-            standardDrinks: 1,
-            timestamp: drinkTimestamp,
-          };
-          drinks.push(drink);
-        }
-
-        updates.drinks = drinks;
-      }
-    }
-    setMultiple(updates);
+    setMultiple({
+      weightError: '',
+      setupComplete: true,
+      startTime: Date.now(),
+    });
 
     const greeting = ROBOT_GREETINGS[Math.floor(Math.random() * ROBOT_GREETINGS.length)];
     showRobotMessage(greeting);
-  };
-
-  const handleModeSelect = (selectedMode) => {
-    setField('mode', selectedMode);
   };
 
   const addDrink = (name = 'Standard Drink', oz = null, abv = null) => {
@@ -359,7 +286,7 @@ function BACTrackerContent() {
       return;
     }
 
-    if (state.mode === 'live' && !state.startTime) {
+    if (!state.startTime) {
       setField('startTime', Date.now());
     }
 
@@ -530,17 +457,10 @@ function BACTrackerContent() {
         <Setup
           gender={state.gender}
           weight={state.weight}
-          mode={state.mode}
-          estimateDrinks={state.estimateDrinks}
-          estimateHours={state.estimateHours}
           weightError={state.weightError}
           onGenderChange={(gender) => setField('gender', gender)}
           onWeightChange={(weight) => setField('weight', weight)}
-          onModeSelect={handleModeSelect}
-          onEstimateDrinksChange={(value) => setField('estimateDrinks', value)}
-          onEstimateHoursChange={(value) => setField('estimateHours', value)}
           onSubmit={handleSetup}
-          onBack={() => setField('mode', null)}
         />
       </PWAProvider>
     );
