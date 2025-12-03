@@ -128,10 +128,6 @@ export function trackerReducer(state, action) {
         bac: 0,
         startTime: null,
         hasBeenImpaired: false,
-        estimateDrinks: '',
-        estimateHours: '',
-        mode: '',
-        setupComplete: false,
       };
 
     case 'RESET_APP':
