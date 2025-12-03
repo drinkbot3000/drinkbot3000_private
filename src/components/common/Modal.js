@@ -28,10 +28,10 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50 overflow-y-auto">
-      <div className={`bg-white rounded-2xl shadow-2xl p-8 ${maxWidth} w-full my-8`}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+      <div className={`bg-white rounded-2xl shadow-2xl ${maxWidth} w-full my-8 flex flex-col max-h-[90vh]`}>
         {title && (
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between p-8 pb-6 flex-shrink-0">
             <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
             {showCloseButton && (
               <button
@@ -44,7 +44,7 @@ export function Modal({
             )}
           </div>
         )}
-        <div>{children}</div>
+        <div className="overflow-y-auto px-8 pb-8">{children}</div>
       </div>
     </div>
   );
