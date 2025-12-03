@@ -22,6 +22,7 @@ export const useBACCalculation = ({ dispatch, state }) => {
   const genderRef = useRef(state.gender);
   const weightRef = useRef(state.weight);
   const useSlowMetabolismRef = useRef(state.useSlowMetabolism);
+  const lastBACRef = useRef(state.bac);
 
   // Keep refs synchronized with state
   useEffect(() => {
@@ -47,6 +48,10 @@ export const useBACCalculation = ({ dispatch, state }) => {
   useEffect(() => {
     useSlowMetabolismRef.current = state.useSlowMetabolism;
   }, [state.useSlowMetabolism]);
+
+  useEffect(() => {
+    lastBACRef.current = state.bac;
+  }, [state.bac]);
 
   // Main BAC calculation effect - only recreates interval on setup completion
   useEffect(() => {
@@ -75,7 +80,11 @@ export const useBACCalculation = ({ dispatch, state }) => {
         console.error('Weight:', weightRef.current, 'Gender:', genderRef.current);
       }
 
-      dispatch({ type: 'SET_FIELD', field: 'bac', value: currentBAC });
+      // Only update if BAC has meaningfully changed (avoid unnecessary re-renders)
+      const bacChanged = Math.abs(currentBAC - lastBACRef.current) >= 0.001;
+      if (bacChanged) {
+        dispatch({ type: 'SET_FIELD', field: 'bac', value: currentBAC });
+      }
 
       // Track if user has been impaired (at or above legal limit)
       if (currentBAC >= CONSTANTS.LEGAL_LIMIT && !hasBeenImpairedRef.current) {
