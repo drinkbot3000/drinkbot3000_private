@@ -696,14 +696,13 @@ function BACTrackerContent() {
           estimateDrinks={state.estimateDrinks}
           estimateHours={state.estimateHours}
           weightError={state.weightError}
-          useSlowMetabolism={state.useSlowMetabolism}
           onGenderChange={(gender) => setField('gender', gender)}
           onWeightChange={(weight) => setField('weight', weight)}
           onModeSelect={handleModeSelect}
           onEstimateDrinksChange={(value) => setField('estimateDrinks', value)}
           onEstimateHoursChange={(value) => setField('estimateHours', value)}
-          onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
-          onComplete={handleSetup}
+          onSubmit={handleSetup}
+          onBack={() => setField('mode', null)}
         />
       </PWAProvider>
     );
