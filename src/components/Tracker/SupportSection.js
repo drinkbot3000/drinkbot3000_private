@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { DollarSign } from 'lucide-react';
 
 /**
@@ -48,3 +49,7 @@ export function SupportSection({ onTip }) {
     </div>
   );
 }
+
+SupportSection.propTypes = {
+  onTip: PropTypes.func.isRequired,
+};

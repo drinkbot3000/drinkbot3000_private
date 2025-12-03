@@ -21,8 +21,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/service-worker.js')
       .then((registration) => {
-        console.log('✅ Service Worker registered successfully:', registration.scope);
-
+        // Service Worker registered successfully
         // Check for updates periodically
         setInterval(() => {
           registration.update();
@@ -31,13 +30,13 @@ if ('serviceWorker' in navigator) {
         // TODO: Update notification removed - if needed in future, add update detection here
         // Previously would notify user with window.confirm() when new version available
       })
-      .catch((error) => {
-        console.log('❌ Service Worker registration failed:', error);
+      .catch(() => {
+        // Service Worker registration failed - app will still work without offline support
       });
 
     // Handle controller change
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('Service Worker controller changed');
+      // Service Worker controller changed - new version active
     });
   });
 }

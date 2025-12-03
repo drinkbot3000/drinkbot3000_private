@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Settings, HelpCircle } from 'lucide-react';
 
 /**
@@ -13,11 +14,7 @@ import { Settings, HelpCircle } from 'lucide-react';
  * @param {Function} props.onHelpClick - Help button click handler
  * @param {React.ReactNode} props.children - Content to render in main area
  */
-export function MainLayout({
-  onSettingsClick,
-  onHelpClick,
-  children,
-}) {
+export function MainLayout({ onSettingsClick, onHelpClick, children }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-24">
       {/* Header */}
@@ -56,3 +53,9 @@ export function MainLayout({
     </div>
   );
 }
+
+MainLayout.propTypes = {
+  onSettingsClick: PropTypes.func.isRequired,
+  onHelpClick: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
+};

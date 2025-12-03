@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { DollarSign, CheckCircle, Mail, Clock } from 'lucide-react';
 import { Modal } from '../common';
 
@@ -101,10 +102,9 @@ export function RefundPolicyModal({ isOpen, onClose }) {
             <div>
               <h3 className="font-semibold text-indigo-900 text-sm mb-2">Refund Method</h3>
               <p className="text-sm text-indigo-800">
-                Refunds are processed through the original payment method via Stripe. You'll
-                receive your money back in the same account or card you used for the purchase.
-                Depending on your bank, it may take 5-10 business days for the refund to appear in
-                your account.
+                Refunds are processed through the original payment method via Stripe. You'll receive
+                your money back in the same account or card you used for the purchase. Depending on
+                your bank, it may take 5-10 business days for the refund to appear in your account.
               </p>
             </div>
           </div>
@@ -128,3 +128,8 @@ export function RefundPolicyModal({ isOpen, onClose }) {
     </Modal>
   );
 }
+
+RefundPolicyModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

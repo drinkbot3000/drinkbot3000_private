@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Smile } from 'lucide-react';
 
 /**
@@ -35,3 +36,9 @@ export function MessageDisplay({ robotMessage, joke, showJoke }) {
     </>
   );
 }
+
+MessageDisplay.propTypes = {
+  robotMessage: PropTypes.string,
+  joke: PropTypes.string,
+  showJoke: PropTypes.bool,
+};

@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Modal } from './Modal';
 import { Button } from './Button';
 
@@ -43,3 +44,13 @@ export function ConfirmModal({
     </Modal>
   );
 }
+
+ConfirmModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  message: PropTypes.string.isRequired,
+  confirmText: PropTypes.string,
+  cancelText: PropTypes.string,
+  variant: PropTypes.oneOf(['primary', 'secondary', 'success', 'danger', 'warning', 'outline']),
+};

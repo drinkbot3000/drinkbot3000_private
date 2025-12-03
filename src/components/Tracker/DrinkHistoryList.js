@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Trash2, RefreshCw } from 'lucide-react';
 import { formatTime } from '../../utils';
 
@@ -90,6 +91,15 @@ export function DrinkHistoryList({
     </div>
   );
 }
+
+DrinkHistoryList.propTypes = {
+  drinks: PropTypes.array.isRequired,
+  showHistory: PropTypes.bool.isRequired,
+  onToggleHistory: PropTypes.func.isRequired,
+  onDeleteDrink: PropTypes.func.isRequired,
+  onUndoLast: PropTypes.func.isRequired,
+  onClearAll: PropTypes.func.isRequired,
+};
 
 /**
  * Get drink icon based on name

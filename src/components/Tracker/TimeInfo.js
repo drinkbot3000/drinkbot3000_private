@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Clock, Coffee } from 'lucide-react';
 import { calculateElapsedTime, formatSoberDuration } from '../../utils';
 import { calculateSoberTime } from '../../services';
@@ -32,12 +33,16 @@ export function TimeInfo({ startTime, bac, useSlowMetabolism }) {
         </div>
         <div>
           <Coffee className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-gray-800">
-            {soberDuration}
-          </div>
+          <div className="text-2xl font-bold text-gray-800">{soberDuration}</div>
           <div className="text-xs text-gray-500">Until Sober</div>
         </div>
       </div>
     </div>
   );
 }
+
+TimeInfo.propTypes = {
+  startTime: PropTypes.number,
+  bac: PropTypes.number.isRequired,
+  useSlowMetabolism: PropTypes.bool.isRequired,
+};

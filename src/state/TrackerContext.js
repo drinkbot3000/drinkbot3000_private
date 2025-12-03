@@ -4,6 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useMemo, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { trackerReducer, initialState } from './trackerReducer';
 import { calculateStandardDrinks } from '../services/bacCalculation.service';
 import { generateReceipt } from '../services/receipt.service';
@@ -162,6 +163,10 @@ export function TrackerProvider({ children }) {
 
   return <TrackerContext.Provider value={value}>{children}</TrackerContext.Provider>;
 }
+
+TrackerProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 /**
  * useTracker Hook

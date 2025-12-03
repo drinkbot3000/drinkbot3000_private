@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Button } from '../common';
 
 /**
@@ -168,3 +169,18 @@ export function AddDrinkPanel({
     </div>
   );
 }
+
+AddDrinkPanel.propTypes = {
+  onAddDrink: PropTypes.func.isRequired,
+  savedCustomDrinks: PropTypes.array.isRequired,
+  showCustomDrink: PropTypes.bool.isRequired,
+  onToggleCustomDrink: PropTypes.func.isRequired,
+  customDrinkName: PropTypes.string,
+  customDrinkOz: PropTypes.string,
+  customDrinkABV: PropTypes.string,
+  onCustomDrinkChange: PropTypes.func.isRequired,
+  onAddCustomDrink: PropTypes.func.isRequired,
+  onSaveCustomDrink: PropTypes.func.isRequired,
+  onDeleteCustomDrink: PropTypes.func.isRequired,
+  onCancelCustomDrink: PropTypes.func.isRequired,
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './common/Button';
 
@@ -39,8 +40,8 @@ const ErrorFallback = ({ error, errorInfo, resetError }) => {
 
         {/* Error Description */}
         <p className="text-gray-600 text-center mb-6">
-          We encountered an unexpected error. Don't worry, your data is safe.
-          You can try refreshing the page or returning to the home screen.
+          We encountered an unexpected error. Don't worry, your data is safe. You can try refreshing
+          the page or returning to the home screen.
         </p>
 
         {/* Error Details (Development Only) */}
@@ -49,9 +50,7 @@ const ErrorFallback = ({ error, errorInfo, resetError }) => {
             <h3 className="text-sm font-semibold text-red-900 mb-2">
               Error Details (Development Mode):
             </h3>
-            <p className="text-sm text-red-800 font-mono mb-2 break-words">
-              {error.toString()}
-            </p>
+            <p className="text-sm text-red-800 font-mono mb-2 break-words">{error.toString()}</p>
             {errorInfo && errorInfo.componentStack && (
               <details className="mt-2">
                 <summary className="text-sm text-red-700 cursor-pointer hover:text-red-900">
@@ -100,14 +99,21 @@ const ErrorFallback = ({ error, errorInfo, resetError }) => {
         {/* Safety Note */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-500 text-center">
-            <strong>Safety Note:</strong> If you were tracking your BAC, please
-            wait at least 15 minutes after your last drink before making any
-            decisions about driving.
+            <strong>Safety Note:</strong> If you were tracking your BAC, please wait at least 15
+            minutes after your last drink before making any decisions about driving.
           </p>
         </div>
       </div>
     </div>
   );
+};
+
+ErrorFallback.propTypes = {
+  error: PropTypes.instanceOf(Error),
+  errorInfo: PropTypes.shape({
+    componentStack: PropTypes.string,
+  }),
+  resetError: PropTypes.func,
 };
 
 export default ErrorFallback;

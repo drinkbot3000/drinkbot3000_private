@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Globe, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '../common';
 
@@ -43,21 +44,11 @@ function ConsentScreen({ onAccept, onDecline }) {
         </div>
 
         <div className="space-y-3">
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={onAccept}
-            className="shadow-lg"
-          >
+          <Button variant="primary" size="lg" fullWidth onClick={onAccept} className="shadow-lg">
             I Consent to USA Location Verification
           </Button>
 
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={onDecline}
-          >
+          <Button variant="secondary" fullWidth onClick={onDecline}>
             I Do Not Consent
           </Button>
         </div>
@@ -261,3 +252,31 @@ export function GeolocationConsent({
       return null;
   }
 }
+
+ConsentScreen.propTypes = {
+  onAccept: PropTypes.func.isRequired,
+  onDecline: PropTypes.func.isRequired,
+};
+
+TechnicalErrorScreen.propTypes = {
+  error: PropTypes.string,
+  onBypass: PropTypes.func.isRequired,
+  onRetry: PropTypes.func.isRequired,
+  onGoBack: PropTypes.func.isRequired,
+};
+
+BlockedScreen.propTypes = {
+  country: PropTypes.string,
+  onGoBack: PropTypes.func.isRequired,
+};
+
+GeolocationConsent.propTypes = {
+  state: PropTypes.oneOf(['consent', 'loading', 'blocked', 'technical-error']),
+  country: PropTypes.string,
+  error: PropTypes.string,
+  onAccept: PropTypes.func,
+  onDecline: PropTypes.func,
+  onBypass: PropTypes.func,
+  onRetry: PropTypes.func,
+  onGoBack: PropTypes.func,
+};
