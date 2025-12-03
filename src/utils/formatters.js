@@ -85,6 +85,28 @@ export const formatSoberTime = (soberTime) => {
 };
 
 /**
+ * Format time duration until sober (just the duration part)
+ * @param {Date} soberTime - Estimated sober time
+ * @returns {string} Formatted duration string (e.g., "2h 30m")
+ */
+export const formatSoberDuration = (soberTime) => {
+  const now = new Date();
+  const diffMs = soberTime - now;
+
+  if (diffMs <= 0) {
+    return '0m';
+  }
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.ceil((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+};
+
+/**
  * Format BAC for display
  * @param {number} bac - BAC percentage
  * @returns {string} Formatted BAC string

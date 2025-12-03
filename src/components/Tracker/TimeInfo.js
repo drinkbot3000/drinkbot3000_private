@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Clock, Coffee } from 'lucide-react';
-import { calculateElapsedTime, formatSoberTime } from '../../utils';
+import { calculateElapsedTime, formatSoberDuration } from '../../utils';
 import { calculateSoberTime } from '../../services';
 
 /**
@@ -20,7 +20,7 @@ export function TimeInfo({ startTime, bac, useSlowMetabolism }) {
 
   const elapsedTime = calculateElapsedTime(startTime);
   const soberTime = calculateSoberTime(bac, useSlowMetabolism);
-  const soberTimeText = formatSoberTime(soberTime);
+  const soberDuration = formatSoberDuration(soberTime);
 
   return (
     <div className="bg-white rounded-lg p-4 mb-6 shadow">
@@ -33,7 +33,7 @@ export function TimeInfo({ startTime, bac, useSlowMetabolism }) {
         <div>
           <Coffee className="w-5 h-5 text-gray-400 mx-auto mb-1" />
           <div className="text-2xl font-bold text-gray-800">
-            {bac > 0 ? soberTimeText.split(' ')[2] || 'Now' : '0m'}
+            {soberDuration}
           </div>
           <div className="text-xs text-gray-500">Until Sober</div>
         </div>
