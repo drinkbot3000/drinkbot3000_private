@@ -34,6 +34,7 @@ import { useSetup } from './hooks/useSetup';
 // Components
 import { OnboardingFlow } from './components/OnboardingFlow';
 import { TrackerInterface } from './components/TrackerInterface';
+import FeatureErrorBoundary from './components/FeatureErrorBoundary';
 
 // Constants
 import { CONSTANTS } from './constants';
@@ -335,30 +336,43 @@ function BACTrackerContent() {
   // Render onboarding flow or main tracker interface
   if (!onboardingComplete) {
     return (
-      <OnboardingFlow
-        state={state}
-        handlers={{
-          ...onboardingHandlers,
-          handleSetup: setupHandlers.handleSetup,
-        }}
-        setField={setField}
-      />
+      <FeatureErrorBoundary
+        featureName="Onboarding"
+        featureDescription="complete the initial setup"
+        fallbackAction={() => window.location.reload()}
+        showSafetyNote={false}
+      >
+        <OnboardingFlow
+          state={state}
+          handlers={{
+            ...onboardingHandlers,
+            handleSetup: setupHandlers.handleSetup,
+          }}
+          setField={setField}
+        />
+      </FeatureErrorBoundary>
     );
   }
 
   return (
-    <TrackerInterface
-      state={state}
-      setField={setField}
-      setMultiple={setMultiple}
-      drinkHandlers={drinkHandlers}
-      settingsHandlers={settingsHandlers}
-      miscHandlers={{
-        tellJoke: setupHandlers.tellJoke,
-        handlePaymentSuccess: setupHandlers.handlePaymentSuccess,
-      }}
-      hideConfirm={hideConfirm}
-    />
+    <FeatureErrorBoundary
+      featureName="BAC Tracker"
+      featureDescription="track your drinks and BAC level"
+      showSafetyNote={true}
+    >
+      <TrackerInterface
+        state={state}
+        setField={setField}
+        setMultiple={setMultiple}
+        drinkHandlers={drinkHandlers}
+        settingsHandlers={settingsHandlers}
+        miscHandlers={{
+          tellJoke: setupHandlers.tellJoke,
+          handlePaymentSuccess: setupHandlers.handlePaymentSuccess,
+        }}
+        hideConfirm={hideConfirm}
+      />
+    </FeatureErrorBoundary>
   );
 }
 
