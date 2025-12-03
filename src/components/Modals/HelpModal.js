@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Activity, Calculator, AlertCircle } from 'lucide-react';
 import { Modal } from '../common';
 
@@ -59,7 +60,9 @@ export function HelpModal({ isOpen, onClose }) {
             <Calculator className="w-4 h-4 mr-2" />
             Calculator Tab
           </h3>
-          <p className="text-sm text-purple-800 mb-2">Plan ahead or check what your BAC might be:</p>
+          <p className="text-sm text-purple-800 mb-2">
+            Plan ahead or check what your BAC might be:
+          </p>
           <ul className="text-sm text-purple-800 space-y-1">
             <li>• Enter number of drinks and time period</li>
             <li>• Get estimated BAC without logging drinks</li>
@@ -118,3 +121,8 @@ export function HelpModal({ isOpen, onClose }) {
     </Modal>
   );
 }
+
+HelpModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

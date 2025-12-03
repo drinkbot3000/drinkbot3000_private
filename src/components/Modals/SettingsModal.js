@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { FileText, DollarSign, AlertTriangle } from 'lucide-react';
 import { Modal, Button } from '../common';
 import { COLORS, RADIUS, SPACING } from '../../styles/designTokens';
@@ -102,9 +103,7 @@ export function SettingsModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Weight (lbs)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Weight (lbs)</label>
                 <input
                   type="number"
                   value={editWeight}
@@ -141,9 +140,7 @@ export function SettingsModal({
           <div className="flex items-start gap-2 mb-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-amber-900 text-sm mb-1">
-                Metabolism Variability
-              </h3>
+              <h3 className="font-semibold text-amber-900 text-sm mb-1">Metabolism Variability</h3>
               <p className="text-xs text-amber-800 mb-3">
                 Alcohol metabolism varies significantly between individuals. Studies show metabolism
                 can be up to twice as slow for some people due to genetics, medications, health
@@ -199,11 +196,7 @@ export function SettingsModal({
             Terms of Service
           </Button>
 
-          <Button
-            onClick={onShowRefundPolicy}
-            variant="outline"
-            fullWidth
-          >
+          <Button onClick={onShowRefundPolicy} variant="outline" fullWidth>
             <DollarSign className="w-4 h-4 inline mr-2" />
             Refund Policy
           </Button>
@@ -221,3 +214,22 @@ export function SettingsModal({
     </Modal>
   );
 }
+
+SettingsModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  gender: PropTypes.string,
+  weight: PropTypes.string,
+  editMode: PropTypes.bool.isRequired,
+  editGender: PropTypes.string,
+  editWeight: PropTypes.string,
+  weightError: PropTypes.string,
+  useSlowMetabolism: PropTypes.bool.isRequired,
+  onEditModeToggle: PropTypes.func.isRequired,
+  onGenderChange: PropTypes.func.isRequired,
+  onWeightChange: PropTypes.func.isRequired,
+  onMetabolismChange: PropTypes.func.isRequired,
+  onSaveSettings: PropTypes.func.isRequired,
+  onCancelEdit: PropTypes.func.isRequired,
+  onShowRefundPolicy: PropTypes.func.isRequired,
+};

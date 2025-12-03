@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { AlertTriangle } from 'lucide-react';
 
 /**
@@ -91,3 +92,8 @@ export function BACDisplay({ bac, hasBeenImpaired }) {
     </>
   );
 }
+
+BACDisplay.propTypes = {
+  bac: PropTypes.number.isRequired,
+  hasBeenImpaired: PropTypes.bool.isRequired,
+};

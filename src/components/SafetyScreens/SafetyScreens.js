@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { AlertTriangle, Pill, Bed, Car } from 'lucide-react';
 import { Button } from '../common';
 
@@ -259,24 +260,13 @@ export function SafetyScreens({ currentScreen, onNext, onDecline }) {
         </div>
 
         <div className="space-y-3">
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={onNext}
-            className="shadow-lg"
-          >
+          <Button variant="primary" size="lg" fullWidth onClick={onNext} className="shadow-lg">
             {currentScreen === 3
               ? 'I Understand - Continue to App (4 of 4)'
               : `I Understand (${currentScreen + 1} of 4)`}
           </Button>
 
-          <Button
-            variant="secondary"
-            size="md"
-            fullWidth
-            onClick={onDecline}
-          >
+          <Button variant="secondary" size="md" fullWidth onClick={onDecline}>
             I Do Not Accept
           </Button>
         </div>
@@ -284,3 +274,9 @@ export function SafetyScreens({ currentScreen, onNext, onDecline }) {
     </div>
   );
 }
+
+SafetyScreens.propTypes = {
+  currentScreen: PropTypes.number.isRequired,
+  onNext: PropTypes.func.isRequired,
+  onDecline: PropTypes.func.isRequired,
+};

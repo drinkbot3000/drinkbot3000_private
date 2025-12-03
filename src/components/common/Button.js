@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const buttonVariants = {
   primary: 'bg-indigo-600 text-white hover:bg-indigo-700',
@@ -65,13 +66,20 @@ export function Button({
   const buttonProps = Component === 'button' ? { type, disabled } : {};
 
   return (
-    <Component
-      onClick={onClick}
-      className={buttonClasses}
-      {...buttonProps}
-      {...props}
-    >
+    <Component onClick={onClick} className={buttonClasses} {...buttonProps} {...props}>
       {children}
     </Component>
   );
 }
+
+Button.propTypes = {
+  variant: PropTypes.oneOf(['primary', 'secondary', 'success', 'danger', 'warning', 'outline']),
+  size: PropTypes.oneOf(['sm', 'md', 'lg', 'xl']),
+  fullWidth: PropTypes.bool,
+  disabled: PropTypes.bool,
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func,
+  className: PropTypes.string,
+  type: PropTypes.string,
+  as: PropTypes.elementType,
+};
