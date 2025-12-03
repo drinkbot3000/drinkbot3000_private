@@ -8,10 +8,6 @@
  */
 
 /**
- * @typedef {'tracker' | 'estimate' | 'live' | ''} Mode
- */
-
-/**
  * @typedef {'tracker' | 'calculator'} ActiveTab
  */
 
@@ -57,9 +53,6 @@
  * @property {number|null} startTime
  * @property {string} currentJoke
  * @property {boolean} showJoke
- * @property {Mode} mode
- * @property {string} estimateDrinks
- * @property {string} estimateHours
  * @property {ActiveTab} activeTab
  * @property {string} calcDrinks
  * @property {string} calcHours
@@ -109,9 +102,6 @@
  * @property {number} weight - Weight in pounds
  * @property {Drink[]} drinks
  * @property {number|null} startTime
- * @property {Mode} mode
- * @property {string} estimateDrinks
- * @property {string} estimateHours
  * @property {boolean} useSlowMetabolism
  */
 

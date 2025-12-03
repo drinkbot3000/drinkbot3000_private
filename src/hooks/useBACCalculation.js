@@ -20,13 +20,10 @@ export const useBACCalculation = ({ dispatch, state }) => {
 
     const interval = setInterval(() => {
       const currentBAC = calculateBAC({
-        mode: state.mode,
         gender: state.gender,
         weight: state.weight,
         drinks: state.drinks,
         startTime: state.startTime,
-        estimateDrinks: state.estimateDrinks,
-        estimateHours: state.estimateHours,
         useSlowMetabolism: state.useSlowMetabolism,
       });
 
@@ -64,9 +61,6 @@ export const useBACCalculation = ({ dispatch, state }) => {
     state.gender,
     state.weight,
     state.startTime,
-    state.mode,
-    state.estimateDrinks,
-    state.estimateHours,
     state.hasBeenImpaired,
     state.useSlowMetabolism,
     dispatch,

@@ -23,11 +23,6 @@ export const initialState = {
   hasBeenImpaired: false,
   useSlowMetabolism: true,
 
-  // Mode
-  mode: '',
-  estimateDrinks: '',
-  estimateHours: '',
-
   // UI state
   activeTab: 'tracker',
   showSplash: true,
@@ -128,9 +123,6 @@ export function trackerReducer(state, action) {
         bac: 0,
         startTime: null,
         hasBeenImpaired: false,
-        estimateDrinks: '',
-        estimateHours: '',
-        mode: '',
         setupComplete: false,
       };
 
