@@ -3,7 +3,7 @@
  * Functions for generating and managing payment receipts
  */
 
-import { CONSTANTS } from '../constants';
+import { CONSTANTS, EMOJIS } from '../constants';
 
 /**
  * Generate a new receipt
@@ -76,7 +76,7 @@ TERMS:
 
 Thank you for supporting responsible drinking awareness!
 
-DrinkBot3000 - Your Safety Companion 🤖
+DrinkBot3000 - Your Safety Companion ${EMOJIS.ROBOT}
 ────────────────────────────────────────────────────────────
 
 This receipt is valid proof of payment.

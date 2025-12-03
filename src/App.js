@@ -19,7 +19,7 @@ import { GeolocationConsent } from './components/GeolocationVerification';
 import { Disclaimer } from './components/Disclaimer';
 import { Setup } from './components/Setup';
 import { MainLayout } from './components/MainLayout';
-import { ConfirmModal } from './components/common';
+import { ConfirmModal, Modal } from './components/common';
 import {
   BACDisplay,
   TimeInfo,
@@ -50,7 +50,7 @@ import { generateReceipt } from './services/receipt.service';
 import { useBACCalculation } from './hooks/useBACCalculation';
 
 // Constants
-import { CONSTANTS, JOKES, ROBOT_GREETINGS, ROBOT_COMMENTS } from './constants';
+import { CONSTANTS, JOKES, ROBOT_GREETINGS, ROBOT_COMMENTS, EMOJIS } from './constants';
 
 /**
  * Main App Content (uses TrackerContext)
@@ -157,7 +157,7 @@ function BACTrackerContent() {
       setItem(STORAGE_KEYS.AGE_VERIFIED, 'true');
       setMultiple({ ageVerified: true, showGeoConsent: true });
     } else {
-      alert('You must be of legal drinking age to use this app.');
+      setField('showAgeRestrictionModal', true);
     }
   };
 
@@ -299,7 +299,7 @@ function BACTrackerContent() {
   const clearDrinks = () => {
     if (state.drinks.length > 0) {
       clearDrinksAction();
-      showRobotMessage('*whirrs loudly* All drinks cleared from memory! Starting fresh! 🤖');
+      showRobotMessage(`*whirrs loudly* All drinks cleared from memory! Starting fresh! ${EMOJIS.ROBOT}`);
     } else {
       showRobotMessage('No drinks to clear!');
     }
@@ -307,7 +307,7 @@ function BACTrackerContent() {
 
   const deleteDrink = (id) => {
     removeDrink(id);
-    showRobotMessage('*whirrs* Drink removed from records! 🤖');
+    showRobotMessage(`*whirrs* Drink removed from records! ${EMOJIS.ROBOT}`);
   };
 
   const tellJoke = () => {
@@ -323,7 +323,7 @@ function BACTrackerContent() {
     const receipt = generateReceipt(amount);
     addReceipt(receipt);
     setField('showReceipt', true);
-    showRobotMessage('*beeps gratefully* Thank you for your support! 🤖💚');
+    showRobotMessage(`*beeps gratefully* Thank you for your support! ${EMOJIS.ROBOT}${EMOJIS.HEART}`);
   };
 
   const handleSaveCustomDrink = () => {
@@ -347,12 +347,12 @@ function BACTrackerContent() {
       customDrinkABV: '5',
       showCustomDrink: false,
     });
-    showRobotMessage('*beep boop* Custom drink saved! 🤖');
+    showRobotMessage(`*beep boop* Custom drink saved! ${EMOJIS.ROBOT}`);
   };
 
   const handleDeleteCustomDrink = (id) => {
     deleteCustomDrinkAction(id);
-    showRobotMessage('Custom drink deleted! 🤖');
+    showRobotMessage(`Custom drink deleted! ${EMOJIS.ROBOT}`);
   };
 
   // Settings handlers
@@ -385,7 +385,7 @@ function BACTrackerContent() {
           weightError: '',
         });
         hideConfirm();
-        showRobotMessage('Profile updated! Tracker has been reset. 🤖');
+        showRobotMessage(`Profile updated! Tracker has been reset. ${EMOJIS.ROBOT}`);
       }
     );
   };
@@ -595,6 +595,28 @@ function BACTrackerContent() {
         }}
         onCancel={() => hideConfirm()}
       />
+      <Modal
+        isOpen={state.showAgeRestrictionModal}
+        onClose={() => setField('showAgeRestrictionModal', false)}
+        title="Age Restriction"
+        maxWidth="max-w-md"
+      >
+        <div className="text-center">
+          <p className="text-gray-700 mb-6">
+            You must be of legal drinking age to use this application.
+          </p>
+          <p className="text-gray-600 text-sm mb-4">
+            This app is intended for users who are 21 years or older in the United States,
+            or of legal drinking age in their respective country.
+          </p>
+          <button
+            onClick={() => setField('showAgeRestrictionModal', false)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            I Understand
+          </button>
+        </div>
+      </Modal>
 
       <PWAInstallPrompt />
     </PWAProvider>
