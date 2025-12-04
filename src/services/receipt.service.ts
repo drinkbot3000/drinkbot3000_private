@@ -1,18 +1,33 @@
 /**
  * Receipt Service
- * Functions for generating and managing payment receipts
+ * Functions for generating and managing payment receipts with type safety
  */
 
 import { CONSTANTS, EMOJIS } from '../constants';
 
 /**
- * Generate a new receipt
- * @param {number} amount - Payment amount
- * @param {string} paymentMethod - Payment method (default: 'Stripe')
- * @returns {Object} Receipt object
+ * Receipt object structure
  */
-export const generateReceipt = (amount, paymentMethod = 'Stripe') => {
-  const stripeFee = amount * 0.029 + 0.30;
+export interface Receipt {
+  id: string;
+  date: string;
+  amount: number;
+  stripeFee: string;
+  netAmount: string;
+  paymentMethod: string;
+  description: string;
+  status: string;
+  refundableUntil: string;
+}
+
+/**
+ * Generate a new receipt
+ * @param amount - Payment amount
+ * @param paymentMethod - Payment method (default: 'Stripe')
+ * @returns Receipt object
+ */
+export const generateReceipt = (amount: number, paymentMethod = 'Stripe'): Receipt => {
+  const stripeFee = amount * 0.029 + 0.3;
   const netAmount = amount - stripeFee;
 
   return {
@@ -32,10 +47,10 @@ export const generateReceipt = (amount, paymentMethod = 'Stripe') => {
 
 /**
  * Format receipt as plain text for download
- * @param {Object} receipt - Receipt object
- * @returns {string} Formatted receipt text
+ * @param receipt - Receipt object
+ * @returns Formatted receipt text
  */
-export const formatReceiptText = (receipt) => {
+export const formatReceiptText = (receipt: Receipt): string => {
   return `
 ╔═══════════════════════════════════════════════════════════╗
 ║              DRINKBOT3000 - PAYMENT RECEIPT               ║
@@ -86,9 +101,9 @@ Keep this for your records.
 
 /**
  * Download receipt as text file
- * @param {Object} receipt - Receipt object
+ * @param receipt - Receipt object
  */
-export const downloadReceipt = (receipt) => {
+export const downloadReceipt = (receipt: Receipt): void => {
   const receiptText = formatReceiptText(receipt);
   const blob = new Blob([receiptText], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
@@ -105,22 +120,22 @@ export const downloadReceipt = (receipt) => {
 
 /**
  * Check if receipt is still refundable
- * @param {Object} receipt - Receipt object
- * @returns {boolean} True if refundable
+ * @param receipt - Receipt object
+ * @returns True if refundable
  */
-export const isRefundable = (receipt) => {
+export const isRefundable = (receipt: Receipt): boolean => {
   return new Date() < new Date(receipt.refundableUntil);
 };
 
 /**
  * Get days remaining for refund
- * @param {Object} receipt - Receipt object
- * @returns {number} Days remaining (or 0 if expired)
+ * @param receipt - Receipt object
+ * @returns Days remaining (or 0 if expired)
  */
-export const getDaysUntilRefundExpires = (receipt) => {
+export const getDaysUntilRefundExpires = (receipt: Receipt): number => {
   const now = new Date();
   const expiryDate = new Date(receipt.refundableUntil);
-  const diffTime = expiryDate - now;
+  const diffTime = expiryDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   return Math.max(0, diffDays);

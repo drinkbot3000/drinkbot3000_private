@@ -1,19 +1,19 @@
 /**
  * Storage Service
- * Abstraction layer for localStorage operations
- * Provides error handling and type safety
+ * Type-safe abstraction layer for localStorage operations
+ * Provides error handling and generic type support
  */
 
 /**
- * Safely get item from localStorage
- * @param {string} key - Storage key
- * @param {*} defaultValue - Default value if key doesn't exist
- * @returns {*} Parsed value or default
+ * Safely get item from localStorage with type safety
+ * @param key - Storage key
+ * @param defaultValue - Default value if key doesn't exist
+ * @returns Parsed value or default
  */
-export const getItem = (key, defaultValue = null) => {
+export const getItem = <T>(key: string, defaultValue: T | null = null): T | null => {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
+    return item ? (JSON.parse(item) as T) : defaultValue;
   } catch (error) {
     console.error(`Error reading localStorage key "${key}":`, error);
     return defaultValue;
@@ -22,18 +22,18 @@ export const getItem = (key, defaultValue = null) => {
 
 /**
  * Safely set item in localStorage
- * @param {string} key - Storage key
- * @param {*} value - Value to store
- * @returns {boolean} True if successful
+ * @param key - Storage key
+ * @param value - Value to store
+ * @returns True if successful
  */
-export const setItem = (key, value) => {
+export const setItem = <T>(key: string, value: T): boolean => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (error) {
     console.error(`Error setting localStorage key "${key}":`, error);
     // Handle quota exceeded error
-    if (error.name === 'QuotaExceededError') {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
       console.error('localStorage quota exceeded');
     }
     return false;
@@ -42,10 +42,10 @@ export const setItem = (key, value) => {
 
 /**
  * Remove item from localStorage
- * @param {string} key - Storage key
- * @returns {boolean} True if successful
+ * @param key - Storage key
+ * @returns True if successful
  */
-export const removeItem = (key) => {
+export const removeItem = (key: string): boolean => {
   try {
     localStorage.removeItem(key);
     return true;
@@ -57,11 +57,11 @@ export const removeItem = (key) => {
 
 /**
  * Get boolean value from localStorage
- * @param {string} key - Storage key
- * @param {boolean} defaultValue - Default value
- * @returns {boolean} Boolean value
+ * @param key - Storage key
+ * @param defaultValue - Default value
+ * @returns Boolean value
  */
-export const getBoolean = (key, defaultValue = false) => {
+export const getBoolean = (key: string, defaultValue = false): boolean => {
   try {
     const value = localStorage.getItem(key);
     return value === 'true';
@@ -73,11 +73,11 @@ export const getBoolean = (key, defaultValue = false) => {
 
 /**
  * Set boolean value in localStorage
- * @param {string} key - Storage key
- * @param {boolean} value - Boolean value
- * @returns {boolean} True if successful
+ * @param key - Storage key
+ * @param value - Boolean value
+ * @returns True if successful
  */
-export const setBoolean = (key, value) => {
+export const setBoolean = (key: string, value: boolean): boolean => {
   try {
     localStorage.setItem(key, value.toString());
     return true;
@@ -89,9 +89,9 @@ export const setBoolean = (key, value) => {
 
 /**
  * Clear all localStorage data
- * @returns {boolean} True if successful
+ * @returns True if successful
  */
-export const clearAll = () => {
+export const clearAll = (): boolean => {
   try {
     localStorage.clear();
     return true;
@@ -103,9 +103,9 @@ export const clearAll = () => {
 
 /**
  * Check if localStorage is available
- * @returns {boolean} True if localStorage is available
+ * @returns True if localStorage is available
  */
-export const isAvailable = () => {
+export const isAvailable = (): boolean => {
   try {
     const test = '__localStorage_test__';
     localStorage.setItem(test, test);
@@ -116,7 +116,9 @@ export const isAvailable = () => {
   }
 };
 
-// Storage keys constants
+/**
+ * Storage keys constants for type-safe access
+ */
 export const STORAGE_KEYS = {
   BAC_TRACKER_DATA: 'bacTrackerData',
   AGE_VERIFIED: 'ageVerified',
@@ -128,4 +130,6 @@ export const STORAGE_KEYS = {
   GEO_COUNTRY_CODE: 'userCountryCode',
   GEO_CONSENT_GIVEN: 'geoConsentGiven',
   PWA_INSTALL_DISMISSED: 'pwa-install-dismissed',
-};
+} as const;
+
+export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
