@@ -7,15 +7,33 @@ import { useCallback } from 'react';
 import { setItem, removeItem, STORAGE_KEYS } from '../services/storage.service';
 import { checkGeographicRestriction } from '../services/geolocation.service';
 
+type SetFieldFunction = (field: string, value: any) => void;
+type SetMultipleFunction = (updates: Record<string, any>) => void;
+
+interface OnboardingHandlers {
+  handleAgeVerification: (isOfAge: boolean) => void;
+  handleGeoConsentAccept: () => Promise<void>;
+  handleGeoConsentDecline: () => void;
+  handleGeoBypass: () => void;
+  handleGeoRetry: () => void;
+  handleGeoGoBack: () => void;
+  handleDisclaimerAccept: () => void;
+  handleSafetyScreenNext: (currentSafetyScreen: number) => void;
+  handleSafetyScreenDecline: () => void;
+}
+
 /**
  * Hook for managing onboarding flow
- * @param {Function} setField - Function to update a single state field
- * @param {Function} setMultiple - Function to update multiple state fields
- * @returns {Object} Onboarding handler functions
+ * @param setField - Function to update a single state field
+ * @param setMultiple - Function to update multiple state fields
+ * @returns Onboarding handler functions
  */
-export const useOnboarding = (setField, setMultiple) => {
+export const useOnboarding = (
+  setField: SetFieldFunction,
+  setMultiple: SetMultipleFunction
+): OnboardingHandlers => {
   const handleAgeVerification = useCallback(
-    (isOfAge) => {
+    (isOfAge: boolean) => {
       if (isOfAge) {
         setItem(STORAGE_KEYS.AGE_VERIFIED, 'true');
         setMultiple({ ageVerified: true, showGeoConsent: true });
@@ -32,7 +50,7 @@ export const useOnboarding = (setField, setMultiple) => {
 
     try {
       const result = await checkGeographicRestriction();
-      const updates = { geoVerifying: false };
+      const updates: Record<string, any> = { geoVerifying: false };
 
       if (result.allowed) {
         Object.assign(updates, {
@@ -59,7 +77,7 @@ export const useOnboarding = (setField, setMultiple) => {
       console.error('Geographic verification failed:', error);
       setMultiple({
         geoVerifying: false,
-        geoError: error.message,
+        geoError: error instanceof Error ? error.message : 'Unknown error',
         geoBlocked: true,
         geoTechnicalError: true,
         geoCountry: 'Unknown',
@@ -74,7 +92,7 @@ export const useOnboarding = (setField, setMultiple) => {
 
   const handleGeoBypass = useCallback(() => {
     setItem(STORAGE_KEYS.GEO_VERIFIED, 'true');
-    setItem(STORAGE_KEYS.USER_COUNTRY, 'USA (Manual Override)');
+    setItem(STORAGE_KEYS.GEO_COUNTRY, 'USA (Manual Override)');
     setMultiple({
       geoVerified: true,
       geoBlocked: false,
@@ -99,7 +117,7 @@ export const useOnboarding = (setField, setMultiple) => {
   }, [setMultiple]);
 
   const handleSafetyScreenNext = useCallback(
-    (currentSafetyScreen) => {
+    (currentSafetyScreen: number) => {
       if (currentSafetyScreen < 3) {
         setField('currentSafetyScreen', currentSafetyScreen + 1);
       } else {

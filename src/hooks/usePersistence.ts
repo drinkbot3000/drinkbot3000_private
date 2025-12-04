@@ -1,29 +1,31 @@
 /**
  * usePersistence Hook
- * Handles loading and saving tracker data to localStorage
+ * Handles loading and saving tracker data to localStorage with type safety
  */
 
 import { useEffect } from 'react';
 import { getItem, setItem, STORAGE_KEYS } from '../services/storage.service';
 
+type SetMultipleFunction = (updates: Record<string, any>) => void;
+
 /**
  * Hook to handle data persistence
- * @param {Object} state - Current tracker state
- * @param {Function} setMultiple - Function to update multiple state fields
+ * @param state - Current tracker state
+ * @param setMultiple - Function to update multiple state fields
  */
-export const usePersistence = (state, setMultiple) => {
+export const usePersistence = (state: any, setMultiple: SetMultipleFunction): void => {
   // Load saved data on mount
   useEffect(() => {
-    const saved = getItem(STORAGE_KEYS.BAC_TRACKER_DATA);
-    const ageCheck = getItem(STORAGE_KEYS.AGE_VERIFIED);
-    const disclaimerCheck = getItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED);
-    const safetyCheck = getItem(STORAGE_KEYS.SAFETY_SCREENS_COMPLETE);
-    const savedReceipts = getItem(STORAGE_KEYS.RECEIPTS);
-    const geoCheck = getItem(STORAGE_KEYS.GEO_VERIFIED);
-    const geoCountry = getItem(STORAGE_KEYS.USER_COUNTRY);
-    const geoConsentCheck = getItem(STORAGE_KEYS.GEO_CONSENT_GIVEN);
+    const saved = getItem<any>(STORAGE_KEYS.BAC_TRACKER_DATA);
+    const ageCheck = getItem<string>(STORAGE_KEYS.AGE_VERIFIED);
+    const disclaimerCheck = getItem<string>(STORAGE_KEYS.DISCLAIMER_ACCEPTED);
+    const safetyCheck = getItem<string>(STORAGE_KEYS.SAFETY_SCREENS_COMPLETE);
+    const savedReceipts = getItem<any[]>(STORAGE_KEYS.RECEIPTS);
+    const geoCheck = getItem<string>(STORAGE_KEYS.GEO_VERIFIED);
+    const geoCountry = getItem<string>(STORAGE_KEYS.GEO_COUNTRY);
+    const geoConsentCheck = getItem<string>(STORAGE_KEYS.GEO_CONSENT_GIVEN);
 
-    const updates = {};
+    const updates: Record<string, any> = {};
 
     if (ageCheck === 'true') updates.ageVerified = true;
     if (disclaimerCheck === 'true') updates.disclaimerAccepted = true;
@@ -53,7 +55,7 @@ export const usePersistence = (state, setMultiple) => {
 
   // Save receipts
   useEffect(() => {
-    if (state.receipts.length > 0) {
+    if (state.receipts && state.receipts.length > 0) {
       setItem(STORAGE_KEYS.RECEIPTS, state.receipts);
     }
   }, [state.receipts]);
