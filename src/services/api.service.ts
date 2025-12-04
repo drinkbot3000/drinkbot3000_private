@@ -1,41 +1,53 @@
 /**
  * API Service
  * Generic HTTP client with timeout, retry logic, and error handling
- * Provides a consistent interface for all API calls
+ * Provides a consistent interface for all API calls with full type safety
  */
 
 /**
  * HTTP request options
- * @typedef {Object} RequestOptions
- * @property {string} method - HTTP method (GET, POST, etc.)
- * @property {Object} [headers] - Request headers
- * @property {*} [body] - Request body (will be JSON stringified)
- * @property {number} [timeout] - Request timeout in milliseconds
- * @property {AbortSignal} [signal] - Optional abort signal
- * @property {boolean} [credentials] - Include credentials (default: false)
- * @property {string} [cache] - Cache mode (default: 'no-cache')
  */
+export interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: any;
+  timeout?: number;
+  signal?: AbortSignal | null;
+  credentials?: boolean;
+  cache?: RequestCache;
+}
+
+/**
+ * Retry decision function type
+ */
+export type ShouldRetryFunction = (error: Error, attempt: number) => boolean;
 
 /**
  * API error class with additional context
  */
 export class ApiError extends Error {
-  constructor(message, statusCode, response) {
+  public readonly statusCode: number;
+  public readonly response: Response | null;
+
+  constructor(message: string, statusCode: number, response: Response | null = null) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.response = response;
+
+    // Restore prototype chain for instanceof checks
+    Object.setPrototypeOf(this, ApiError.prototype);
   }
 }
 
 /**
  * Make an HTTP request with timeout and error handling
- * @param {string} url - The URL to fetch
- * @param {RequestOptions} options - Request options
- * @returns {Promise<any>} The response data
+ * @param url - The URL to fetch
+ * @param options - Request options
+ * @returns The response data
  * @throws {ApiError} If the request fails
  */
-export async function request(url, options = {}) {
+export async function request<T = any>(url: string, options: RequestOptions = {}): Promise<T> {
   const {
     method = 'GET',
     headers = {},
@@ -43,7 +55,7 @@ export async function request(url, options = {}) {
     timeout = 8000,
     signal = null,
     credentials = false,
-    cache = 'no-cache'
+    cache = 'no-cache',
   } = options;
 
   // Create abort controller for timeout
@@ -54,20 +66,23 @@ export async function request(url, options = {}) {
   const finalSignal = signal || controller.signal;
 
   try {
-    const fetchOptions = {
+    const fetchOptions: RequestInit = {
       method,
       headers: {
-        'Accept': 'application/json',
-        ...headers
+        Accept: 'application/json',
+        ...headers,
       },
       credentials: credentials ? 'include' : 'omit',
       cache,
-      signal: finalSignal
+      signal: finalSignal,
     };
 
     // Add body if present
     if (body) {
-      fetchOptions.headers['Content-Type'] = 'application/json';
+      fetchOptions.headers = {
+        ...fetchOptions.headers,
+        'Content-Type': 'application/json',
+      };
       fetchOptions.body = JSON.stringify(body);
     }
 
@@ -80,12 +95,11 @@ export async function request(url, options = {}) {
     }
 
     // Parse JSON response
-    const data = await response.json();
+    const data: T = await response.json();
     return data;
-
   } catch (error) {
     // Handle abort/timeout errors
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       throw new ApiError('Request timeout - service took too long to respond', 408);
     }
 
@@ -95,8 +109,8 @@ export async function request(url, options = {}) {
     }
 
     // Wrap other errors
-    throw new ApiError(error.message || 'Network request failed', 0, null);
-
+    const message = error instanceof Error ? error.message : 'Network request failed';
+    throw new ApiError(message, 0, null);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -104,51 +118,60 @@ export async function request(url, options = {}) {
 
 /**
  * Make a GET request
- * @param {string} url - The URL to fetch
- * @param {RequestOptions} options - Request options
- * @returns {Promise<any>} The response data
+ * @param url - The URL to fetch
+ * @param options - Request options
+ * @returns The response data
  */
-export async function get(url, options = {}) {
-  return request(url, { ...options, method: 'GET' });
+export async function get<T = any>(url: string, options: RequestOptions = {}): Promise<T> {
+  return request<T>(url, { ...options, method: 'GET' });
 }
 
 /**
  * Make a POST request
- * @param {string} url - The URL to fetch
- * @param {*} body - Request body
- * @param {RequestOptions} options - Request options
- * @returns {Promise<any>} The response data
+ * @param url - The URL to fetch
+ * @param body - Request body
+ * @param options - Request options
+ * @returns The response data
  */
-export async function post(url, body, options = {}) {
-  return request(url, { ...options, method: 'POST', body });
+export async function post<T = any>(
+  url: string,
+  body: any,
+  options: RequestOptions = {}
+): Promise<T> {
+  return request<T>(url, { ...options, method: 'POST', body });
 }
 
 /**
  * Make a request with retry logic
- * @param {string} url - The URL to fetch
- * @param {RequestOptions} options - Request options
- * @param {number} maxRetries - Maximum number of retries (default: 2)
- * @param {Function} shouldRetry - Function to determine if error should be retried
- * @returns {Promise<any>} The response data
+ * @param url - The URL to fetch
+ * @param options - Request options
+ * @param maxRetries - Maximum number of retries (default: 2)
+ * @param shouldRetry - Function to determine if error should be retried
+ * @returns The response data
  */
-export async function requestWithRetry(url, options = {}, maxRetries = 2, shouldRetry = defaultShouldRetry) {
-  let lastError;
+export async function requestWithRetry<T = any>(
+  url: string,
+  options: RequestOptions = {},
+  maxRetries = 2,
+  shouldRetry: ShouldRetryFunction = defaultShouldRetry
+): Promise<T> {
+  let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await request(url, options);
+      return await request<T>(url, options);
     } catch (error) {
-      lastError = error;
+      lastError = error as Error;
 
       // Check if we should retry this error
-      if (!shouldRetry(error, attempt)) {
+      if (!shouldRetry(lastError, attempt)) {
         throw error;
       }
 
       // Don't wait after the last attempt
       if (attempt < maxRetries) {
         // Exponential backoff: 1s, 2s, 4s...
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+        await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
       }
     }
   }
@@ -158,10 +181,11 @@ export async function requestWithRetry(url, options = {}, maxRetries = 2, should
 
 /**
  * Default retry logic - don't retry rate limits or client errors
- * @param {Error} error - The error that occurred
- * @returns {boolean} Whether to retry
+ * @param error - The error that occurred
+ * @param attempt - Current attempt number (unused in default logic)
+ * @returns Whether to retry
  */
-function defaultShouldRetry(error) {
+function defaultShouldRetry(error: Error, attempt: number): boolean {
   // Don't retry rate limit errors
   if (error instanceof ApiError) {
     if (error.statusCode === 429 || error.statusCode === 403) {
@@ -177,10 +201,10 @@ function defaultShouldRetry(error) {
 
 /**
  * Get a user-friendly error message based on status code
- * @param {number} statusCode - HTTP status code
- * @returns {string} Error message
+ * @param statusCode - HTTP status code
+ * @returns Error message
  */
-function getErrorMessage(statusCode) {
+function getErrorMessage(statusCode: number): string {
   switch (statusCode) {
     case 400:
       return 'Bad request';
