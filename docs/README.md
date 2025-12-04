@@ -4,16 +4,6 @@ This directory contains all project documentation organized by category.
 
 ## 📁 Documentation Structure
 
-### `/deployment/` - Deployment Guides
-
-Everything you need to deploy DrinkBot3000 to production:
-
-- **[START_HERE.md](deployment/START_HERE.md)** - Begin here! Choose your path
-- **[QUICK_START.md](deployment/QUICK_START.md)** - Deploy in 5 minutes
-- **[DEPLOYMENT.md](deployment/DEPLOYMENT.md)** - Complete deployment guide
-- **[NETLIFY_SETUP.md](deployment/NETLIFY_SETUP.md)** - Detailed Netlify instructions
-- **[DEPLOYMENT_CHECKLIST.md](deployment/DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist
-- **[TROUBLESHOOTING.md](deployment/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### `/archive/` - Historical Documentation
 
