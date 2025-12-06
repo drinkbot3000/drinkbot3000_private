@@ -1,23 +1,41 @@
 /**
  * useSetup Hook
- * Handles initial setup and miscellaneous operations (jokes, payments)
+ * Handles initial setup and miscellaneous operations (jokes, payments) with type safety
  */
 
 import { useCallback } from 'react';
 import { validateWeight } from '../services/validation.service';
 import { generateReceipt } from '../services/receipt.service';
-import { ROBOT_GREETINGS, JOKES, EMOJIS, CONSTANTS } from '../constants';
+import { getRandomGreeting, getRandomJoke, EMOJIS, CONSTANTS } from '../constants';
+import type { Receipt } from '../services/receipt.service';
+
+type SetFieldFunction = (field: string, value: any) => void;
+type SetMultipleFunction = (updates: Record<string, any>) => void;
+type AddReceiptFunction = (receipt: Receipt) => void;
+type ShowRobotMessageFunction = (message: string) => void;
+
+interface SetupHandlers {
+  handleSetup: () => void;
+  tellJoke: () => void;
+  handlePaymentSuccess: () => void;
+}
 
 /**
  * Hook for managing setup and miscellaneous operations
- * @param {Object} state - Current tracker state
- * @param {Function} setField - Function to update a single state field
- * @param {Function} setMultiple - Function to update multiple state fields
- * @param {Function} addReceipt - Function to add receipt to state
- * @param {Function} showRobotMessage - Function to display robot messages
- * @returns {Object} Setup handler functions
+ * @param state - Current tracker state
+ * @param setField - Function to update a single state field
+ * @param setMultiple - Function to update multiple state fields
+ * @param addReceipt - Function to add receipt to state
+ * @param showRobotMessage - Function to display robot messages
+ * @returns Setup handler functions
  */
-export const useSetup = (state, setField, setMultiple, addReceipt, showRobotMessage) => {
+export const useSetup = (
+  state: any, // TODO: Refine type in Phase 3
+  setField: SetFieldFunction,
+  setMultiple: SetMultipleFunction,
+  addReceipt: AddReceiptFunction,
+  showRobotMessage: ShowRobotMessageFunction
+): SetupHandlers => {
   const handleSetup = useCallback(() => {
     if (!state.gender) {
       showRobotMessage('Please select your gender to continue.');
@@ -40,12 +58,12 @@ export const useSetup = (state, setField, setMultiple, addReceipt, showRobotMess
       startTime: Date.now(),
     });
 
-    const greeting = ROBOT_GREETINGS[Math.floor(Math.random() * ROBOT_GREETINGS.length)];
+    const greeting = getRandomGreeting();
     showRobotMessage(greeting);
   }, [state.gender, state.weight, setField, setMultiple, showRobotMessage]);
 
   const tellJoke = useCallback(() => {
-    const randomJoke = JOKES[Math.floor(Math.random() * JOKES.length)];
+    const randomJoke = getRandomJoke();
     setMultiple({ currentJoke: randomJoke, showJoke: true });
     setTimeout(() => {
       setField('showJoke', false);
