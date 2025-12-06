@@ -10,16 +10,48 @@ import { GeolocationConsent } from './GeolocationVerification';
 import { Disclaimer } from './Disclaimer';
 import { SafetyScreens } from './SafetyScreens';
 import { Setup } from './Setup';
+import type { Gender } from '../types';
+
+interface OnboardingState {
+  ageVerified: boolean;
+  showGeoConsent: boolean;
+  geoVerifying: boolean;
+  geoBlocked: boolean;
+  geoTechnicalError: boolean;
+  geoCountry: string;
+  geoError: string;
+  showDisclaimerModal: boolean;
+  safetyScreensComplete: boolean;
+  currentSafetyScreen: number;
+  setupComplete: boolean;
+  gender: Gender | null;
+  weight: string;
+  weightError: string;
+}
+
+interface OnboardingHandlers {
+  handleAgeVerification: (isOfAge: boolean) => void;
+  handleGeoConsentAccept: () => void;
+  handleGeoConsentDecline: () => void;
+  handleGeoBypass: () => void;
+  handleGeoRetry: () => void;
+  handleGeoGoBack: () => void;
+  handleDisclaimerAccept: () => void;
+  handleSafetyScreenNext: (currentScreen: number) => void;
+  handleSafetyScreenDecline: () => void;
+  handleSetup: () => void;
+}
+
+interface OnboardingFlowProps {
+  state: OnboardingState;
+  handlers: OnboardingHandlers;
+  setField: (field: string, value: unknown) => void;
+}
 
 /**
  * Determines and renders the appropriate onboarding screen
- * @param {Object} props - Component props
- * @param {Object} props.state - Current app state
- * @param {Object} props.handlers - Onboarding event handlers
- * @param {Function} props.setField - Function to update a single state field
- * @returns {JSX.Element|null} The appropriate onboarding screen or null
  */
-export const OnboardingFlow = ({ state, handlers, setField }) => {
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ state, handlers, setField }) => {
   // Age verification
   if (!state.ageVerified) {
     return (
@@ -85,8 +117,8 @@ export const OnboardingFlow = ({ state, handlers, setField }) => {
           gender={state.gender}
           weight={state.weight}
           weightError={state.weightError}
-          onGenderChange={(gender) => setField('gender', gender)}
-          onWeightChange={(weight) => setField('weight', weight)}
+          onGenderChange={(gender: Gender) => setField('gender', gender)}
+          onWeightChange={(weight: string) => setField('weight', weight)}
           onSubmit={handlers.handleSetup}
         />
       </PWAProvider>

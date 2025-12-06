@@ -4,21 +4,27 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { User, Scale } from 'lucide-react';
 import { Button } from '../common';
+import type { Gender } from '../../types';
 
-/**
- * Setup Component
- * @param {Object} props
- * @param {string} props.gender - Selected gender ('male' or 'female')
- * @param {string} props.weight - Weight in pounds
- * @param {string} props.weightError - Weight validation error
- * @param {Function} props.onGenderChange - Handler for gender change
- * @param {Function} props.onWeightChange - Handler for weight change
- * @param {Function} props.onSubmit - Handler for form submission
- */
-export function Setup({ gender, weight, weightError, onGenderChange, onWeightChange, onSubmit }) {
+interface SetupProps {
+  gender: Gender | null;
+  weight: string;
+  weightError: string;
+  onGenderChange: (gender: Gender) => void;
+  onWeightChange: (weight: string) => void;
+  onSubmit: () => void;
+}
+
+export function Setup({
+  gender,
+  weight,
+  weightError,
+  onGenderChange,
+  onWeightChange,
+  onSubmit,
+}: SetupProps): JSX.Element {
   const isFormValid = gender && weight && !weightError;
 
   return (
@@ -85,12 +91,3 @@ export function Setup({ gender, weight, weightError, onGenderChange, onWeightCha
     </div>
   );
 }
-
-Setup.propTypes = {
-  gender: PropTypes.string,
-  weight: PropTypes.string,
-  weightError: PropTypes.string,
-  onGenderChange: PropTypes.func.isRequired,
-  onWeightChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-};
