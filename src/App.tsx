@@ -42,7 +42,7 @@ import { CONSTANTS } from './constants';
 /**
  * Main App Content (uses all stores)
  */
-function BACTrackerContent() {
+function BACTrackerContent(): JSX.Element {
   // Import all stores
   const userStore = useUser();
   const bacStore = useBAC();
@@ -63,7 +63,7 @@ function BACTrackerContent() {
 
   // Create unified setField function that routes to correct store
   const setField = useCallback(
-    (field, value) => {
+    (field: string, value: unknown) => {
       // User store fields
       if (
         [
@@ -158,13 +158,13 @@ function BACTrackerContent() {
 
   // Create unified setMultiple function
   const setMultiple = useCallback(
-    (values) => {
-      const userFields = {};
-      const bacFields = {};
-      const uiFields = {};
-      const modalFields = {};
-      const customDrinksFields = {};
-      const receiptsFields = {};
+    (values: Record<string, unknown>) => {
+      const userFields: Record<string, unknown> = {};
+      const bacFields: Record<string, unknown> = {};
+      const uiFields: Record<string, unknown> = {};
+      const modalFields: Record<string, unknown> = {};
+      const customDrinksFields: Record<string, unknown> = {};
+      const receiptsFields: Record<string, unknown> = {};
 
       Object.entries(values).forEach(([field, value]) => {
         if (
@@ -270,7 +270,7 @@ function BACTrackerContent() {
 
   // Robot message display
   const showRobotMessage = useCallback(
-    (message) => {
+    (message: string) => {
       setField('robotMessage', message);
       setTimeout(() => {
         setField('robotMessage', '');
@@ -283,7 +283,7 @@ function BACTrackerContent() {
   usePersistence(state, setMultiple);
 
   useBACCalculation({
-    dispatch: (action) => {
+    dispatch: (action: any) => {
       if (action.type === 'SET_FIELD') {
         setField(action.field, action.value);
       } else if (action.type === 'SET_MULTIPLE') {
@@ -343,7 +343,7 @@ function BACTrackerContent() {
         showSafetyNote={false}
       >
         <OnboardingFlow
-          state={state}
+          state={state as any}
           handlers={{
             ...onboardingHandlers,
             handleSetup: setupHandlers.handleSetup,
@@ -361,11 +361,11 @@ function BACTrackerContent() {
       showSafetyNote={true}
     >
       <TrackerInterface
-        state={state}
+        state={state as any}
         setField={setField}
         setMultiple={setMultiple}
-        drinkHandlers={drinkHandlers}
-        settingsHandlers={settingsHandlers}
+        drinkHandlers={drinkHandlers as any}
+        settingsHandlers={settingsHandlers as any}
         miscHandlers={{
           tellJoke: setupHandlers.tellJoke,
           handlePaymentSuccess: setupHandlers.handlePaymentSuccess,
@@ -379,7 +379,7 @@ function BACTrackerContent() {
 /**
  * Main App Component with All Store Providers
  */
-export default function BACTracker() {
+export default function BACTracker(): JSX.Element {
   return (
     <UserProvider>
       <BACProvider>

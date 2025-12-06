@@ -6,13 +6,28 @@
 import React from 'react';
 import { Button } from '../common';
 import { AlertCircle } from 'lucide-react';
+import type { Gender } from '../../types';
+
+interface CalculatorStatus {
+  bgColor: string;
+  label: string;
+  message: string;
+}
+
+interface CalculatorProps {
+  drinks: string;
+  hours: string;
+  calculatedBAC: number | null;
+  gender: Gender | null;
+  onDrinksChange: (value: string) => void;
+  onHoursChange: (value: string) => void;
+  onCalculate: () => void;
+}
 
 /**
  * Get BAC status for display
- * @param {number} bac - Current BAC
- * @returns {Object} Status info
  */
-function getCalculatorStatus(bac) {
+function getCalculatorStatus(bac: number): CalculatorStatus {
   if (bac === 0) {
     return {
       bgColor: 'bg-gradient-to-r from-green-600 to-emerald-600',
@@ -52,17 +67,6 @@ function getCalculatorStatus(bac) {
   }
 }
 
-/**
- * Calculator Component
- * @param {Object} props
- * @param {string} props.drinks - Number of drinks
- * @param {string} props.hours - Hours elapsed
- * @param {number|null} props.calculatedBAC - Calculated BAC result
- * @param {string} props.gender - User gender
- * @param {Function} props.onDrinksChange - Handler for drinks change
- * @param {Function} props.onHoursChange - Handler for hours change
- * @param {Function} props.onCalculate - Handler for calculate button
- */
 export function Calculator({
   drinks,
   hours,
@@ -71,7 +75,7 @@ export function Calculator({
   onDrinksChange,
   onHoursChange,
   onCalculate,
-}) {
+}: CalculatorProps): JSX.Element {
   const status = calculatedBAC !== null ? getCalculatorStatus(calculatedBAC) : null;
   const isValid = drinks && hours;
 
@@ -118,12 +122,10 @@ export function Calculator({
         </Button>
 
         {/* Results Display */}
-        {status && (
+        {status && calculatedBAC !== null && (
           <div className={`rounded-lg p-6 ${status.bgColor}`}>
             <div className="text-center">
-              <div className="text-5xl font-bold text-white mb-2">
-                {calculatedBAC.toFixed(3)}%
-              </div>
+              <div className="text-5xl font-bold text-white mb-2">{calculatedBAC.toFixed(3)}%</div>
               <div className="text-xl text-white font-medium mb-3">{status.label}</div>
               <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
                 <p className="text-white text-sm">{status.message}</p>
@@ -137,8 +139,8 @@ export function Calculator({
           <div className="flex items-start">
             <AlertCircle className="w-4 h-4 text-amber-600 mr-2 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-amber-800">
-              <strong>Note:</strong> This calculator uses your saved profile (
-              {gender || 'not set'}, weight configured). Results are estimates only.
+              <strong>Note:</strong> This calculator uses your saved profile ({gender || 'not set'},
+              weight configured). Results are estimates only.
             </p>
           </div>
         </div>

@@ -4,11 +4,26 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
-import { AlertTriangle, Pill, Bed, Car } from 'lucide-react';
+import { AlertTriangle, Pill, Bed, Car, LucideIcon } from 'lucide-react';
 import { Button } from '../common';
 
-const safetyScreensData = [
+interface SafetyScreen {
+  id: number;
+  bgGradient: string;
+  iconBg: string;
+  iconColor: string;
+  Icon: LucideIcon;
+  title: string;
+  content: JSX.Element;
+}
+
+interface SafetyScreensProps {
+  currentScreen: number;
+  onNext: () => void;
+  onDecline: () => void;
+}
+
+const safetyScreensData: SafetyScreen[] = [
   {
     id: 0,
     bgGradient: 'from-gray-900 via-gray-800 to-gray-900',
@@ -230,14 +245,11 @@ const safetyScreensData = [
   },
 ];
 
-/**
- * SafetyScreens Component
- * @param {Object} props
- * @param {number} props.currentScreen - Current screen index (0-3)
- * @param {Function} props.onNext - Handler for next button
- * @param {Function} props.onDecline - Handler for decline button
- */
-export function SafetyScreens({ currentScreen, onNext, onDecline }) {
+export function SafetyScreens({
+  currentScreen,
+  onNext,
+  onDecline,
+}: SafetyScreensProps): JSX.Element | null {
   const screen = safetyScreensData[currentScreen];
 
   if (!screen) return null;
@@ -274,9 +286,3 @@ export function SafetyScreens({ currentScreen, onNext, onDecline }) {
     </div>
   );
 }
-
-SafetyScreens.propTypes = {
-  currentScreen: PropTypes.number.isRequired,
-  onNext: PropTypes.func.isRequired,
-  onDecline: PropTypes.func.isRequired,
-};

@@ -18,20 +18,91 @@ import {
 } from './Tracker';
 import { HelpModal, SettingsModal, RefundPolicyModal, ReceiptModal } from './Modals';
 import FeatureErrorBoundary from './FeatureErrorBoundary';
+import type { Gender, Drink } from '../types';
 
-/**
- * Main tracker interface
- * @param {Object} props - Component props
- * @param {Object} props.state - Current app state
- * @param {Function} props.setField - Function to update a single state field
- * @param {Function} props.setMultiple - Function to update multiple state fields
- * @param {Object} props.drinkHandlers - Drink management handlers
- * @param {Object} props.settingsHandlers - Settings handlers
- * @param {Object} props.miscHandlers - Miscellaneous handlers
- * @param {Function} props.hideConfirm - Function to hide confirmation modal
- * @returns {JSX.Element} The tracker interface
- */
-export const TrackerInterface = ({
+interface TrackerState {
+  // User profile
+  gender: Gender | null;
+  weight: string;
+
+  // BAC and drinks
+  bac: number;
+  drinks: Drink[];
+  startTime: number | null;
+  hasBeenImpaired: boolean;
+  useSlowMetabolism: boolean;
+
+  // UI state
+  showCustomDrink: boolean;
+  customDrinkName: string;
+  customDrinkOz: string;
+  customDrinkABV: string;
+  savedCustomDrinks: any[];
+  showDrinkHistory: boolean;
+
+  // Modals
+  showHelp: boolean;
+  showSettings: boolean;
+  showRefundPolicy: boolean;
+  showReceipt: boolean;
+  showConfirmModal: boolean;
+  showAgeRestrictionModal: boolean;
+
+  // Settings modal
+  settingsEditMode: boolean;
+  settingsEditGender: Gender | null;
+  settingsEditWeight: string;
+  weightError: string;
+
+  // Confirm modal
+  confirmModalMessage: string;
+  confirmModalAction: (() => void) | null;
+
+  // Receipt
+  currentReceipt: any;
+
+  // Support
+  customTipAmount: string;
+
+  // Robot messages
+  robotMessage: string;
+  currentJoke: string;
+  showJoke: boolean;
+}
+
+interface DrinkHandlers {
+  addDrink: (drinkName: string, standardDrinks: number) => void;
+  deleteDrink: (drinkId: string) => void;
+  undoDrink: () => void;
+  clearDrinks: () => void;
+  handleAddCustomDrink: () => void;
+  handleSaveCustomDrink: () => void;
+  handleDeleteCustomDrink: (drinkId: string) => void;
+  handleCancelCustomDrink: () => void;
+}
+
+interface SettingsHandlers {
+  handleSettingsEditToggle: () => void;
+  handleSettingsSave: () => void;
+  handleSettingsCancel: () => void;
+}
+
+interface MiscHandlers {
+  handlePaymentSuccess: (amount: number, receiptData: any) => void;
+  tellJoke: () => void;
+}
+
+interface TrackerInterfaceProps {
+  state: TrackerState;
+  setField: (field: string, value: unknown) => void;
+  setMultiple: (fields: Record<string, unknown>) => void;
+  drinkHandlers: DrinkHandlers;
+  settingsHandlers: SettingsHandlers;
+  miscHandlers: MiscHandlers;
+  hideConfirm: () => void;
+}
+
+export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
   state,
   setField,
   setMultiple,

@@ -4,14 +4,43 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Globe, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '../common';
+
+type GeolocationState = 'consent' | 'loading' | 'blocked' | 'technical-error';
+
+interface ConsentScreenProps {
+  onAccept: () => void;
+  onDecline: () => void;
+}
+
+interface TechnicalErrorScreenProps {
+  error?: string;
+  onBypass: () => void;
+  onRetry: () => void;
+  onGoBack: () => void;
+}
+
+interface BlockedScreenProps {
+  country?: string;
+  onGoBack: () => void;
+}
+
+interface GeolocationConsentProps {
+  state: GeolocationState;
+  country?: string;
+  error?: string;
+  onAccept?: () => void;
+  onDecline?: () => void;
+  onBypass?: () => void;
+  onRetry?: () => void;
+  onGoBack?: () => void;
+}
 
 /**
  * Consent Screen - Ask permission for location check
  */
-function ConsentScreen({ onAccept, onDecline }) {
+function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -66,7 +95,7 @@ function ConsentScreen({ onAccept, onDecline }) {
 /**
  * Loading Screen - Verifying location
  */
-function LoadingScreen() {
+function LoadingScreen(): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -89,7 +118,12 @@ function LoadingScreen() {
 /**
  * Technical Error Screen - Service unavailable with bypass option
  */
-function TechnicalErrorScreen({ error, onBypass, onRetry, onGoBack }) {
+function TechnicalErrorScreen({
+  error,
+  onBypass,
+  onRetry,
+  onGoBack,
+}: TechnicalErrorScreenProps): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-900 via-orange-800 to-orange-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -153,7 +187,7 @@ function TechnicalErrorScreen({ error, onBypass, onRetry, onGoBack }) {
 /**
  * Blocked Screen - User is outside USA
  */
-function BlockedScreen({ country, onGoBack }) {
+function BlockedScreen({ country, onGoBack }: BlockedScreenProps): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -207,16 +241,6 @@ function BlockedScreen({ country, onGoBack }) {
 /**
  * GeolocationConsent Component
  * Main component that renders the appropriate screen based on state
- *
- * @param {Object} props
- * @param {string} props.state - Current state: 'consent', 'loading', 'blocked', 'technical-error'
- * @param {string} props.country - Detected country name (for blocked state)
- * @param {string} props.error - Error message (for technical-error state)
- * @param {Function} props.onAccept - Handler for accepting consent
- * @param {Function} props.onDecline - Handler for declining consent
- * @param {Function} props.onBypass - Handler for bypassing technical error
- * @param {Function} props.onRetry - Handler for retrying verification
- * @param {Function} props.onGoBack - Handler for going back
  */
 export function GeolocationConsent({
   state,
@@ -227,10 +251,10 @@ export function GeolocationConsent({
   onBypass,
   onRetry,
   onGoBack,
-}) {
+}: GeolocationConsentProps): JSX.Element | null {
   switch (state) {
     case 'consent':
-      return <ConsentScreen onAccept={onAccept} onDecline={onDecline} />;
+      return <ConsentScreen onAccept={onAccept!} onDecline={onDecline!} />;
 
     case 'loading':
       return <LoadingScreen />;
@@ -239,44 +263,16 @@ export function GeolocationConsent({
       return (
         <TechnicalErrorScreen
           error={error}
-          onBypass={onBypass}
-          onRetry={onRetry}
-          onGoBack={onGoBack}
+          onBypass={onBypass!}
+          onRetry={onRetry!}
+          onGoBack={onGoBack!}
         />
       );
 
     case 'blocked':
-      return <BlockedScreen country={country} onGoBack={onGoBack} />;
+      return <BlockedScreen country={country} onGoBack={onGoBack!} />;
 
     default:
       return null;
   }
 }
-
-ConsentScreen.propTypes = {
-  onAccept: PropTypes.func.isRequired,
-  onDecline: PropTypes.func.isRequired,
-};
-
-TechnicalErrorScreen.propTypes = {
-  error: PropTypes.string,
-  onBypass: PropTypes.func.isRequired,
-  onRetry: PropTypes.func.isRequired,
-  onGoBack: PropTypes.func.isRequired,
-};
-
-BlockedScreen.propTypes = {
-  country: PropTypes.string,
-  onGoBack: PropTypes.func.isRequired,
-};
-
-GeolocationConsent.propTypes = {
-  state: PropTypes.oneOf(['consent', 'loading', 'blocked', 'technical-error']),
-  country: PropTypes.string,
-  error: PropTypes.string,
-  onAccept: PropTypes.func,
-  onDecline: PropTypes.func,
-  onBypass: PropTypes.func,
-  onRetry: PropTypes.func,
-  onGoBack: PropTypes.func,
-};

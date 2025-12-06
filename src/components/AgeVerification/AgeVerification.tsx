@@ -4,16 +4,14 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { ShieldAlert } from 'lucide-react';
 import { CONSTANTS } from '../../constants';
 
-/**
- * Age Verification Screen
- * @param {Object} props
- * @param {Function} props.onVerify - Callback with boolean (true = of age, false = underage)
- */
-export function AgeVerification({ onVerify }) {
+interface AgeVerificationProps {
+  onVerify: (isOfAge: boolean) => void;
+}
+
+export function AgeVerification({ onVerify }: AgeVerificationProps): JSX.Element {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
@@ -56,7 +54,3 @@ export function AgeVerification({ onVerify }) {
     </div>
   );
 }
-
-AgeVerification.propTypes = {
-  onVerify: PropTypes.func.isRequired,
-};
