@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '../common';
 
@@ -63,9 +64,9 @@ export function Disclaimer({ onAccept, onDecline }) {
             <div>
               <p className="font-semibold mt-4">LEGAL CONSEQUENCES:</p>
               <p>
-                Using this app does NOT protect you from DUI/DWI charges or other legal consequences.
-                Law enforcement uses certified breathalyzer devices. You may be impaired even if this
-                app shows a low BAC.
+                Using this app does NOT protect you from DUI/DWI charges or other legal
+                consequences. Law enforcement uses certified breathalyzer devices. You may be
+                impaired even if this app shows a low BAC.
               </p>
             </div>
 
@@ -81,10 +82,10 @@ export function Disclaimer({ onAccept, onDecline }) {
             <div>
               <p className="font-semibold mt-4">ASSUMPTION OF RISK:</p>
               <p>
-                By using this app, you assume all risks and agree that the developer, its affiliates,
-                and contributors are NOT liable for any damages, injuries, accidents, legal issues, or
-                other consequences arising from your use of this application or decisions based on its
-                output.
+                By using this app, you assume all risks and agree that the developer, its
+                affiliates, and contributors are NOT liable for any damages, injuries, accidents,
+                legal issues, or other consequences arising from your use of this application or
+                decisions based on its output.
               </p>
             </div>
 
@@ -96,14 +97,19 @@ export function Disclaimer({ onAccept, onDecline }) {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={onAccept}
-            className="shadow-lg"
+        <div className="my-4 py-3 text-center border-y border-gray-200">
+          <a
+            href="/terms.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 hover:text-indigo-800 font-medium underline text-sm"
           >
+            📜 Read Full Terms of Service
+          </a>
+        </div>
+
+        <div className="space-y-3">
+          <Button variant="primary" size="lg" fullWidth onClick={onAccept} className="shadow-lg">
             I Understand and Accept
           </Button>
 
@@ -115,3 +121,8 @@ export function Disclaimer({ onAccept, onDecline }) {
     </div>
   );
 }
+
+Disclaimer.propTypes = {
+  onAccept: PropTypes.func.isRequired,
+  onDecline: PropTypes.func.isRequired,
+};

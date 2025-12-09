@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { Activity, Calculator, AlertCircle } from 'lucide-react';
+import PropTypes from 'prop-types';
+import { Activity, AlertCircle } from 'lucide-react';
 import { Modal } from '../common';
 
 /**
@@ -17,53 +18,42 @@ export function HelpModal({ isOpen, onClose }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="How to Use DrinkBot3000">
       <div className="space-y-6">
-        {/* Tracker Tab Instructions */}
+        {/* How It Works */}
         <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
           <h3 className="font-semibold text-indigo-900 mb-2 flex items-center">
             <Activity className="w-4 h-4 mr-2" />
-            Tracker Tab
+            How It Works
           </h3>
           <ul className="text-sm text-indigo-800 space-y-2">
             <li>
-              <strong>1.</strong> Log each drink as you consume it using the drink buttons
+              <strong>1.</strong> Log each drink as you consume it using the preset drink buttons (beer, wine, shot, cocktail) or create a custom drink
             </li>
             <li>
-              <strong>2.</strong> Your BAC (Blood Alcohol Content) is estimated in real-time
+              <strong>2.</strong> Your BAC (Blood Alcohol Content) is calculated in real-time based on your profile (gender and weight)
             </li>
             <li>
               <strong>3.</strong> The color-coded display shows your current state:
               <ul className="ml-4 mt-1 space-y-1">
                 <li>
-                  • <strong>Green:</strong> Sober
+                  • <strong>Green:</strong> Sober (0.00%)
                 </li>
                 <li>
-                  • <strong>Yellow:</strong> Buzzed (caution)
+                  • <strong>Yellow:</strong> Buzzed - use caution (0.01-0.04%)
                 </li>
                 <li>
-                  • <strong>Orange:</strong> Impaired (do not drive)
+                  • <strong>Orange:</strong> Impaired - DO NOT DRIVE (0.05-0.07%)
                 </li>
                 <li>
-                  • <strong>Red:</strong> Dangerously intoxicated
+                  • <strong>Red:</strong> Legally intoxicated or dangerously high (0.08%+)
                 </li>
               </ul>
             </li>
             <li>
-              <strong>4.</strong> View elapsed time and estimated time until sober
+              <strong>4.</strong> Track your session with elapsed time and estimated time until sober
             </li>
-          </ul>
-        </div>
-
-        {/* Calculator Tab Instructions */}
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <h3 className="font-semibold text-purple-900 mb-2 flex items-center">
-            <Calculator className="w-4 h-4 mr-2" />
-            Calculator Tab
-          </h3>
-          <p className="text-sm text-purple-800 mb-2">Plan ahead or check what your BAC might be:</p>
-          <ul className="text-sm text-purple-800 space-y-1">
-            <li>• Enter number of drinks and time period</li>
-            <li>• Get estimated BAC without logging drinks</li>
-            <li>• Useful for planning your night</li>
+            <li>
+              <strong>5.</strong> View your drink history and manage your drinks (undo last, clear all, or delete specific drinks)
+            </li>
           </ul>
         </div>
 
@@ -108,13 +98,19 @@ export function HelpModal({ isOpen, onClose }) {
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <h3 className="font-semibold text-blue-900 mb-2">Tips for Best Results</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Log drinks immediately when consumed</li>
-            <li>• Be honest about drink sizes and strength</li>
-            <li>• Check your profile in Settings (gender & weight affect BAC)</li>
-            <li>• Use the Calculator to plan ahead</li>
+            <li>• Log drinks immediately as you consume them for accurate tracking</li>
+            <li>• Be honest about drink sizes and alcohol strength</li>
+            <li>• Update your profile in Settings if needed (gender & weight significantly affect BAC)</li>
+            <li>• Use custom drinks for mixed beverages or non-standard sizes</li>
+            <li>• Save frequently used custom drinks for quick logging</li>
           </ul>
         </div>
       </div>
     </Modal>
   );
 }
+
+HelpModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

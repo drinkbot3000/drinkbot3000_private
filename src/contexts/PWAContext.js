@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const PWAContext = createContext(null);
 
@@ -30,13 +31,10 @@ export const PWAProvider = ({ children }) => {
       // Stash the event so it can be triggered later
       setDeferredPrompt(e);
       setIsInstallable(true);
-
-      console.log('💾 PWA install prompt available');
     };
 
     // Listen for app installation
     const handleAppInstalled = () => {
-      console.log('✅ PWA was installed successfully');
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
@@ -53,7 +51,6 @@ export const PWAProvider = ({ children }) => {
 
   const showInstallPrompt = async () => {
     if (!deferredPrompt) {
-      console.log('❌ Install prompt not available');
       return false;
     }
 
@@ -64,19 +61,12 @@ export const PWAProvider = ({ children }) => {
       // Wait for the user to respond to the prompt
       const { outcome } = await deferredPrompt.userChoice;
 
-      if (outcome === 'accepted') {
-        console.log('✅ User accepted the install prompt');
-      } else {
-        console.log('❌ User dismissed the install prompt');
-      }
-
       // Clear the deferred prompt
       setDeferredPrompt(null);
       setIsInstallable(false);
 
       return outcome === 'accepted';
-    } catch (error) {
-      console.error('❌ Error showing install prompt:', error);
+    } catch {
       return false;
     }
   };
@@ -88,4 +78,8 @@ export const PWAProvider = ({ children }) => {
   };
 
   return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>;
+};
+
+PWAProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };

@@ -2,13 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#4F46E5" />
     <meta name="description" content="DrinkBot3000 - Track your BAC responsibly. Never drink and drive." />
 
-    <!-- PWA Meta Tags -->
+    <!-- Resource Hints for Performance -->
+    <link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://storage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://api.ipgeolocation.io" />
+    <link rel="dns-prefetch" href="https://buy.stripe.com" />
+
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- Favicons -->
     <link rel="icon" href="/icon-192.png" type="image/png" />
+    <link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512" />
 
     <!-- Apple iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,6 +28,7 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png" />
+    <link rel="apple-touch-startup-image" href="/icon-512.png" />
 
     <!-- Microsoft Windows/Edge PWA Support -->
     <meta name="msapplication-TileColor" content="#4F46E5" />
@@ -39,12 +50,17 @@
     <meta property="og:description" content="Track your blood alcohol content responsibly. Safety-first BAC tracker with comprehensive warnings." />
     <meta property="og:site_name" content="DrinkBot3000" />
     <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://drinkbot3000.netlify.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="DrinkBot3000 logo" />
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="DrinkBot3000" />
     <meta name="twitter:description" content="Responsible drinking companion. Track BAC, stay safe." />
     <meta name="twitter:creator" content="@drinkbot3000" />
+    <meta name="twitter:image" content="https://drinkbot3000.netlify.app/icon-512.png" />
 
     <!-- SEO -->
     <meta name="keywords" content="BAC tracker, blood alcohol content, responsible drinking, alcohol safety, drink tracker, BAC calculator" />
@@ -53,14 +69,14 @@
     <link rel="canonical" href="https://drinkbot3000.netlify.app/" />
 
     <title>DrinkBot3000 - Responsible Drinking Companion</title>
-    
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -68,11 +84,12 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
         #root {
             min-height: 100vh;
+            min-height: 100dvh;
         }
-        
+
         /* Loading screen */
         .loading-screen {
             display: flex;
@@ -80,10 +97,11 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            min-height: 100dvh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-        
+
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -92,23 +110,33 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
+
         .loading-text {
             margin-top: 20px;
             font-size: 18px;
             font-weight: 500;
+        }
+
+        /* Safe area insets for notched devices */
+        @supports (padding: env(safe-area-inset-top)) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
         }
     </style>
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root">
-        <div class="loading-screen">
-            <div class="loading-spinner"></div>
+        <div class="loading-screen" role="progressbar" aria-label="Loading application">
+            <div class="loading-spinner" aria-hidden="true"></div>
             <div class="loading-text">Loading DrinkBot3000...</div>
         </div>
     </div>

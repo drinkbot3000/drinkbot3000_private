@@ -4,9 +4,14 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { FileText, Download, CheckCircle, Clock, DollarSign } from 'lucide-react';
 import { Modal, Button } from '../common';
-import { downloadReceipt, isRefundable, getDaysUntilRefundExpires } from '../../services/receipt.service';
+import {
+  downloadReceipt,
+  isRefundable,
+  getDaysUntilRefundExpires,
+} from '../../services/receipt.service';
 
 /**
  * ReceiptModal Component
@@ -127,8 +132,11 @@ export function ReceiptModal({ isOpen, onClose, receipt }) {
               <div>
                 <h3 className="font-semibold text-blue-900 text-sm mb-1">Refund Eligible</h3>
                 <p className="text-sm text-blue-800">
-                  You have <strong>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</strong> remaining
-                  to request a refund.
+                  You have{' '}
+                  <strong>
+                    {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
+                  </strong>{' '}
+                  remaining to request a refund.
                 </p>
                 <p className="text-xs text-blue-700 mt-2">
                   Refundable until:{' '}
@@ -187,3 +195,19 @@ export function ReceiptModal({ isOpen, onClose, receipt }) {
     </Modal>
   );
 }
+
+ReceiptModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  receipt: PropTypes.shape({
+    id: PropTypes.string,
+    date: PropTypes.number,
+    status: PropTypes.string,
+    description: PropTypes.string,
+    amount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    stripeFee: PropTypes.string,
+    netAmount: PropTypes.string,
+    paymentMethod: PropTypes.string,
+    refundableUntil: PropTypes.number,
+  }),
+};

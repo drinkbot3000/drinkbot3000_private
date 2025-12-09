@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 /**
  * Card Component
@@ -26,3 +27,10 @@ export function Card({ children, className = '', hover = false, onClick }) {
     </div>
   );
 }
+
+Card.propTypes = {
+  children: PropTypes.node.isRequired,
+  className: PropTypes.string,
+  hover: PropTypes.bool,
+  onClick: PropTypes.func,
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import ErrorFallback from './ErrorFallback';
 
 /**
@@ -16,7 +17,7 @@ class ErrorBoundary extends React.Component {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -33,7 +34,7 @@ class ErrorBoundary extends React.Component {
     // Store error details in state
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Optional: Send to error reporting service
@@ -46,7 +47,7 @@ class ErrorBoundary extends React.Component {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
@@ -57,7 +58,7 @@ class ErrorBoundary extends React.Component {
         return React.cloneElement(this.props.fallback, {
           error: this.state.error,
           errorInfo: this.state.errorInfo,
-          resetError: this.resetError
+          resetError: this.resetError,
         });
       }
 
@@ -73,5 +74,10 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+  fallback: PropTypes.element,
+};
 
 export default ErrorBoundary;

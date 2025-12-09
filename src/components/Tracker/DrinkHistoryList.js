@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Trash2, RefreshCw } from 'lucide-react';
 import { formatTime } from '../../utils';
 
@@ -30,7 +31,7 @@ export function DrinkHistoryList({
   return (
     <div className="bg-white rounded-lg p-6 mb-6 shadow">
       {hasDrinks && (
-        <>
+        <div className="mb-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">Drinks ({drinks.length})</h3>
             <button
@@ -43,7 +44,7 @@ export function DrinkHistoryList({
 
           {/* Drink List */}
           {showHistory && (
-            <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+            <div className="space-y-2 max-h-60 overflow-y-auto">
               {drinks.map((drink) => (
                 <div
                   key={drink.id}
@@ -66,10 +67,10 @@ export function DrinkHistoryList({
               ))}
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons - Always visible */}
       <div className="flex gap-2">
         <button
           onClick={onUndoLast}
@@ -90,6 +91,15 @@ export function DrinkHistoryList({
     </div>
   );
 }
+
+DrinkHistoryList.propTypes = {
+  drinks: PropTypes.array.isRequired,
+  showHistory: PropTypes.bool.isRequired,
+  onToggleHistory: PropTypes.func.isRequired,
+  onDeleteDrink: PropTypes.func.isRequired,
+  onUndoLast: PropTypes.func.isRequired,
+  onClearAll: PropTypes.func.isRequired,
+};
 
 /**
  * Get drink icon based on name
