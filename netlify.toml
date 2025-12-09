@@ -7,6 +7,7 @@
   CI = "false"
   NPM_FLAGS = "--legacy-peer-deps"
 
+# SPA redirect - must come after specific routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -16,12 +17,26 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    # Core Security Headers
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://storage.googleapis.com https://buy.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.ipgeolocation.io https://buy.stripe.com; frame-src https://buy.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com; upgrade-insecure-requests;"
+
+    # HSTS - Enforce HTTPS (1 year with preload)
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+    # Cross-Origin Policies for enhanced security
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    Cross-Origin-Resource-Policy = "same-origin"
+    X-Permitted-Cross-Domain-Policies = "none"
+    X-Download-Options = "noopen"
+
+    # Permissions Policy - Restrict browser features
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), display-capture=(), fullscreen=(self), picture-in-picture=(self)"
+
+    # Content Security Policy
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://storage.googleapis.com https://buy.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.ipgeolocation.io https://buy.stripe.com; frame-src https://buy.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com; frame-ancestors 'none'; upgrade-insecure-requests;"
 
 # HTML files - no cache, always revalidate
 [[headers]]
@@ -29,7 +44,7 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# Service Worker - critical PWA file, short cache, must revalidate
+# Service Worker - critical PWA file, never cache
 [[headers]]
   for = "/service-worker.js"
   [headers.values]
@@ -37,7 +52,7 @@
     Service-Worker-Allowed = "/"
     Content-Type = "application/javascript; charset=utf-8"
 
-# PWA Manifest - cache but revalidate
+# PWA Manifest - cache but revalidate frequently
 [[headers]]
   for = "/manifest.json"
   [headers.values]
@@ -50,36 +65,39 @@
   [headers.values]
     Cache-Control = "public, max-age=86400, must-revalidate"
 
-# Static assets - long-term cache with immutable
+# Static assets with content hash - long-term immutable cache
 [[headers]]
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# JavaScript and CSS files - moderate cache
+# JavaScript files - moderate cache
 [[headers]]
   for = "/*.js"
   [headers.values]
     Cache-Control = "public, max-age=86400, must-revalidate"
     Content-Type = "application/javascript; charset=utf-8"
 
+# CSS files - moderate cache
 [[headers]]
   for = "/*.css"
   [headers.values]
     Cache-Control = "public, max-age=86400, must-revalidate"
     Content-Type = "text/css; charset=utf-8"
 
-# Images - long-term cache
+# Favicon - long-term cache
 [[headers]]
   for = "/*.ico"
   [headers.values]
     Cache-Control = "public, max-age=2592000, immutable"
 
+# PNG images - long-term cache
 [[headers]]
   for = "/*.png"
   [headers.values]
     Cache-Control = "public, max-age=2592000, immutable"
 
+# JPEG images - long-term cache
 [[headers]]
   for = "/*.jpg"
   [headers.values]
@@ -90,12 +108,49 @@
   [headers.values]
     Cache-Control = "public, max-age=2592000, immutable"
 
+# SVG images - long-term cache
 [[headers]]
   for = "/*.svg"
   [headers.values]
     Cache-Control = "public, max-age=2592000, immutable"
 
+# WebP images - long-term cache
 [[headers]]
   for = "/*.webp"
   [headers.values]
     Cache-Control = "public, max-age=2592000, immutable"
+
+# WOFF2 fonts - very long cache (fonts rarely change)
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "font/woff2"
+
+# WOFF fonts - very long cache
+[[headers]]
+  for = "/*.woff"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "font/woff"
+
+# JSON data files (API responses, configs)
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+    Content-Type = "application/json; charset=utf-8"
+
+# Source maps (only in development, excluded from production)
+[[headers]]
+  for = "/*.map"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# Netlify Functions configuration (if needed in future)
+[functions]
+  directory = "netlify/functions"
+
+# Edge Functions configuration (if needed in future)
+[edge_functions]
+  directory = "netlify/edge-functions"
