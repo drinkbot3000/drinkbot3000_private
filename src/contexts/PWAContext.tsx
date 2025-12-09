@@ -1,9 +1,31 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const PWAContext = createContext(null);
+// ============================================================================
+// Types
+// ============================================================================
 
-export const usePWA = () => {
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+interface PWAContextValue {
+  isInstallable: boolean;
+  isInstalled: boolean;
+  showInstallPrompt: () => Promise<boolean>;
+}
+
+interface PWAProviderProps {
+  children: ReactNode;
+}
+
+// ============================================================================
+// Context
+// ============================================================================
+
+const PWAContext = createContext<PWAContextValue | null>(null);
+
+export const usePWA = (): PWAContextValue => {
   const context = useContext(PWAContext);
   if (!context) {
     throw new Error('usePWA must be used within a PWAProvider');
@@ -11,8 +33,8 @@ export const usePWA = () => {
   return context;
 };
 
-export const PWAProvider = ({ children }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+export const PWAProvider = ({ children }: PWAProviderProps): JSX.Element => {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
@@ -24,12 +46,12 @@ export const PWAProvider = ({ children }) => {
     }
 
     // Listen for the beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
 
       // Stash the event so it can be triggered later
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
@@ -49,7 +71,7 @@ export const PWAProvider = ({ children }) => {
     };
   }, []);
 
-  const showInstallPrompt = async () => {
+  const showInstallPrompt = async (): Promise<boolean> => {
     if (!deferredPrompt) {
       return false;
     }
@@ -71,15 +93,11 @@ export const PWAProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  const value: PWAContextValue = {
     isInstallable,
     isInstalled,
     showInstallPrompt,
   };
 
   return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>;
-};
-
-PWAProvider.propTypes = {
-  children: PropTypes.node.isRequired,
 };

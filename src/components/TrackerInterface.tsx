@@ -105,7 +105,7 @@ interface TrackerInterfaceProps {
 export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
   state,
   setField,
-  setMultiple,
+  setMultiple: _setMultiple,
   drinkHandlers,
   settingsHandlers,
   miscHandlers,

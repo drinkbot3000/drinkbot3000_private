@@ -5,10 +5,10 @@
 
 /**
  * Format timestamp to readable time
- * @param {number} timestamp - Unix timestamp
- * @returns {string} Formatted time string
+ * @param timestamp - Unix timestamp
+ * @returns Formatted time string
  */
-export const formatTime = (timestamp) => {
+export const formatTime = (timestamp: number): string => {
   const date = new Date(timestamp);
   return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
@@ -18,10 +18,10 @@ export const formatTime = (timestamp) => {
 
 /**
  * Calculate elapsed time from start time
- * @param {number} startTime - Start timestamp
- * @returns {string} Formatted elapsed time (e.g., "2h 30m")
+ * @param startTime - Start timestamp
+ * @returns Formatted elapsed time (e.g., "2h 30m")
  */
-export const calculateElapsedTime = (startTime) => {
+export const calculateElapsedTime = (startTime: number | null): string => {
   if (!startTime) return '0m';
 
   const elapsed = Date.now() - startTime;
@@ -36,10 +36,10 @@ export const calculateElapsedTime = (startTime) => {
 
 /**
  * Format date for display
- * @param {string|Date} date - Date to format
- * @returns {string} Formatted date string
+ * @param date - Date to format
+ * @returns Formatted date string
  */
-export const formatDate = (date) => {
+export const formatDate = (date: string | Date): string => {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -49,10 +49,10 @@ export const formatDate = (date) => {
 
 /**
  * Format date and time for display
- * @param {string|Date} date - Date to format
- * @returns {string} Formatted date and time string
+ * @param date - Date to format
+ * @returns Formatted date and time string
  */
-export const formatDateTime = (date) => {
+export const formatDateTime = (date: string | Date): string => {
   return new Date(date).toLocaleString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -64,12 +64,12 @@ export const formatDateTime = (date) => {
 
 /**
  * Format sober time estimate
- * @param {Date} soberTime - Estimated sober time
- * @returns {string} Formatted sober time message
+ * @param soberTime - Estimated sober time
+ * @returns Formatted sober time message
  */
-export const formatSoberTime = (soberTime) => {
+export const formatSoberTime = (soberTime: Date): string => {
   const now = new Date();
-  const diffMs = soberTime - now;
+  const diffMs = soberTime.getTime() - now.getTime();
 
   if (diffMs <= 0) {
     return 'You should be sober now';
@@ -86,12 +86,12 @@ export const formatSoberTime = (soberTime) => {
 
 /**
  * Format time duration until sober (just the duration part)
- * @param {Date} soberTime - Estimated sober time
- * @returns {string} Formatted duration string (e.g., "2h 30m")
+ * @param soberTime - Estimated sober time
+ * @returns Formatted duration string (e.g., "2h 30m")
  */
-export const formatSoberDuration = (soberTime) => {
+export const formatSoberDuration = (soberTime: Date): string => {
   const now = new Date();
-  const diffMs = soberTime - now;
+  const diffMs = soberTime.getTime() - now.getTime();
 
   if (diffMs <= 0) {
     return '0m';
@@ -108,18 +108,18 @@ export const formatSoberDuration = (soberTime) => {
 
 /**
  * Format BAC for display
- * @param {number} bac - BAC percentage
- * @returns {string} Formatted BAC string
+ * @param bac - BAC percentage
+ * @returns Formatted BAC string
  */
-export const formatBAC = (bac) => {
+export const formatBAC = (bac: number): string => {
   return bac.toFixed(3);
 };
 
 /**
  * Format currency
- * @param {number} amount - Amount to format
- * @returns {string} Formatted currency string
+ * @param amount - Amount to format
+ * @returns Formatted currency string
  */
-export const formatCurrency = (amount) => {
+export const formatCurrency = (amount: number): string => {
   return `$${amount.toFixed(2)}`;
 };

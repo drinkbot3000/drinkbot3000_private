@@ -3,7 +3,7 @@ import { Download, X } from 'lucide-react';
 import { usePWA } from './contexts/PWAContext';
 import { getItem, setItem, STORAGE_KEYS } from './services/storage.service';
 
-const PWAInstallPrompt = () => {
+const PWAInstallPrompt: React.FC = () => {
   const { isInstallable, isInstalled, showInstallPrompt } = usePWA();
   const [showPrompt, setShowPrompt] = useState(false);
 
@@ -42,7 +42,7 @@ const PWAInstallPrompt = () => {
   useEffect(() => {
     const dismissed = getItem(STORAGE_KEYS.PWA_INSTALL_DISMISSED);
     if (dismissed) {
-      const dismissedTime = typeof dismissed === 'number' ? dismissed : parseInt(dismissed, 10);
+      const dismissedTime = typeof dismissed === 'number' ? dismissed : parseInt(String(dismissed), 10);
       const daysSinceDismissal = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
 
       if (daysSinceDismissal < 7) {

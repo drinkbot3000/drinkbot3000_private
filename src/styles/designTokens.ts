@@ -56,7 +56,7 @@ export const COLORS = {
     gray800: 'bg-gray-800',
     gray900: 'bg-gray-900',
   },
-};
+} as const;
 
 // Spacing & Padding
 export const SPACING = {
@@ -77,7 +77,7 @@ export const SPACING = {
     medium: 'gap-4',
     large: 'gap-6',
   },
-};
+} as const;
 
 // Shadows
 export const SHADOWS = {
@@ -87,7 +87,7 @@ export const SHADOWS = {
   modal: 'shadow-xl',
   prominent: 'shadow-2xl',
   none: 'shadow-none',
-};
+} as const;
 
 // Border Radius
 export const RADIUS = {
@@ -96,7 +96,7 @@ export const RADIUS = {
   large: 'rounded-xl',
   extraLarge: 'rounded-2xl',
   full: 'rounded-full',
-};
+} as const;
 
 // Typography
 export const TYPOGRAPHY = {
@@ -118,7 +118,7 @@ export const TYPOGRAPHY = {
     semibold: 'font-semibold',
     bold: 'font-bold',
   },
-};
+} as const;
 
 // Common Component Styles (Preset Combinations)
 export const COMPONENT_STYLES = {
@@ -147,7 +147,7 @@ export const COMPONENT_STYLES = {
     centered: 'flex items-center justify-center min-h-screen p-4',
     content: 'max-w-md mx-auto',
   },
-};
+} as const;
 
 // Gradients
 export const GRADIENTS = {
@@ -155,17 +155,17 @@ export const GRADIENTS = {
   success: 'bg-gradient-to-r from-green-600 to-emerald-600',
   danger: 'bg-gradient-to-r from-red-600 to-pink-600',
   background: 'bg-gradient-to-br from-indigo-50 via-white to-purple-50',
-};
+} as const;
 
 // Transitions
 export const TRANSITIONS = {
   default: 'transition-all duration-200',
   slow: 'transition-all duration-300',
   fast: 'transition-all duration-100',
-};
+} as const;
 
 // Gender Button Colors (Specific to the app)
 export const GENDER_COLORS = {
   male: 'bg-indigo-600 hover:bg-indigo-700',
   female: 'bg-purple-600 hover:bg-purple-700',
-};
+} as const;

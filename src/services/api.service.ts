@@ -185,7 +185,7 @@ export async function requestWithRetry<T = any>(
  * @param attempt - Current attempt number (unused in default logic)
  * @returns Whether to retry
  */
-function defaultShouldRetry(error: Error, attempt: number): boolean {
+function defaultShouldRetry(error: Error, _attempt: number): boolean {
   // Don't retry rate limit errors
   if (error instanceof ApiError) {
     if (error.statusCode === 429 || error.statusCode === 403) {
