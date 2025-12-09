@@ -21,7 +21,16 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'warn',
     'react/no-unescaped-entities': 'off',
-    'no-unused-vars': 'warn',
+    'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
+  overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+        'no-unused-vars': 'off',
+      },
+    },
+  ],
 };
