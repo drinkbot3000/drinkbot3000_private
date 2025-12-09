@@ -146,11 +146,3 @@
   for = "/*.map"
   [headers.values]
     Cache-Control = "public, max-age=86400"
-
-# Netlify Functions configuration (if needed in future)
-[functions]
-  directory = "netlify/functions"
-
-# Edge Functions configuration (if needed in future)
-[edge_functions]
-  directory = "netlify/edge-functions"
