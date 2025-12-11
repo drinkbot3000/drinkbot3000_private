@@ -2,7 +2,7 @@
   "name": "drinkbot3000",
   "version": "1.0.0",
   "description": "DrinkBot3000 - Responsible Drinking Companion",
-  "homepage": ".",
+  "homepage": "/",
   "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
