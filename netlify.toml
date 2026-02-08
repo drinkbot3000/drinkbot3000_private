@@ -5,7 +5,24 @@
 [build.environment]
   NODE_VERSION = "22"
   CI = "false"
-  NPM_FLAGS = "--legacy-peer-deps"
+
+# Deploy preview context (pull requests)
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.deploy-preview.environment]
+  CI = "false"
+
+# Branch deploy context (non-main branches)
+[context.branch-deploy]
+  command = "npm run build"
+
+[context.branch-deploy.environment]
+  CI = "false"
+
+# Netlify plugins
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
 
 # SPA redirect - must come after specific routes
 [[redirects]]
