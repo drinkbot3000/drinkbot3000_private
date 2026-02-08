@@ -97,7 +97,6 @@ function BACTrackerContent(): JSX.Element {
       // UI store fields
       else if (
         [
-          'activeTab',
           'showSplash',
           'showSettings',
           'showHelp',
@@ -190,7 +189,6 @@ function BACTrackerContent(): JSX.Element {
           bacFields[field] = value;
         } else if (
           [
-            'activeTab',
             'showSplash',
             'showSettings',
             'showHelp',
