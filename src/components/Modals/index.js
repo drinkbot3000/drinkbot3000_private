@@ -5,5 +5,3 @@
 
 export { HelpModal } from './HelpModal';
 export { SettingsModal } from './SettingsModal';
-export { RefundPolicyModal } from './RefundPolicyModal';
-export { ReceiptModal } from './ReceiptModal';

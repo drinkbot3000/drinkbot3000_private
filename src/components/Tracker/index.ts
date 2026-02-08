@@ -15,8 +15,5 @@ export type { AddDrinkPanelProps, SavedCustomDrink } from './AddDrinkPanel';
 export { DrinkHistoryList } from './DrinkHistoryList';
 export type { DrinkHistoryListProps } from './DrinkHistoryList';
 
-export { SupportSection } from './SupportSection';
-export type { SupportSectionProps } from './SupportSection';
-
 export { MessageDisplay } from './MessageDisplay';
 export type { MessageDisplayProps } from './MessageDisplay';

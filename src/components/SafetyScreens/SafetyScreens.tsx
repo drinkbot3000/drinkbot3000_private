@@ -224,7 +224,9 @@ const safetyScreensData: SafetyScreen[] = [
           <div className="flex flex-wrap gap-2 justify-center">
             <span className="px-3 py-1 bg-black text-white rounded-full text-sm">Uber</span>
             <span className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm">Lyft</span>
-            <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-sm">Taxi</span>
+            <span className="px-3 py-1 bg-yellow-500 text-gray-900 rounded-full text-sm font-medium">
+              Taxi
+            </span>
           </div>
         </div>
 
@@ -260,7 +262,7 @@ export function SafetyScreens({
     <div
       className={`min-h-screen bg-gradient-to-br ${bgGradient} p-6 flex items-center justify-center`}
     >
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="text-center mb-6">
           <div
             className={`inline-flex items-center justify-center w-24 h-24 mb-6 ${iconBg} rounded-full`}

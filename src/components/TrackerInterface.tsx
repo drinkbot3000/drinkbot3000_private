@@ -8,15 +8,8 @@ import PWAInstallPrompt from '../PWAInstallPrompt';
 import { PWAProvider } from '../contexts/PWAContext';
 import { MainLayout } from './MainLayout';
 import { ConfirmModal, Modal } from './common';
-import {
-  BACDisplay,
-  TimeInfo,
-  AddDrinkPanel,
-  DrinkHistoryList,
-  SupportSection,
-  MessageDisplay,
-} from './Tracker';
-import { HelpModal, SettingsModal, RefundPolicyModal, ReceiptModal } from './Modals';
+import { BACDisplay, TimeInfo, AddDrinkPanel, DrinkHistoryList, MessageDisplay } from './Tracker';
+import { HelpModal, SettingsModal } from './Modals';
 import FeatureErrorBoundary from './FeatureErrorBoundary';
 import type { Gender, Drink } from '../types';
 
@@ -43,8 +36,6 @@ interface TrackerState {
   // Modals
   showHelp: boolean;
   showSettings: boolean;
-  showRefundPolicy: boolean;
-  showReceipt: boolean;
   showConfirmModal: boolean;
   showAgeRestrictionModal: boolean;
 
@@ -57,12 +48,6 @@ interface TrackerState {
   // Confirm modal
   confirmModalMessage: string;
   confirmModalAction: (() => void) | null;
-
-  // Receipt
-  currentReceipt: any;
-
-  // Support
-  customTipAmount: string;
 
   // Robot messages
   robotMessage: string;
@@ -88,7 +73,6 @@ interface SettingsHandlers {
 }
 
 interface MiscHandlers {
-  handlePaymentSuccess: (amount: number, receiptData: any) => void;
   tellJoke: () => void;
 }
 
@@ -108,7 +92,7 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
   setMultiple: _setMultiple,
   drinkHandlers,
   settingsHandlers,
-  miscHandlers,
+  miscHandlers: _miscHandlers,
   hideConfirm,
 }) => {
   return (
@@ -170,18 +154,6 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
             onClearAll={drinkHandlers.clearDrinks}
           />
         </FeatureErrorBoundary>
-        <FeatureErrorBoundary
-          featureName="Support & Payment"
-          featureDescription="support the app"
-          showSafetyNote={false}
-        >
-          <SupportSection
-            customTipAmount={state.customTipAmount}
-            onCustomTipChange={(value) => setField('customTipAmount', value)}
-            onPaymentSuccess={miscHandlers.handlePaymentSuccess}
-            onTellJoke={miscHandlers.tellJoke}
-          />
-        </FeatureErrorBoundary>
       </MainLayout>
 
       {/* Modals */}
@@ -207,22 +179,6 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
           onMetabolismChange={(value) => setField('useSlowMetabolism', value)}
           onSaveSettings={settingsHandlers.handleSettingsSave}
           onCancelEdit={settingsHandlers.handleSettingsCancel}
-          onShowRefundPolicy={() => setField('showRefundPolicy', true)}
-        />
-      </FeatureErrorBoundary>
-      <RefundPolicyModal
-        isOpen={state.showRefundPolicy}
-        onClose={() => setField('showRefundPolicy', false)}
-      />
-      <FeatureErrorBoundary
-        featureName="Receipt Display"
-        featureDescription="view your receipt"
-        showSafetyNote={false}
-      >
-        <ReceiptModal
-          isOpen={state.showReceipt}
-          onClose={() => setField('showReceipt', false)}
-          receipt={state.currentReceipt}
         />
       </FeatureErrorBoundary>
       <ConfirmModal

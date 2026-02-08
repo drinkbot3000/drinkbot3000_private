@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { FileText, DollarSign, AlertTriangle } from 'lucide-react';
+import { FileText, AlertTriangle } from 'lucide-react';
 import { Modal, Button } from '../common';
 import { COLORS, RADIUS, SPACING } from '../../styles/designTokens';
 import type { Gender } from '../../types';
@@ -25,7 +25,6 @@ export interface SettingsModalProps {
   onMetabolismChange: (checked: boolean) => void;
   onSaveSettings: () => void;
   onCancelEdit: () => void;
-  onShowRefundPolicy: () => void;
 }
 
 /**
@@ -47,7 +46,6 @@ export function SettingsModal({
   onMetabolismChange,
   onSaveSettings,
   onCancelEdit,
-  onShowRefundPolicy,
 }: SettingsModalProps): JSX.Element {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings">
@@ -196,11 +194,6 @@ export function SettingsModal({
           >
             <FileText className="w-4 h-4 inline mr-2" />
             Terms of Service
-          </Button>
-
-          <Button onClick={onShowRefundPolicy} variant="outline" fullWidth>
-            <DollarSign className="w-4 h-4 inline mr-2" />
-            Refund Policy
           </Button>
         </div>
 
