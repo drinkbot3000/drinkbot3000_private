@@ -127,6 +127,10 @@ export function Calculator({
             <div className="text-center">
               <div className="text-5xl font-bold text-white mb-2">{calculatedBAC.toFixed(3)}%</div>
               <div className="text-xl text-white font-medium mb-3">{status.label}</div>
+              <p className="text-white/80 text-sm mb-3">
+                Based on {drinks} drink{drinks !== '1' ? 's' : ''} over {hours} hour
+                {hours !== '1' ? 's' : ''}
+              </p>
               <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
                 <p className="text-white text-sm">{status.message}</p>
               </div>
