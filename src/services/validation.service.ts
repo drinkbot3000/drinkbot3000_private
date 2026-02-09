@@ -29,29 +29,6 @@ export const validateWeight = (weight: string | number): string => {
   return '';
 };
 
-/**
- * Validate tip amount
- * @param amount - Tip amount to validate (string or number)
- * @returns Error message or empty string if valid
- */
-export const validateTipAmount = (amount: string | number): string => {
-  const tipValue = parseFloat(String(amount));
-
-  if (isNaN(tipValue)) {
-    return 'Please enter a valid amount';
-  }
-
-  if (tipValue < CONSTANTS.MIN_TIP_AMOUNT) {
-    return `Minimum tip amount is $${CONSTANTS.MIN_TIP_AMOUNT}`;
-  }
-
-  if (tipValue > 1000) {
-    return 'Maximum tip amount is $1000';
-  }
-
-  return '';
-};
-
 interface CustomDrinkInput {
   oz: string | number;
   abv: string | number;
