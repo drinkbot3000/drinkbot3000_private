@@ -225,7 +225,7 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
             </div>
             <div className="text-center">
               <span className="text-5xl font-bold text-indigo-700">
-                {drinksNeeded.toFixed(1)}
+                {Math.round(drinksNeeded)}
               </span>
               <p className="text-gray-500 text-sm mt-2">
                 standard drinks over {hoursNum} hour{hoursNum !== 1 ? 's' : ''} to reach {selectedBAC} BAC
