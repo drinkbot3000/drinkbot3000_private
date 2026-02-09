@@ -95,13 +95,13 @@ interface CalculatorInput {
  * @returns Validation result with isValid flag and error message
  */
 export const validateCalculatorInput = ({ drinks, hours }: CalculatorInput): ValidationResult => {
-  const drinksValue = parseFloat(String(drinks));
+  const drinksValue = parseInt(String(drinks), 10);
   const hoursValue = parseFloat(String(hours));
 
-  if (isNaN(drinksValue) || drinksValue < 0) {
+  if (isNaN(drinksValue) || drinksValue < 0 || !Number.isInteger(Number(drinks))) {
     return {
       isValid: false,
-      error: 'Please enter a valid number of drinks',
+      error: 'Please enter a valid whole number of drinks',
     };
   }
 
