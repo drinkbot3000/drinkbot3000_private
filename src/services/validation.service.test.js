@@ -168,6 +168,16 @@ describe('Validation Service', () => {
       expect(result.error).toContain('drinks');
     });
 
+    it('should return error for non-integer drinks', () => {
+      const result = validateCalculatorInput({
+        drinks: '3.5',
+        hours: '2',
+      });
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain('whole number');
+    });
+
     it('should return error for unrealistically high drinks', () => {
       const result = validateCalculatorInput({
         drinks: '51',

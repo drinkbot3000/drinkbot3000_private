@@ -81,8 +81,7 @@ function calculateDrinksNeeded(
   useSlowMetabolism: boolean
 ): number {
   const weightKg = weightLbs * CONSTANTS.LBS_TO_KG;
-  const bodyWater =
-    gender === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
+  const bodyWater = gender === 'male' ? CONSTANTS.MALE_BODY_WATER : CONSTANTS.FEMALE_BODY_WATER;
   const metabolismRate = useSlowMetabolism
     ? CONSTANTS.SLOW_METABOLISM_RATE
     : CONSTANTS.METABOLISM_RATE;
@@ -91,7 +90,7 @@ function calculateDrinksNeeded(
     (targetBAC + metabolismRate * hours) *
     ((weightKg * bodyWater) / CONSTANTS.GRAMS_PER_STANDARD_DRINK);
 
-  return Math.max(0, drinks);
+  return Math.max(0, Math.round(drinks));
 }
 
 export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
@@ -110,7 +109,12 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
   const hoursValid = hours === '' || (hoursNum >= 0 && hoursNum <= 72);
 
   const canCalculate =
-    weightValid && selectedBAC !== null && state.gender !== null && hours !== '' && hoursValid && hoursNum > 0;
+    weightValid &&
+    selectedBAC !== null &&
+    state.gender !== null &&
+    hours !== '' &&
+    hoursValid &&
+    hoursNum > 0;
 
   const drinksNeeded = useMemo(() => {
     if (!canCalculate) return null;
@@ -178,10 +182,14 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
                       : 'bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200'
                   }`}
               >
-                <span className={`text-2xl font-bold ${selectedBAC === level.value ? 'text-white' : 'text-indigo-700'}`}>
+                <span
+                  className={`text-2xl font-bold ${selectedBAC === level.value ? 'text-white' : 'text-indigo-700'}`}
+                >
                   {level.label}
                 </span>
-                <span className={`text-xs mt-1 ${selectedBAC === level.value ? 'text-indigo-100' : 'text-indigo-500'}`}>
+                <span
+                  className={`text-xs mt-1 ${selectedBAC === level.value ? 'text-indigo-100' : 'text-indigo-500'}`}
+                >
                   {level.description}
                 </span>
               </button>
@@ -224,11 +232,10 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
               <h3 className="text-lg font-semibold text-gray-800">Standard Drinks Needed</h3>
             </div>
             <div className="text-center">
-              <span className="text-5xl font-bold text-indigo-700">
-                {Math.round(drinksNeeded)}
-              </span>
+              <span className="text-5xl font-bold text-indigo-700">{drinksNeeded}</span>
               <p className="text-gray-500 text-sm mt-2">
-                standard drinks over {hoursNum} hour{hoursNum !== 1 ? 's' : ''} to reach {selectedBAC} BAC
+                standard drinks over {hoursNum} hour{hoursNum !== 1 ? 's' : ''} to reach{' '}
+                {selectedBAC} BAC
               </p>
               {selectedBAC! >= CONSTANTS.LEGAL_LIMIT && (
                 <p className="text-red-600 text-sm font-semibold mt-3">

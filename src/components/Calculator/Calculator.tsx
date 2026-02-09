@@ -98,7 +98,7 @@ export function Calculator({
             className="w-full px-4 py-3 border border-gray-300 rounded-lg"
             placeholder="e.g., 3"
             min="0"
-            step="0.5"
+            step="1"
           />
         </div>
 
