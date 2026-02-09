@@ -63,11 +63,6 @@ export const useDrinkManagement = (
         setField('startTime', Date.now());
       }
 
-      // Auto-show drink history when adding first drink to prevent layout shift
-      if (state.drinks.length === 0) {
-        setField('showDrinkHistory', true);
-      }
-
       addDrinkAction(name, oz, abv);
 
       const comment = getRandomComment();
@@ -78,7 +73,6 @@ export const useDrinkManagement = (
       state.gender,
       state.weight,
       state.startTime,
-      state.drinks.length,
       addDrinkAction,
       setField,
       showRobotMessage,

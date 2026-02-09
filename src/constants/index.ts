@@ -31,7 +31,6 @@ export const CONSTANTS = {
   FEMALE_BODY_WATER: 0.55 as const,
   STANDARD_DRINK_OZ: 0.6 as const,
   LEGAL_LIMIT: 0.08 as const,
-  MIN_TIP_AMOUNT: 1 as const,
   MIN_WEIGHT: 50 as const,
   MAX_WEIGHT: 500 as const,
   ROBOT_MESSAGE_DURATION: 5000 as const,
