@@ -67,11 +67,17 @@ const BAC_LEVELS = [
 
 /**
  * Calculate the number of standard drinks needed to reach a target BAC
- * over a given time period.
+ * over a given time period, using the inverse Widmark formula.
  *
- * BAC = (drinks * GRAMS_PER_STANDARD_DRINK) / (weightKg * bodyWater) - metabolismRate * hours
- * Solving for drinks:
- *   drinks = (targetBAC + metabolismRate * hours) * (weightKg * bodyWater) / GRAMS_PER_STANDARD_DRINK
+ * The live BAC tracker computes per-drink BAC as:
+ *   BAC = (grams / (weightKg * bodyWater * 1000)) * 100
+ *       = grams / (weightKg * bodyWater * 10)
+ *
+ * For N standard drinks consumed at the start of a window of H hours:
+ *   BAC = N * GRAMS_PER_STANDARD_DRINK / (weightKg * bodyWater * 10) - metabolismRate * H
+ *
+ * Solving for N:
+ *   N = (targetBAC + metabolismRate * H) * (weightKg * bodyWater * 10) / GRAMS_PER_STANDARD_DRINK
  */
 function calculateDrinksNeeded(
   targetBAC: number,
@@ -87,8 +93,8 @@ function calculateDrinksNeeded(
     : CONSTANTS.METABOLISM_RATE;
 
   const drinks =
-    (targetBAC + metabolismRate * hours) *
-    ((weightKg * bodyWater) / CONSTANTS.GRAMS_PER_STANDARD_DRINK);
+    ((targetBAC + metabolismRate * hours) * (weightKg * bodyWater * 10)) /
+    CONSTANTS.GRAMS_PER_STANDARD_DRINK;
 
   return Math.max(0, Math.round(drinks));
 }
