@@ -120,7 +120,7 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
     state.gender !== null &&
     hours !== '' &&
     hoursValid &&
-    hoursNum > 0;
+    hoursNum >= 0;
 
   const drinksNeeded = useMemo(() => {
     if (!canCalculate) return null;
