@@ -69,7 +69,6 @@
  * @property {boolean} showConfirmModal
  * @property {string} confirmModalMessage
  * @property {Function|null} confirmModalAction
- * @property {boolean} showDrinkHistory
  * @property {string} weightError
  * @property {string} customTipAmount
  * @property {boolean} showDisclaimerModal

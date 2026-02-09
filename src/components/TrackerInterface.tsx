@@ -9,7 +9,7 @@ import PWAInstallPrompt from '../PWAInstallPrompt';
 import { PWAProvider } from '../contexts/PWAContext';
 import { MainLayout } from './MainLayout';
 import { ConfirmModal, Modal } from './common';
-import { BACDisplay, TimeInfo, DrinkHistoryList, MessageDisplay } from './Tracker';
+import { BACDisplay, TimeInfo, MessageDisplay } from './Tracker';
 import { HelpModal, SettingsModal } from './Modals';
 import FeatureErrorBoundary from './FeatureErrorBoundary';
 import { CONSTANTS } from '../constants';
@@ -26,9 +26,6 @@ interface TrackerState {
   startTime: number | null;
   hasBeenImpaired: boolean;
   useSlowMetabolism: boolean;
-
-  // UI state
-  showDrinkHistory: boolean;
 
   // Modals
   showHelp: boolean;
@@ -54,9 +51,6 @@ interface TrackerState {
 
 interface DrinkHandlers {
   addDrink: (drinkName: string, oz?: number | null, abv?: number | null) => void;
-  deleteDrink: (drinkId: string) => void;
-  undoDrink: () => void;
-  clearDrinks: () => void;
 }
 
 interface SettingsHandlers {
@@ -173,20 +167,6 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
           bac={state.bac}
           useSlowMetabolism={state.useSlowMetabolism}
         />
-        <FeatureErrorBoundary
-          featureName="Drink History"
-          featureDescription="view and manage your drink history"
-          showSafetyNote={true}
-        >
-          <DrinkHistoryList
-            drinks={state.drinks}
-            showHistory={state.showDrinkHistory}
-            onToggleHistory={() => setField('showDrinkHistory', !state.showDrinkHistory)}
-            onDeleteDrink={drinkHandlers.deleteDrink}
-            onUndoLast={drinkHandlers.undoDrink}
-            onClearAll={drinkHandlers.clearDrinks}
-          />
-        </FeatureErrorBoundary>
       </MainLayout>
 
       {/* Modals */}

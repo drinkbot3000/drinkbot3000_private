@@ -135,7 +135,6 @@ function BACTrackerContent(): JSX.Element {
           'customDrinkName',
           'showCustomDrink',
           'savedCustomDrinks',
-          'showDrinkHistory',
           'weightError',
           'tipError',
           'customTipAmount',
