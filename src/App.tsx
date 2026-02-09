@@ -19,8 +19,6 @@ import {
   useModal,
   CustomDrinksProvider,
   useCustomDrinks,
-  ReceiptsProvider,
-  useReceipts,
 } from './stores';
 
 // Hooks
@@ -49,7 +47,6 @@ function BACTrackerContent(): JSX.Element {
   const uiStore = useUI();
   const modalStore = useModal();
   const customDrinksStore = useCustomDrinks();
-  const receiptsStore = useReceipts();
 
   // Combine state for easier access (temporary during migration)
   const state = {
@@ -58,7 +55,6 @@ function BACTrackerContent(): JSX.Element {
     ...uiStore.state,
     ...modalStore.state,
     ...customDrinksStore.state,
-    ...receiptsStore.state,
   };
 
   // Create unified setField function that routes to correct store
@@ -101,7 +97,6 @@ function BACTrackerContent(): JSX.Element {
       // UI store fields
       else if (
         [
-          'activeTab',
           'showSplash',
           'showSettings',
           'showHelp',
@@ -148,12 +143,8 @@ function BACTrackerContent(): JSX.Element {
       ) {
         customDrinksStore.setField(field, value);
       }
-      // Receipts store fields
-      else if (['currentReceipt', 'receipts'].includes(field)) {
-        receiptsStore.setField(field, value);
-      }
     },
-    [userStore, bacStore, uiStore, modalStore, customDrinksStore, receiptsStore]
+    [userStore, bacStore, uiStore, modalStore, customDrinksStore]
   );
 
   // Create unified setMultiple function
@@ -164,7 +155,6 @@ function BACTrackerContent(): JSX.Element {
       const uiFields: Record<string, unknown> = {};
       const modalFields: Record<string, unknown> = {};
       const customDrinksFields: Record<string, unknown> = {};
-      const receiptsFields: Record<string, unknown> = {};
 
       Object.entries(values).forEach(([field, value]) => {
         if (
@@ -199,7 +189,6 @@ function BACTrackerContent(): JSX.Element {
           bacFields[field] = value;
         } else if (
           [
-            'activeTab',
             'showSplash',
             'showSettings',
             'showHelp',
@@ -241,8 +230,6 @@ function BACTrackerContent(): JSX.Element {
           ].includes(field)
         ) {
           customDrinksFields[field] = value;
-        } else if (['currentReceipt', 'receipts'].includes(field)) {
-          receiptsFields[field] = value;
         }
       });
 
@@ -252,9 +239,8 @@ function BACTrackerContent(): JSX.Element {
       if (Object.keys(modalFields).length > 0) modalStore.setMultiple(modalFields);
       if (Object.keys(customDrinksFields).length > 0)
         customDrinksStore.setMultiple(customDrinksFields);
-      if (Object.keys(receiptsFields).length > 0) receiptsStore.setMultiple(receiptsFields);
     },
-    [userStore, bacStore, uiStore, modalStore, customDrinksStore, receiptsStore]
+    [userStore, bacStore, uiStore, modalStore, customDrinksStore]
   );
 
   // Extract actions from stores
@@ -262,7 +248,6 @@ function BACTrackerContent(): JSX.Element {
   const removeDrink = bacStore.removeDrink;
   const undoDrink = bacStore.undoDrink;
   const clearDrinksAction = bacStore.clearDrinks;
-  const addReceipt = receiptsStore.addReceipt;
   const addCustomDrinkAction = customDrinksStore.addCustomDrink;
   const deleteCustomDrinkAction = customDrinksStore.deleteCustomDrink;
   const showConfirm = modalStore.showConfirm;
@@ -319,7 +304,7 @@ function BACTrackerContent(): JSX.Element {
     showRobotMessage
   );
 
-  const setupHandlers = useSetup(state, setField, setMultiple, addReceipt, showRobotMessage);
+  const setupHandlers = useSetup(state, setField, setMultiple, null, showRobotMessage);
 
   // Check if onboarding is complete
   const onboardingComplete =
@@ -368,7 +353,6 @@ function BACTrackerContent(): JSX.Element {
         settingsHandlers={settingsHandlers as any}
         miscHandlers={{
           tellJoke: setupHandlers.tellJoke,
-          handlePaymentSuccess: setupHandlers.handlePaymentSuccess,
         }}
         hideConfirm={hideConfirm}
       />
@@ -386,9 +370,7 @@ export default function BACTracker(): JSX.Element {
         <UIProvider>
           <ModalProvider>
             <CustomDrinksProvider>
-              <ReceiptsProvider>
-                <BACTrackerContent />
-              </ReceiptsProvider>
+              <BACTrackerContent />
             </CustomDrinksProvider>
           </ModalProvider>
         </UIProvider>

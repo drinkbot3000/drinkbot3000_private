@@ -1,7 +1,7 @@
 /**
  * UI Store
- * Manages UI state: tabs, display flags, and settings edit mode
- * Fields: 10 (activeTab, showSplash, showSettings, showHelp, showGeoConsent,
+ * Manages UI state: display flags and settings edit mode
+ * Fields: 9 (showSplash, showSettings, showHelp, showGeoConsent,
  *         geoVerifying, geoTechnicalError, settingsEditMode, settingsEditGender,
  *         settingsEditWeight)
  */
@@ -11,10 +11,9 @@ import PropTypes from 'prop-types';
 
 const UIContext = createContext(undefined);
 
-// Initial state - 10 fields
+// Initial state - 9 fields
 export const initialUIState = {
-  // Tab & display state
-  activeTab: 'tracker',
+  // Display state
   showSplash: true,
   showSettings: false,
   showHelp: false,

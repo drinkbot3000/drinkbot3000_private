@@ -17,7 +17,7 @@ import type { Emojis } from '../types';
  * for fasted subjects, providing safer, more conservative estimates for sobriety time.
  */
 export const CONSTANTS = {
-  METABOLISM_RATE: 0.010 as const,
+  METABOLISM_RATE: 0.01 as const,
 
   /**
    * Slow metabolism rate (0.005% per hour) - accounting for the margin of error where
@@ -35,9 +35,7 @@ export const CONSTANTS = {
   MAX_WEIGHT: 500 as const,
   ROBOT_MESSAGE_DURATION: 5000 as const,
   JOKE_DURATION: 7000 as const,
-  MIN_TIP_AMOUNT: 3 as const,
   LEGAL_DRINKING_AGE: 21 as const,
-  REFUND_WINDOW_DAYS: 30 as const,
 } as const;
 
 export type ConstantsType = typeof CONSTANTS;
@@ -47,12 +45,10 @@ export type ConstantsType = typeof CONSTANTS;
 // ============================================================================
 
 interface Config {
-  readonly STRIPE_PAYMENT_LINK: string;
   readonly SUPPORT_EMAIL: string;
 }
 
 export const CONFIG: Config = {
-  STRIPE_PAYMENT_LINK: process.env.REACT_APP_STRIPE_PAYMENT_LINK || 'https://buy.stripe.com/aFa14m7kE8UfdjB00g5sA01',
   SUPPORT_EMAIL: process.env.REACT_APP_SUPPORT_EMAIL || 'drinkbot3000@gmail.com',
 };
 
@@ -83,28 +79,28 @@ export const EMOJIS: Readonly<Emojis> = {
  */
 export const JOKES: readonly string[] = [
   "Why don't scientists trust atoms? Because they make up everything!",
-  "What do you call a bear with no teeth? A gummy bear!",
-  "Why did the scarecrow win an award? He was outstanding in his field!",
-  "What do you call a fake noodle? An impasta!",
+  'What do you call a bear with no teeth? A gummy bear!',
+  'Why did the scarecrow win an award? He was outstanding in his field!',
+  'What do you call a fake noodle? An impasta!',
   "What's orange and sounds like a parrot? A carrot!",
-  "Why did the math book look so sad? Because it had too many problems!",
+  'Why did the math book look so sad? Because it had too many problems!',
   "Why don't skeletons fight each other? They don't have the guts!",
-  "What do you call a fish wearing a bowtie? Sofishticated!",
-  "Why did the bicycle fall over? Because it was two-tired!",
-  "What do you call a sleeping bull? A bulldozer!",
+  'What do you call a fish wearing a bowtie? Sofishticated!',
+  'Why did the bicycle fall over? Because it was two-tired!',
+  'What do you call a sleeping bull? A bulldozer!',
   "Why can't your nose be 12 inches long? Because then it would be a foot!",
   "What do you call cheese that isn't yours? Nacho cheese!",
   "Why don't programmers like nature? It has too many bugs!",
-  "What do you call a snowman with a six-pack? An abdominal snowman!",
-  "What do you call a lazy kangaroo? A pouch potato!",
+  'What do you call a snowman with a six-pack? An abdominal snowman!',
+  'What do you call a lazy kangaroo? A pouch potato!',
   "Why don't mountains get cold? They wear snow caps!",
-  "What do you call a magic dog? A labracadabrador!",
-  "Why did the picture go to jail? It was framed!",
+  'What do you call a magic dog? A labracadabrador!',
+  'Why did the picture go to jail? It was framed!',
   "What do you call a boomerang that won't come back? A stick!",
-  "What do you call a cow during an earthquake? A milkshake!",
+  'What do you call a cow during an earthquake? A milkshake!',
 ] as const;
 
-export type Joke = typeof JOKES[number];
+export type Joke = (typeof JOKES)[number];
 
 /**
  * Robot greeting messages
@@ -117,7 +113,7 @@ export const ROBOT_GREETINGS: readonly string[] = [
   `*whirrs politely* I shall help you stay safe this evening! ${EMOJIS.TOP_HAT}`,
 ] as const;
 
-export type RobotGreeting = typeof ROBOT_GREETINGS[number];
+export type RobotGreeting = (typeof ROBOT_GREETINGS)[number];
 
 /**
  * Robot comment messages
@@ -132,7 +128,7 @@ export const ROBOT_COMMENTS: readonly string[] = [
   `*mechanical nod* You're making wise choices! ${EMOJIS.TOP_HAT}`,
 ] as const;
 
-export type RobotComment = typeof ROBOT_COMMENTS[number];
+export type RobotComment = (typeof ROBOT_COMMENTS)[number];
 
 // ============================================================================
 // Utility Functions

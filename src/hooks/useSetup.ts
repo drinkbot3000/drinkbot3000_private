@@ -1,23 +1,19 @@
 /**
  * useSetup Hook
- * Handles initial setup and miscellaneous operations (jokes, payments) with type safety
+ * Handles initial setup and miscellaneous operations (jokes) with type safety
  */
 
 import { useCallback } from 'react';
 import { validateWeight } from '../services/validation.service';
-import { generateReceipt } from '../services/receipt.service';
-import { getRandomGreeting, getRandomJoke, EMOJIS, CONSTANTS } from '../constants';
-import type { Receipt } from '../services/receipt.service';
+import { getRandomGreeting, getRandomJoke, CONSTANTS } from '../constants';
 
 type SetFieldFunction = (field: string, value: any) => void;
 type SetMultipleFunction = (updates: Record<string, any>) => void;
-type AddReceiptFunction = (receipt: Receipt) => void;
 type ShowRobotMessageFunction = (message: string) => void;
 
 interface SetupHandlers {
   handleSetup: () => void;
   tellJoke: () => void;
-  handlePaymentSuccess: () => void;
 }
 
 /**
@@ -25,15 +21,15 @@ interface SetupHandlers {
  * @param state - Current tracker state
  * @param setField - Function to update a single state field
  * @param setMultiple - Function to update multiple state fields
- * @param addReceipt - Function to add receipt to state
+ * @param _unused - Unused parameter kept for call-site compatibility
  * @param showRobotMessage - Function to display robot messages
  * @returns Setup handler functions
  */
 export const useSetup = (
-  state: any, // TODO: Refine type in Phase 3
+  state: any,
   setField: SetFieldFunction,
   setMultiple: SetMultipleFunction,
-  addReceipt: AddReceiptFunction,
+  _unused: any,
   showRobotMessage: ShowRobotMessageFunction
 ): SetupHandlers => {
   const handleSetup = useCallback(() => {
@@ -70,19 +66,8 @@ export const useSetup = (
     }, CONSTANTS.JOKE_DURATION);
   }, [setField, setMultiple]);
 
-  const handlePaymentSuccess = useCallback(() => {
-    const amount = parseFloat(state.customTipAmount) || 5;
-    const receipt = generateReceipt(amount);
-    addReceipt(receipt);
-    setField('showReceipt', true);
-    showRobotMessage(
-      `*beeps gratefully* Thank you for your support! ${EMOJIS.ROBOT}${EMOJIS.HEART}`
-    );
-  }, [state.customTipAmount, addReceipt, setField, showRobotMessage]);
-
   return {
     handleSetup,
     tellJoke,
-    handlePaymentSuccess,
   };
 };

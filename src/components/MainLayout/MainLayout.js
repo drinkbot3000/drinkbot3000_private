@@ -1,6 +1,6 @@
 /**
  * MainLayout Component
- * Main app layout with header and tab navigation
+ * Main app layout with header
  */
 
 import React from 'react';
@@ -16,7 +16,7 @@ import { Settings, HelpCircle } from 'lucide-react';
  */
 export function MainLayout({ onSettingsClick, onHelpClick, children }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-6">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-md mx-auto px-6 py-4 flex items-center justify-between">
