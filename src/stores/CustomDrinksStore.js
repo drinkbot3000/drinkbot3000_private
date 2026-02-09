@@ -1,8 +1,8 @@
 /**
  * Custom Drinks Store
  * Manages custom drinks and validation errors
- * Fields: 8 (customDrinkOz, customDrinkABV, customDrinkName, showCustomDrink,
- *         savedCustomDrinks, weightError, tipError, customTipAmount)
+ * Fields: 6 (customDrinkOz, customDrinkABV, customDrinkName, showCustomDrink,
+ *         savedCustomDrinks, weightError)
  */
 
 import React, { createContext, useContext, useReducer, useMemo, useCallback } from 'react';
@@ -23,8 +23,6 @@ export const initialCustomDrinksState = {
 
   // Validation errors
   weightError: '',
-  tipError: '',
-  customTipAmount: '',
 };
 
 /**

@@ -4,7 +4,6 @@
 
 import {
   validateWeight,
-  validateTipAmount,
   validateCustomDrink,
   validateCalculatorInput,
   validateAge,
@@ -34,30 +33,6 @@ describe('Validation Service', () => {
       expect(validateWeight('abc')).toContain('valid number');
       expect(validateWeight('')).toContain('valid number');
       expect(validateWeight(null)).toContain('valid number');
-    });
-  });
-
-  describe('validateTipAmount', () => {
-    it('should return empty string for valid tip amount', () => {
-      expect(validateTipAmount(5)).toBe('');
-      expect(validateTipAmount('10')).toBe('');
-      expect(validateTipAmount(CONSTANTS.MIN_TIP_AMOUNT)).toBe('');
-      expect(validateTipAmount(100)).toBe('');
-    });
-
-    it('should return error for tip below minimum', () => {
-      const error = validateTipAmount(CONSTANTS.MIN_TIP_AMOUNT - 1);
-      expect(error).toContain('Minimum');
-    });
-
-    it('should return error for tip above maximum', () => {
-      const error = validateTipAmount(1001);
-      expect(error).toContain('Maximum');
-    });
-
-    it('should return error for non-numeric tip', () => {
-      expect(validateTipAmount('abc')).toContain('valid amount');
-      expect(validateTipAmount('')).toContain('valid amount');
     });
   });
 

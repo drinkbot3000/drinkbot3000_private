@@ -22,9 +22,7 @@ import {
 } from './stores';
 
 // Hooks
-import { useBACCalculation } from './hooks/useBACCalculation';
 import { usePersistence } from './hooks/usePersistence';
-import { useDrinkManagement } from './hooks/useDrinkManagement';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useSettings } from './hooks/useSettings';
 import { useSetup } from './hooks/useSetup';
@@ -136,8 +134,6 @@ function BACTrackerContent(): JSX.Element {
           'showCustomDrink',
           'savedCustomDrinks',
           'weightError',
-          'tipError',
-          'customTipAmount',
         ].includes(field)
       ) {
         customDrinksStore.setField(field, value);
@@ -222,10 +218,7 @@ function BACTrackerContent(): JSX.Element {
             'customDrinkName',
             'showCustomDrink',
             'savedCustomDrinks',
-            'showDrinkHistory',
             'weightError',
-            'tipError',
-            'customTipAmount',
           ].includes(field)
         ) {
           customDrinksFields[field] = value;
@@ -243,12 +236,6 @@ function BACTrackerContent(): JSX.Element {
   );
 
   // Extract actions from stores
-  const addDrinkAction = bacStore.addDrink;
-  const removeDrink = bacStore.removeDrink;
-  const undoDrink = bacStore.undoDrink;
-  const clearDrinksAction = bacStore.clearDrinks;
-  const addCustomDrinkAction = customDrinksStore.addCustomDrink;
-  const deleteCustomDrinkAction = customDrinksStore.deleteCustomDrink;
   const showConfirm = modalStore.showConfirm;
   const hideConfirm = modalStore.hideConfirm;
 
@@ -266,33 +253,7 @@ function BACTrackerContent(): JSX.Element {
   // Custom hooks for different concerns
   usePersistence(state, setMultiple);
 
-  useBACCalculation({
-    dispatch: (action: any) => {
-      if (action.type === 'SET_FIELD') {
-        setField(action.field, action.value);
-      } else if (action.type === 'SET_MULTIPLE') {
-        setMultiple(action.values);
-      }
-    },
-    state,
-  });
-
   const onboardingHandlers = useOnboarding(setField, setMultiple);
-
-  const drinkHandlers = useDrinkManagement(
-    state,
-    {
-      setField,
-      setMultiple,
-      addDrink: addDrinkAction,
-      removeDrink,
-      undoDrink,
-      clearDrinks: clearDrinksAction,
-      addCustomDrink: addCustomDrinkAction,
-      deleteCustomDrink: deleteCustomDrinkAction,
-    },
-    showRobotMessage
-  );
 
   const settingsHandlers = useSettings(
     state,
@@ -348,11 +309,7 @@ function BACTrackerContent(): JSX.Element {
         state={state as any}
         setField={setField}
         setMultiple={setMultiple}
-        drinkHandlers={drinkHandlers as any}
         settingsHandlers={settingsHandlers as any}
-        miscHandlers={{
-          tellJoke: setupHandlers.tellJoke,
-        }}
         hideConfirm={hideConfirm}
       />
     </FeatureErrorBoundary>

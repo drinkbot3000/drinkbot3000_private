@@ -70,10 +70,8 @@
  * @property {string} confirmModalMessage
  * @property {Function|null} confirmModalAction
  * @property {string} weightError
- * @property {string} customTipAmount
  * @property {boolean} showDisclaimerModal
  * @property {boolean} disclaimerAccepted
- * @property {string} tipError
  * @property {boolean} showRefundPolicy
  * @property {boolean} showReceipt
  * @property {Receipt|null} currentReceipt
