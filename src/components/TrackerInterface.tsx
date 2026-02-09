@@ -1,16 +1,18 @@
 /**
  * TrackerInterface Component
- * Main tracker interface after onboarding is complete
+ * Redesigned single-tab tracker with mass input and drink level buttons
  */
 
 import React from 'react';
+import { Scale } from 'lucide-react';
 import PWAInstallPrompt from '../PWAInstallPrompt';
 import { PWAProvider } from '../contexts/PWAContext';
 import { MainLayout } from './MainLayout';
 import { ConfirmModal, Modal } from './common';
-import { BACDisplay, TimeInfo, AddDrinkPanel, DrinkHistoryList, MessageDisplay } from './Tracker';
+import { BACDisplay, TimeInfo, DrinkHistoryList, MessageDisplay } from './Tracker';
 import { HelpModal, SettingsModal } from './Modals';
 import FeatureErrorBoundary from './FeatureErrorBoundary';
+import { CONSTANTS } from '../constants';
 import type { Gender, Drink } from '../types';
 
 interface TrackerState {
@@ -26,11 +28,6 @@ interface TrackerState {
   useSlowMetabolism: boolean;
 
   // UI state
-  showCustomDrink: boolean;
-  customDrinkName: string;
-  customDrinkOz: string;
-  customDrinkABV: string;
-  savedCustomDrinks: any[];
   showDrinkHistory: boolean;
 
   // Modals
@@ -56,14 +53,10 @@ interface TrackerState {
 }
 
 interface DrinkHandlers {
-  addDrink: (drinkName: string, standardDrinks: number) => void;
+  addDrink: (drinkName: string, oz?: number | null, abv?: number | null) => void;
   deleteDrink: (drinkId: string) => void;
   undoDrink: () => void;
   clearDrinks: () => void;
-  handleAddCustomDrink: () => void;
-  handleSaveCustomDrink: () => void;
-  handleDeleteCustomDrink: (drinkId: string) => void;
-  handleCancelCustomDrink: () => void;
 }
 
 interface SettingsHandlers {
@@ -86,6 +79,13 @@ interface TrackerInterfaceProps {
   hideConfirm: () => void;
 }
 
+/** Drink level presets — oz of pure alcohol per tap */
+const DRINK_LEVELS = [
+  { value: 0.3, label: '0.3', description: 'Light' },
+  { value: 0.6, label: '0.6', description: 'Standard' },
+  { value: 0.99, label: '0.99', description: 'Strong' },
+] as const;
+
 export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
   state,
   setField,
@@ -95,6 +95,18 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
   miscHandlers: _miscHandlers,
   hideConfirm,
 }) => {
+  const weightNum = parseFloat(state.weight) || 0;
+  const weightValid = weightNum >= CONSTANTS.MIN_WEIGHT && weightNum <= CONSTANTS.MAX_WEIGHT;
+
+  /** Add a drink at the given level (oz of pure alcohol) */
+  const handleLevel = (level: (typeof DRINK_LEVELS)[number]) => {
+    // Convert level to oz & abv that yield the correct standardDrinks
+    // standardDrinks = (oz * abv/100) / STANDARD_DRINK_OZ
+    // Using abv=100 → oz = level.value * STANDARD_DRINK_OZ
+    const oz = level.value * CONSTANTS.STANDARD_DRINK_OZ;
+    drinkHandlers.addDrink(level.description, oz, 100);
+  };
+
   return (
     <PWAProvider>
       <MainLayout
@@ -106,40 +118,61 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
           joke={state.currentJoke}
           showJoke={state.showJoke}
         />
+
+        {/* Mass / Weight Input */}
+        <div className="bg-white rounded-2xl p-6 mb-6 shadow">
+          <div className="flex items-center gap-3 mb-4">
+            <Scale className="w-5 h-5 text-indigo-500" />
+            <h3 className="text-lg font-semibold text-gray-800">Your Mass</h3>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              inputMode="decimal"
+              value={state.weight}
+              onChange={(e) => setField('weight', e.target.value)}
+              className={`flex-1 text-3xl font-bold text-center py-3 border-2 rounded-xl transition
+                ${weightValid ? 'border-indigo-200 focus:border-indigo-500' : 'border-red-300 focus:border-red-500'}
+                outline-none`}
+              placeholder="150"
+              min={CONSTANTS.MIN_WEIGHT}
+              max={CONSTANTS.MAX_WEIGHT}
+            />
+            <span className="text-gray-500 font-medium text-lg">lbs</span>
+          </div>
+          {state.weight && !weightValid && (
+            <p className="text-red-500 text-sm mt-2">
+              Enter a weight between {CONSTANTS.MIN_WEIGHT} and {CONSTANTS.MAX_WEIGHT} lbs
+            </p>
+          )}
+        </div>
+
+        {/* Drink Level Buttons */}
+        <div className="bg-white rounded-2xl p-6 mb-6 shadow">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Drink</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {DRINK_LEVELS.map((level) => (
+              <button
+                key={level.value}
+                onClick={() => handleLevel(level)}
+                disabled={!weightValid}
+                className="flex flex-col items-center justify-center p-5 rounded-xl font-medium transition
+                  bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200
+                  disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+              >
+                <span className="text-2xl font-bold text-indigo-700">{level.label}</span>
+                <span className="text-xs text-indigo-500 mt-1">{level.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <BACDisplay bac={state.bac} hasBeenImpaired={state.hasBeenImpaired} />
         <TimeInfo
           startTime={state.startTime}
           bac={state.bac}
           useSlowMetabolism={state.useSlowMetabolism}
         />
-        <FeatureErrorBoundary
-          featureName="Add Drink"
-          featureDescription="add drinks to your tracker"
-          showSafetyNote={true}
-        >
-          <AddDrinkPanel
-            showCustomDrink={state.showCustomDrink}
-            customDrinkName={state.customDrinkName}
-            customDrinkOz={state.customDrinkOz}
-            customDrinkABV={state.customDrinkABV}
-            savedCustomDrinks={state.savedCustomDrinks}
-            onToggleCustomDrink={() => setField('showCustomDrink', !state.showCustomDrink)}
-            onCustomDrinkChange={(field, value) => {
-              if (field === 'name') {
-                setField('customDrinkName', value);
-              } else if (field === 'oz') {
-                setField('customDrinkOz', value);
-              } else if (field === 'abv') {
-                setField('customDrinkABV', value);
-              }
-            }}
-            onAddCustomDrink={drinkHandlers.handleAddCustomDrink}
-            onSaveCustomDrink={drinkHandlers.handleSaveCustomDrink}
-            onDeleteCustomDrink={drinkHandlers.handleDeleteCustomDrink}
-            onCancelCustomDrink={drinkHandlers.handleCancelCustomDrink}
-            onAddDrink={drinkHandlers.addDrink}
-          />
-        </FeatureErrorBoundary>
         <FeatureErrorBoundary
           featureName="Drink History"
           featureDescription="view and manage your drink history"
