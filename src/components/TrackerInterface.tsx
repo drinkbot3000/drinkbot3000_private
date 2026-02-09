@@ -239,9 +239,11 @@ export const TrackerInterface: React.FC<TrackerInterfaceProps> = ({
             </div>
             <div className="text-center">
               <span className="text-5xl font-bold text-indigo-700">{drinksNeeded}</span>
+              <span className="text-xl font-medium text-indigo-400 ml-2">
+                {drinksNeeded === 1 ? 'drink' : 'drinks'}
+              </span>
               <p className="text-gray-500 text-sm mt-2">
-                standard drinks over {hoursNum} hour{hoursNum !== 1 ? 's' : ''} to reach{' '}
-                {selectedBAC} BAC
+                to reach {selectedBAC} BAC over {hoursNum} hour{hoursNum !== 1 ? 's' : ''}
               </p>
               {selectedBAC! >= CONSTANTS.LEGAL_LIMIT && (
                 <p className="text-red-600 text-sm font-semibold mt-3">
